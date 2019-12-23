@@ -1,6 +1,7 @@
 var Discord = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
+const { DiscordBot } = require("dynobot-framework");
 
 var active = true;
 
@@ -11,49 +12,42 @@ logger.add(new logger.transports.Console, {
 });
 logger.level = 'debug';
 
-var bot = new Discord.Client();
-bot.login(auth.token);
+var bot = new DiscordBot(auth.token);
 
-bot.on('ready', () => {
-    logger.info(`Logged in as ${bot.user.tag}!`);
+bot.onEvent('ready', () => {
+    logger.info(`Logged in!`);
 });
 
 function process(recievedMessage) {
-    logger.info(recievedMessage.content.substring(1));
-    var cmdfull = recievedMessage.content.substring(1);
+    logger.info(recievedMessage.getContent().substring(1));
+    var cmdfull = recievedMessage.getContent().substring(1);
     var cmdparsed = cmdfull.split(" ");
     var cmd = cmdparsed[0];
     var args = cmdparsed.splice(1);
 
-    var chan = recievedMessage.channel;
+    var chan = recievedMessage.getChannel();
+    var author = recievedMessage.getAuthor();
+
     switch (cmd) {
         case 'ping':
-            if (recievedMessage.author.username == "Icenoft") {
+            if (author.getName() == "Icenoft") {
                 chan.send("Imagine .ping");
             } else {
                 chan.send("Pong!");
             }
             break;
-        case 'ep':
+        /*case 'ep':
         case 'endProcess':
         case 'endprocess':
-            if (recievedMessage.author.id == "324302699460034561") {
+            if (author.getId() == "324302699460034561") {
                 chan.send("Killing Myself...");
-                bot.destroy()
+                error("Ending Process");
             } else {
                 chan.send("You must be Admin to do that!");
             }
-            break;
-        case 'repeat':
-        case 'rep':
-            var rep = ""
-            for (var i = 0; i < args.length; i++) {
-                rep = rep + args[i] + " ";
-            }
-            chan.send("Here it is again:\n" + rep);
-            break;
+            break;*/
         case 'shutdown':
-            if (recievedMessage.author.id == "324302699460034561") {
+            if (author.getId() == "324302699460034561") {
                 chan.send("Stopping responses");
                 active = false;
             } else {
@@ -61,30 +55,37 @@ function process(recievedMessage) {
             }
             break;
         case 'activate':
-            if (recievedMessage.author.id == "324302699460034561") {
+            if (author.getId() == "324302699460034561") {
                 chan.send("Restarting responses");
                 active = true;
             } else {
                 chan.send("You must be Admin to do that!");
             }
             break;
-        case 'getRoles':
-            logger.info(bot.guilds.{560847285874065408}.roles.array);
+        case 'getPerm':
+            var roles = recievedMessage.getAuthorRoles();
+            roles.forEach(role => {
+                if (role.getName() == "admin" || role.getName() == "dadmin" || role.getName() == "moderator") {
+                    chan.send("Approved");
+                    return;
+                }
+            })
+            chan.send("Done");
             break;
     }
             
 }
 
-bot.on('message', (recievedMessage) => {
-    if (recievedMessage.author == bot.user) {
+bot.onEvent('message', (recievedMessage) => {
+    if (recievedMessage.getAuthor() == bot.getClient()) {
         return
         //prevent responding to its own message
     }
-    if (recievedMessage.content.substring(0, 1) == ".") {
+    if (recievedMessage.getContent().substring(0, 1) == ".") {
         if (active) {
             process(recievedMessage);
         } else {
-            if (recievedMessage.author.id == "324302699460034561") {
+            if (recievedMessage.getAuthor().getId() == "324302699460034561") {
                 process(recievedMessage);
             } else {
                 return
