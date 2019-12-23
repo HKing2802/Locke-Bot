@@ -6,6 +6,7 @@
   "author": "HKing",
   "dependencies": {
     "discord.js": "^11.5.1",
+    "dynobot-framework": "^1.1.4",
     "winston": "^3.2.1"
   }
 }

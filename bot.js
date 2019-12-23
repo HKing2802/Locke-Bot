@@ -34,7 +34,9 @@ function process(recievedMessage) {
                 chan.send("Pong!");
             }
             break;
+        case 'ep':
         case 'endProcess':
+        case 'endprocess':
             if (recievedMessage.author.id == "324302699460034561") {
                 chan.send("Killing Myself...");
                 bot.destroy()
@@ -43,6 +45,7 @@ function process(recievedMessage) {
             }
             break;
         case 'repeat':
+        case 'rep':
             var rep = ""
             for (var i = 0; i < args.length; i++) {
                 rep = rep + args[i] + " ";
@@ -65,7 +68,11 @@ function process(recievedMessage) {
                 chan.send("You must be Admin to do that!");
             }
             break;
+        case 'getRoles':
+            logger.info(bot.guilds.{560847285874065408}.roles.array);
+            break;
     }
+            
 }
 
 bot.on('message', (recievedMessage) => {
