@@ -1,0 +1,8 @@
+{
+“name”: “LockeBot”,
+“version”: “0.0.1”,
+“description”: “Special bot for Locke Server”,
+“main”: “bot.js”,
+“author”: “HKing”,
+“dependencies”: {}
+}
