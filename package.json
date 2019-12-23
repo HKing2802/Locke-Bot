@@ -1,8 +1,11 @@
 {
-“name”: “LockeBot”,
-“version”: “0.0.1”,
-“description”: “Special bot for Locke Server”,
-“main”: “bot.js”,
-“author”: “HKing”,
-“dependencies”: {}
+  "name": "locke-bot",
+  "version": "0.0.1",
+  "description": "Special bot for Locke Server",
+  "main": "bot.js",
+  "author": "HKing",
+  "dependencies": {
+    "discord.js": "^11.5.1",
+    "winston": "^3.2.1"
+  }
 }
