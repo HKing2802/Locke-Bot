@@ -12,7 +12,7 @@ logger.add(new logger.transports.Console, {
 logger.level = 'debug';
 
 var bot = new Discord.Client();
-bot.login(auth.token);
+bot.login(process.env.BOT_TOKEN);
 
 bot.on('ready', () => {
     logger.info(`Logged in as ${bot.user.tag}!`);
