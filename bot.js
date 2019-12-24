@@ -18,8 +18,8 @@ bot.on('ready', () => {
     logger.info(`Logged in as ${bot.user.tag}!`);
 });
 
-function getPerm(recievedMessage) {
-    var roles = recievedMessage.member.roles;
+function getPerm(member) {
+    var roles = member.roles;
     var ret = false;
     roles.forEach(role => {
         if (role.name == "admin" || role.name == "dadmin" || role.name == "moderator") {
@@ -27,10 +27,6 @@ function getPerm(recievedMessage) {
         }
     })
     return ret;
-}
-
-function getMuted(role) {
-    return role.id == "562452717445054474"
 }
 
 function process(recievedMessage) {
@@ -60,13 +56,6 @@ function process(recievedMessage) {
                 chan.send("You must be Admin to do that!");
             }
             break;
-        case 'repeat':
-            var rep = ""
-            for (var i = 0; i < args.length; i++) {
-                rep = rep + args[i] + " ";
-            }
-            chan.send("Here it is again:\n" + rep);
-            break;
         case 'shutdown':
             if (recievedMessage.author.id == "324302699460034561") {
                 chan.send("Stopping responses");
@@ -84,19 +73,43 @@ function process(recievedMessage) {
             }
             break;
         case 'mute':
-            var perm = getPerm(recievedMessage);
+            var perm = getPerm(recievedMessage.member);
             if (perm) {
                 if (recievedMessage.mention_everyone) {
                     chan.send("You can't mute everyone!");
                     break;
-                } else if (!recievedMessage.mentions) {
-                    chan.send("You need to mention someone");
+                } else if (recievedMessage.mentions.members.first() == undefined) {
+                    chan.send("You need to mention someone!");
                 } else {
-                    var memb = recievedMessage.mentions.members
-                    chan.send(memb[0].user.username);
-                    memb.addRole(recievedMessage.guild.roles.find(r => r.id = "562452717445054474"));
+                    var memb = recievedMessage.mentions.members.first()
+                    if (getPerm(memb)) {
+                        chan.send("You can't mute a Moderator/Admin!");
+                    } else {
+                        memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Muted'));
+                        memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Human'));
+                        chan.send("User has been muted.");
+                    }
                 }
-                break;
+            } else {
+                chan.send("You don't have permission to mute someone!");
+            }
+            break;
+        case 'unmute':
+            if (getPerm(recievedMessage.member)) {
+                if (recievedMessage.mention_everyone) {
+                    chan.send("You can't mute everyone!");
+                } else if (recievedMessage.mentions.members.first() == undefined) {
+                    chan.send("You need to mention someone!");
+                } else {
+                    var memb = recievedMessage.mentions.members.first()
+                    if (getPerm(memb)) {
+                        chan.send("You can's mute a Moderator/Admin!");
+                    } else {
+                        memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Human'));
+                        memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Muted'));
+                        chan.send("User has been unmuted.");
+                    }
+                }
             }
     }
 }
