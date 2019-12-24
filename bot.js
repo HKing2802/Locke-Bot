@@ -1,6 +1,6 @@
 var Discord = require('discord.js');
 var logger = require('winston');
-//var auth = require('./auth.json');
+var auth = require('./auth.json');
 
 var active = true;
 
@@ -12,7 +12,7 @@ logger.add(new logger.transports.Console, {
 logger.level = 'debug';
 
 var bot = new Discord.Client();
-bot.login(process.env.BOT_TOKEN);
+bot.login(auth.token);
 
 bot.on('ready', () => {
     logger.info(`Logged in as ${bot.user.tag}!`);
