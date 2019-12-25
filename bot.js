@@ -38,16 +38,26 @@ function getPerm(member) {
     return ret;
 }
 
+function help(chan) {
+    const embed = new Discord.RichEmbed()
+        .setTitle("Help Menu")
+        .addField(".Ping", "Pong!")
+        .addField("mute", "Mutes a user, must be Mod/Admin")
+        .addField("unmute", "Unmutes a user, must be a Mod/Admin")
+        .addField(".Help", "Displays this Message");
+
+    chan.send(embed);
+}
+
 function process(recievedMessage) {
     logger.info(recievedMessage.content.substring(1));
-    var cmdfull = recievedMessage.content.substring(1);
+    var cmdfull = recievedMessage.content.substring(1).toLowerCase();
     var cmdparsed = cmdfull.split(" ");
     var cmd = cmdparsed[0];
     var args = cmdparsed.splice(1);
 
     var chan = recievedMessage.channel;
     switch (cmd) {
-        case 'Ping':
         case 'ping':
             if (recievedMessage.author.username == "Icenoft") {
                 chan.send("Imagine .ping");
@@ -59,7 +69,6 @@ function process(recievedMessage) {
             break;
         case 'ep':
         case 'endprocess':
-        case 'endProcess':
             if (recievedMessage.author.id == "324302699460034561") {
                 chan.send("Done");
                 bot.destroy()
@@ -137,7 +146,7 @@ function process(recievedMessage) {
                 } else {
                     var memb = recievedMessage.mentions.members.first()
                     if (getPerm(memb)) {
-                        chan.send("You can's mute a Moderator/Admin!");
+                        chan.send("You can't mute a Moderator/Admin!");
                         logger.info("Rejected - Target Mod/Admin");
                         logger.info();
                     } else {
@@ -151,11 +160,16 @@ function process(recievedMessage) {
                 }
             }
             break;
-        case 'setLog':
+        case 'setlog':
             if (recievedMessage.author.id == "324302699460034561") {
                 logChan = chan;
-                chan.send("Setting Logging Channel")
+                logger.info("Set Logging Channel");
+                chan.send("Setting Logging Channel");
             }
+            break;
+        case 'help':
+            help(chan);
+            logger.info("Responded");
             break;
     }
 }
