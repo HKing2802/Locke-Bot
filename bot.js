@@ -19,6 +19,14 @@ bot.on('ready', () => {
     logger.info(`Logged in as ${bot.user.tag}!`);
 });
 
+function chanLog(message) {
+    if (logChan == undefined) {
+        logger.warn("no logging channel defined");
+    } else {
+        logChan.send(message);
+    }
+}
+
 function getPerm(member) {
     var roles = member.roles;
     var ret = false;
@@ -105,6 +113,7 @@ function process(recievedMessage) {
                         memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Muted'));
                         memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Human'));
                         chan.send("User has been muted.");
+                        chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + recievedMessage.author.username + ".");
                         logger.info(memb.user.username + " muted");
                         logger.info();
                     }
@@ -135,11 +144,19 @@ function process(recievedMessage) {
                         memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Human'));
                         memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Muted'));
                         chan.send("User has been unmuted.");
+                        chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been unmuted by " + recievedMessage.author.username + ".");
                         logger.info(memb.user.username + " muted");
                         logger.info();
                     }
                 }
             }
+            break;
+        case 'setLog':
+            if (recievedMessage.author.id == "324302699460034561") {
+                logChan = chan;
+                chan.send("Setting Logging Channel")
+            }
+            break;
     }
 }
 
