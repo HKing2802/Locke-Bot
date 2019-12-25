@@ -3,6 +3,7 @@ var logger = require('winston');
 var auth = require('./auth.json');
 
 var active = true;
+var logChan;
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -45,6 +46,8 @@ function process(recievedMessage) {
             } else {
                 chan.send("Pong!");
             }
+            logger.info("Returned");
+            logger.info();
             break;
         case 'ep':
         case 'endprocess':
@@ -59,17 +62,25 @@ function process(recievedMessage) {
         case 'shutdown':
             if (recievedMessage.author.id == "324302699460034561") {
                 chan.send("Stopping responses");
+                logger.info("Stopping");
+                logger.info();
                 active = false;
             } else {
                 chan.send("You must be Admin to do that!");
+                logger.info("Rejected");
+                logger.info();
             }
             break;
         case 'activate':
             if (recievedMessage.author.id == "324302699460034561") {
                 chan.send("Restarting responses");
+                logger.info("Restarting");
+                logger.info();
                 active = true;
             } else {
                 chan.send("You must be Admin to do that!");
+                logger.info("Rejected");
+                logger.info();
             }
             break;
         case 'mute':
@@ -77,37 +88,55 @@ function process(recievedMessage) {
             if (perm) {
                 if (recievedMessage.mention_everyone) {
                     chan.send("You can't mute everyone!");
+                    logger.info("Rejected - Everyone tag");
+                    logger.info();
                     break;
                 } else if (recievedMessage.mentions.members.first() == undefined) {
                     chan.send("You need to mention someone!");
+                    logger.info("Rejected - no mention");
+                    logger.info()
                 } else {
                     var memb = recievedMessage.mentions.members.first()
                     if (getPerm(memb)) {
                         chan.send("You can't mute a Moderator/Admin!");
+                        logger.info("Rejected - Target Mod/Admin");
+                        logger.info();
                     } else {
                         memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Muted'));
                         memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Human'));
                         chan.send("User has been muted.");
+                        logger.info(memb.user.username + " muted");
+                        logger.info();
                     }
                 }
             } else {
                 chan.send("You don't have permission to mute someone!");
+                logger.info("Rejected - Author Perm");
+                logger.info();
             }
             break;
         case 'unmute':
             if (getPerm(recievedMessage.member)) {
                 if (recievedMessage.mention_everyone) {
                     chan.send("You can't mute everyone!");
+                    logger.info("Rejected - Everyone tag");
+                    logger.info();
                 } else if (recievedMessage.mentions.members.first() == undefined) {
                     chan.send("You need to mention someone!");
+                    logger.info("Rejected - no mention");
+                    logger.info()
                 } else {
                     var memb = recievedMessage.mentions.members.first()
                     if (getPerm(memb)) {
                         chan.send("You can's mute a Moderator/Admin!");
+                        logger.info("Rejected - Target Mod/Admin");
+                        logger.info();
                     } else {
                         memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Human'));
                         memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Muted'));
                         chan.send("User has been unmuted.");
+                        logger.info(memb.user.username + " muted");
+                        logger.info();
                     }
                 }
             }
