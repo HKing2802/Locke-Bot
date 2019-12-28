@@ -16,7 +16,7 @@ var token = process.env.auth_token;
 //logger.info(token);
 
 var bot = new Discord.Client();
-bot.login(token;);
+bot.login(token);
 
 bot.on('ready', () => {
     logger.info(`Logged in as ${bot.user.tag}!`);
