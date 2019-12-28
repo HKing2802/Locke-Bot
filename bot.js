@@ -1,6 +1,6 @@
 var Discord = require('discord.js');
 var logger = require('winston');
-//var auth = require('./auth.json');
+var auth = require('./auth.json');
 
 var active = true;
 var logChan;
@@ -12,7 +12,8 @@ logger.add(new logger.transports.Console, {
 });
 logger.level = 'debug';
 
-var token = process.env.auth_token;
+//var token = process.env.auth_token;
+var token = auth.token;
 //logger.info(token);
 
 var bot = new Discord.Client();
