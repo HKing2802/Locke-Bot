@@ -1,6 +1,6 @@
 var Discord = require('discord.js');
 var logger = require('winston');
-var auth = require('./auth.json');
+//var auth = require('./auth.json');
 
 var active = true;
 var logChan;
@@ -12,8 +12,11 @@ logger.add(new logger.transports.Console, {
 });
 logger.level = 'debug';
 
+var token = process.env.auth_token;
+logger.info(token);
+
 var bot = new Discord.Client();
-bot.login(auth.token);
+bot.login(token;);
 
 bot.on('ready', () => {
     logger.info(`Logged in as ${bot.user.tag}!`);
@@ -98,7 +101,7 @@ function process(recievedMessage) {
             }
             break;
         case 'mute':
-            var perm = getPerm(recievedMessage.member);
+            var perm = getPerm(recievedMessage.member, true);
             if (perm) {
                 if (recievedMessage.mention_everyone) {
                     chan.send("You can't mute everyone!");
@@ -109,7 +112,7 @@ function process(recievedMessage) {
                     logger.info("Rejected - no mention");
                 } else {
                     var memb = recievedMessage.mentions.members.first()
-                    if (getPerm(memb)) {
+                    if (getPerm(memb, false)) {
                         chan.send("You can't mute a Moderator/Admin!");
                         logger.info("Rejected - Target Mod/Admin");
                     } else {
@@ -126,24 +129,24 @@ function process(recievedMessage) {
             }
             break;
         case 'unmute':
-            if (getPerm(recievedMessage.member)) {
+            if (getPerm(recievedMessage.member, true)) {
                 if (recievedMessage.mention_everyone) {
-                    chan.send("You can't mute everyone!");
+                    chan.send("You can't unmute everyone!");
                     logger.info("Rejected - Everyone tag");
                 } else if (recievedMessage.mentions.members.first() == undefined) {
                     chan.send("You need to mention someone!");
                     logger.info("Rejected - no mention");
                 } else {
                     var memb = recievedMessage.mentions.members.first()
-                    if (getPerm(memb)) {
-                        chan.send("You can't mute a Moderator/Admin!");
+                    if (getPerm(memb, false)) {
+                        chan.send("You can't unmute a Moderator/Admin!");
                         logger.info("Rejected - Target Mod/Admin");
                     } else {
                         memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Human'));
                         memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Muted'));
                         chan.send("User has been unmuted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been unmuted by " + recievedMessage.author.username + ".");
-                        logger.info(memb.user.username + " muted");
+                        logger.info(memb.user.username + " unmuted");
                     }
                 }
             }
@@ -159,7 +162,6 @@ function process(recievedMessage) {
             help(chan);
             logger.info("Responded");
             break;
-        
     }
 }
 
