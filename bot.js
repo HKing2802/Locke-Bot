@@ -13,7 +13,7 @@ logger.add(new logger.transports.Console, {
 logger.level = 'debug';
 
 var token = process.env.auth_token;
-logger.info(token);
+//logger.info(token);
 
 var bot = new Discord.Client();
 bot.login(token;);
