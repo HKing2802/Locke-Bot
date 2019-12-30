@@ -48,9 +48,10 @@ function getPerm(member, boolHelp) {
 function help(chan) {
     const embed = new Discord.RichEmbed()
         .setTitle("Help Menu")
-        .addField(".Ping", "Pong!")
+        .addField("ping", "Pong!")
         .addField("mute", "Mutes a user, must be Mod/Admin")
         .addField("unmute", "Unmutes a user, must be a Mod/Admin")
+        .addField("snipe", "gets the user's deleted messages, must be a Mod/Admin")
         .addField(".Help", "Displays this Message");
 
     chan.send(embed);
