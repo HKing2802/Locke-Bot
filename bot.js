@@ -4,6 +4,7 @@ var auth = require('./auth.json');
 
 var active = true;
 var logChan;
+var delMsgs = [];
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -111,6 +112,9 @@ function process(recievedMessage) {
                 } else if (recievedMessage.mentions.members.first() == undefined) {
                     chan.send("You need to mention someone!");
                     logger.info("Rejected - no mention");
+                } else if (recievedMessage.mentions.members.first().user.id == "658702825689448466") {
+                    chan.send("I can't mute myself!");
+                    logger.info("Rejected - Self Mention");
                 } else {
                     var memb = recievedMessage.mentions.members.first()
                     if (getPerm(memb, false)) {
@@ -137,6 +141,9 @@ function process(recievedMessage) {
                 } else if (recievedMessage.mentions.members.first() == undefined) {
                     chan.send("You need to mention someone!");
                     logger.info("Rejected - no mention");
+                } else if (recievedMessage.mentions.members.first().user.id == "658702825689448466") {
+                    chan.send("I can't unmute myself!");
+                    logger.info("Rejected - Self Mention");
                 } else {
                     var memb = recievedMessage.mentions.members.first()
                     if (getPerm(memb, false)) {
@@ -150,6 +157,9 @@ function process(recievedMessage) {
                         logger.info(memb.user.username + " unmuted");
                     }
                 }
+            } else {
+                chan.send("You don't have permission to unmute someone!");
+                logger.info("Rejected - Author Perm");
             }
             break;
         case 'setlog':
@@ -162,6 +172,37 @@ function process(recievedMessage) {
         case 'help':
             help(chan);
             logger.info("Responded");
+            break;
+        case 'snipe':
+            if (getPerm(recievedMessage.member, true)) {
+                if (recievedMessage.mention_everyone) {
+                    chan.send("You can't snipe everyone!");
+                    logger.info("Rejected - Everyone tag");
+                } else if (recievedMessage.mentions.members.first() == undefined) {
+                    chan.send("You need to mention someone!");
+                    logger.info("Rejected - no mention");
+                } else if (recievedMessage.mentions.members.first().user.id == "658702825689448466") {
+                    chan.send("I can't snipe myself!");
+                    logger.info("Rejected - Self Mention");
+                } else {
+                    var memb = recievedMessage.mentions.members.first()
+                    for (var i = 0; i < delMsgs.length; i++) {
+                        if (delMsgs[i].author.id == memb.user.id) {
+                            chan.send(delMsgs[i].createdAt + " " + delMsgs[i].createdTimestamp + ": `" + delMsgs[i].content + "`");
+                        }
+                    }
+                }
+            } else {
+                chan.send("You don't have permission to snipe someone!");
+                logger.info("Rejected - Author Perm");
+            }
+            break;
+        case 'dmpDel':
+            if (recievedMessage.author.id == "324302699460034561") {
+                for (var i = 0; i < delMsgs.length; i++) {
+                    chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + " " + delMsgs[i].createdTimestamp + ": `" + delMsgs[i].content + "`");
+                }
+            }
             break;
     }
 }
@@ -182,5 +223,12 @@ bot.on('message', (recievedMessage) => {
             }
         }
 
+    }
+})
+
+bot.on('messageDelete', (delmsg) => {
+    delMsgs.unshift(delmsg);
+    if (delMsgs.length > 50) {
+        delMsgs.pop();
     }
 })
