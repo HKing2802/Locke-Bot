@@ -186,6 +186,7 @@ function process(recievedMessage) {
                     logger.info("Rejected - Self Mention");
                 } else {
                     var memb = recievedMessage.mentions.members.first()
+                    logger.info("Sniping " + memb.user.username);
                     for (var i = 0; i < delMsgs.length; i++) {
                         if (delMsgs[i].author.id == memb.user.id) {
                             chan.send(delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`");
@@ -199,8 +200,9 @@ function process(recievedMessage) {
             break;
         case 'dmpdel':
             if (recievedMessage.author.id == "324302699460034561") {
+                var ret = "";
                 for (var i = 0; i < delMsgs.length; i++) {
-                    chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`");
+                    ret = ret + "`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`\n";
                 }
             }
             break;
