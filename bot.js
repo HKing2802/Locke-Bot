@@ -200,9 +200,8 @@ function process(recievedMessage) {
             break;
         case 'dmpdel':
             if (recievedMessage.author.id == "324302699460034561") {
-                var ret = "";
                 for (var i = 0; i < delMsgs.length; i++) {
-                    ret = ret + "`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`\n";
+                    chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`");
                 }
             }
             break;
