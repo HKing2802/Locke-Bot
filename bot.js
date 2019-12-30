@@ -188,7 +188,7 @@ function process(recievedMessage) {
                     var memb = recievedMessage.mentions.members.first()
                     for (var i = 0; i < delMsgs.length; i++) {
                         if (delMsgs[i].author.id == memb.user.id) {
-                            chan.send(delMsgs[i].createdAt + " / " + delMsgs[i].createdTimestamp + ": `" + delMsgs[i].content + "`");
+                            chan.send(delMsgs[i].createdAt.substring(0, 33) + ": `" + delMsgs[i].content + "`");
                         }
                     }
                 }
@@ -200,7 +200,7 @@ function process(recievedMessage) {
         case 'dmpdel':
             if (recievedMessage.author.id == "324302699460034561") {
                 for (var i = 0; i < delMsgs.length; i++) {
-                    chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + " " + delMsgs[i].createdTimestamp + ": `" + delMsgs[i].content + "`");
+                    chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt.substring(0, 33) + ": `" + delMsgs[i].content + "`");
                 }
             }
             break;
