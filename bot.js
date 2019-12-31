@@ -229,9 +229,13 @@ bot.on('message', (recievedMessage) => {
 })
 
 bot.on('messageDelete', (delmsg) => {
-    delMsgs.unshift(delmsg);
-    logger.info("Deleted Message Logged");
-    if (delMsgs.length > 50) {
-        delMsgs.pop();
+    if (delmsg.author.id == "350823530377773057") {
+        return
+    } else {
+        delMsgs.unshift(delmsg);
+        logger.info("Deleted Message Logged");
+        if (delMsgs.length > 50) {
+            delMsgs.pop();
+        }
     }
 })
