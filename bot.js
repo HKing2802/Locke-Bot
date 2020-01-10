@@ -188,10 +188,16 @@ function process(recievedMessage) {
                 } else {
                     var memb = recievedMessage.mentions.members.first()
                     logger.info("Sniping " + memb.user.username);
+                    var str = "";
                     for (var i = 0; i < delMsgs.length; i++) {
                         if (delMsgs[i].author.id == memb.user.id) {
-                            chan.send(delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`");
+                            str = str.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
                         }
+                    }
+                    if (str.length == 0) {
+                        chan.send("There were no messages found!");
+                    } else {
+                        chan.send(str);
                     }
                 }
             } else {
@@ -201,18 +207,11 @@ function process(recievedMessage) {
             break;
         case 'dmpdel':
             if (recievedMessage.author.id == "324302699460034561") {
-                for (var i = 0; i < delMsgs.length; i++) {
-                    chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`");
-                }
-            }
-            chan.send("--End--");
-            break;
-        case 'test':
-            if (recievedMessage.author.id == "324302699460034561") {
                 var str = "";
                 for (var i = 0; i < delMsgs.length; i++) {
-                    str = str.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n")
+                    str = str.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
                 }
+                str = str.concat("--End--");
                 chan.send(str);
             }
             break;
