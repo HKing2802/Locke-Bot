@@ -205,9 +205,40 @@ function process(recievedMessage) {
                     chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`");
                 }
             }
+            chan.send("--End--");
+            break;
+        case 'test':
+            if (recievedMessage.author.id == "324302699460034561") {
+                var str = "";
+                for (var i = 0; i < 4; i++) {
+                    str = str.concat(delMsgs[i].content, '\n')
+                }
+                chan.send(str);
+            }
             break;
     }
 }
+
+//to-do
+/*
+ * More Channel Logging
+ * Hardcode Chan Log
+ * add channel to snipe cmd
+ * out snipe and dmpDel into one message
+ * add single message only to snipe cmd
+ * add purge DelMsgs array cmd
+ * 
+ * Personal (debug) Help Msg.
+ * dumpLogs cmd -> dumps last 10-ish logs to channel
+ * -> logging array, similar to delMsgs array setup
+ * 
+ * ban
+ * kick
+ * softban
+ * purge(?)
+ * 
+ * update VS
+ */
 
 bot.on('message', (recievedMessage) => {
     if (recievedMessage.author == bot.user) {
