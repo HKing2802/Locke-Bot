@@ -211,7 +211,7 @@ function process(recievedMessage) {
             if (recievedMessage.author.id == "324302699460034561") {
                 var str = "";
                 for (var i = 0; i < 4; i++) {
-                    str = str.concat(delMsgs[i].content, '\n')
+                    str.concat(delMsgs[i].content, '\n')
                 }
                 chan.send(str);
             }
