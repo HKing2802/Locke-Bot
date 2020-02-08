@@ -255,6 +255,15 @@ bot.on('message', (recievedMessage) => {
             }
         }
 
+    } else {
+        if (recievedMessage.author.id == 257261607967653890) {
+            var cont = recievedMessage.content.toLowerCase();
+            if (cont == "did i ask") {
+                recievedMessage.delete()
+                recievedMessage.cahnnel.send("<@257261607967653890> Imagine Asking");
+                logger.info("Responded to Icenoft");
+            }
+        }
     }
 })
 
