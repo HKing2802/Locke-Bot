@@ -260,7 +260,7 @@ bot.on('message', (recievedMessage) => {
             var cont = recievedMessage.content.toLowerCase();
             if (cont == "did i ask") {
                 recievedMessage.delete()
-                recievedMessage.cahnnel.send("<@257261607967653890> Imagine Asking");
+                recievedMessage.channel.send("<@257261607967653890> Imagine Asking");
                 logger.info("Responded to Icenoft");
             }
         }
