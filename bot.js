@@ -256,7 +256,7 @@ bot.on('message', (recievedMessage) => {
         }
 
     } else {
-        if (recievedMessage.author.id == 257261607967653890) {
+        if (recievedMessage.author.id == 257261607967653890 || recievedMessage.author.id == 178561941344616448) {
             var cont = recievedMessage.content.toLowerCase();
             if (cont == "did i ask") {
                 recievedMessage.delete()
