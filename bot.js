@@ -235,7 +235,7 @@ function process(recievedMessage) {
 
                     var defaultClient = cloudMersiveApi.ApiClient.instance;
                     var Apikey = defaultClient.authentications['Apikey'];
-                    Apikey.apiKey = auth.cloudmersive_token;
+                    Apikey.apiKey = process.env.cloudmersive_token;
 
                     var apiInstance = new cloudMersiveApi.ScanApi();
                     var input = new cloudMersiveApi.WebsiteScanRequest();
