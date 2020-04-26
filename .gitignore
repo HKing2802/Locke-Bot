@@ -3,4 +3,3 @@
 /node_modules/**
 /node_modules/
 auth_act.json
-.gitignore
