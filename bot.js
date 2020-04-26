@@ -220,49 +220,51 @@ function process(recievedMessage) {
             break;
 
         case 'malscan':
-            msgId = args[0];
-            if (args.length != 1 || isNaN(msgId)) {
-                chan.send("You must pass a single message id as an argument");
-                return
-            }
-
-            chan.fetchMessage(msgId).then(message => {
-                var attachments = message.attachments;
-                if (attachments.size < 1) {
-                    chan.send("The message contains no attached files");
-                } else {
-
-                    var url = attachments.first().url;
-
-                    var defaultClient = cloudMersiveApi.ApiClient.instance;
-                    var Apikey = defaultClient.authentications['Apikey'];
-                    //Apikey.apiKey = s3.cloudmersive_token;
-                    Apikey.apiKey = auth.cloudmersive_token;
-
-                    var apiInstance = new cloudMersiveApi.ScanApi();
-                    var input = new cloudMersiveApi.WebsiteScanRequest();
-                    input.Url = url;
-
-                    apiInstance.scanWebsite(input, (error, data, response) => {
-                        if (error) {
-                            console.error(error);
-                        } else {
-
-                            var viruses = data.FoundViruses;
-
-                            var result = new Discord.RichEmbed()
-                                .setTitle("Scan resuts")
-                                .addField("Safe file", data.CleanResult);
-
-                            for (var i = 0; viruses && i < viruses; i++) {
-                                result.addField(viruses[i].FileName, viruses[i].VirusName);
-                            }
-
-                            chan.send(result);
-                        }
-                    });
+            if (getPerm(recievedMessage.member, true)) {
+                msgId = args[0];
+                if (args.length != 1 || isNaN(msgId)) {
+                    chan.send("You must pass a single message id as an argument");
+                    return
                 }
-            });
+
+                chan.fetchMessage(msgId).then(message => {
+                    var attachments = message.attachments;
+                    if (attachments.size < 1) {
+                        chan.send("The message contains no attached files");
+                    } else {
+
+                        var url = attachments.first().url;
+
+                        var defaultClient = cloudMersiveApi.ApiClient.instance;
+                        var Apikey = defaultClient.authentications['Apikey'];
+                        //Apikey.apiKey = s3.cloudmersive_token;
+                        Apikey.apiKey = auth.cloudmersive_token;
+
+                        var apiInstance = new cloudMersiveApi.ScanApi();
+                        var input = new cloudMersiveApi.WebsiteScanRequest();
+                        input.Url = url;
+
+                        apiInstance.scanWebsite(input, (error, data, response) => {
+                            if (error) {
+                                console.error(error);
+                            } else {
+
+                                var viruses = data.FoundViruses;
+
+                                var result = new Discord.RichEmbed()
+                                    .setTitle("Scan resuts")
+                                    .addField("Safe file", data.CleanResult);
+
+                                for (var i = 0; viruses && i < viruses; i++) {
+                                    result.addField(viruses[i].FileName, viruses[i].VirusName);
+                                }
+
+                                chan.send(result);
+                            }
+                        });
+                    }
+                });
+            }
     }
 }
 
