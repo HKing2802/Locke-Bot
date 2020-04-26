@@ -1,6 +1,7 @@
 var Discord = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
+var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
 var active = true;
 var logChan;
@@ -13,8 +14,8 @@ logger.add(new logger.transports.Console, {
 });
 logger.level = 'debug';
 
-//var token = process.env.auth_token;
-var token = auth.token;
+var token = process.env.auth_token;
+//var token = auth.token;
 //logger.info(token);
 
 var bot = new Discord.Client();
@@ -52,7 +53,8 @@ function help(chan) {
         .addField("mute", "Mutes a user, must be Mod/Admin")
         .addField("unmute", "Unmutes a user, must be a Mod/Admin")
         .addField("snipe", "gets the user's deleted messages, must be a Mod/Admin")
-        .addField(".Help", "Displays this Message");
+        .addField(".Help", "Displays this Message")
+        .addField(".malscan <message-id>", "Runs a malware scan on the files attatched to a message");
 
     chan.send(embed);
 }
@@ -215,6 +217,50 @@ function process(recievedMessage) {
                 chan.send(str);
             }
             break;
+
+        case 'malscan':
+            msgId = args[0];
+            if (args.length != 1 || isNaN(msgId)) {
+                chan.send("You must pass a single message id as an argument");
+                return
+            }
+
+            chan.fetchMessage(msgId).then(message => {
+                var attachments = message.attachments;
+                if (attachments.size < 1) {
+                    chan.send("The message contains no attached files");
+                } else {
+
+                    var url = attachments.first().url;
+
+                    var defaultClient = cloudMersiveApi.ApiClient.instance;
+                    var Apikey = defaultClient.authentications['Apikey'];
+                    Apikey.apiKey = auth.cloudmersive_token;
+
+                    var apiInstance = new cloudMersiveApi.ScanApi();
+                    var input = new cloudMersiveApi.WebsiteScanRequest();
+                    input.Url = url;
+
+                    apiInstance.scanWebsite(input, (error, data, response) => {
+                        if (error) {
+                            console.error(error);
+                        } else {
+
+                            var viruses = data.FoundViruses;
+
+                            var result = new Discord.RichEmbed()
+                                .setTitle("Scan resuts")
+                                .addField("Safe file", data.CleanResult);
+
+                            for (var i = 0; viruses && i < viruses; i++) {
+                                result.addField(viruses[i].FileName, viruses[i].VirusName);
+                            }
+
+                            chan.send(result);
+                        }
+                    });
+                }
+            });
     }
 }
 
