@@ -1,6 +1,6 @@
 var Discord = require('discord.js');
 var logger = require('winston');
-//var auth = require('./auth.json');
+var auth = require('./auth.json');
 var aws = require('aws-sdk');
 var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
@@ -15,8 +15,8 @@ logger.add(new logger.transports.Console, {
 });
 logger.level = 'debug';
 
-var token = process.env.auth_token;
-//var token = auth.token;
+//var token = process.env.auth_token;
+var token = auth.token;
 //logger.info(token);
 
 var bot = new Discord.Client();
@@ -236,7 +236,8 @@ function process(recievedMessage) {
 
                     var defaultClient = cloudMersiveApi.ApiClient.instance;
                     var Apikey = defaultClient.authentications['Apikey'];
-                    Apikey.apiKey = process.env.cloudmersive_token;
+                    //Apikey.apiKey = process.env.cloudmersive_token;
+                    Apikey.apiKey = auth.cloudmersive_token;
 
                     var apiInstance = new cloudMersiveApi.ScanApi();
                     var input = new cloudMersiveApi.WebsiteScanRequest();
