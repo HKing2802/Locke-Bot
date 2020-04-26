@@ -1,20 +1,21 @@
 {
-  "name": "locke-bot",
-  "version": "0.0.1",
-  "description": "Special bot for Locke Server",
-  "main": "bot.js",
-  "engines": {
-    "node": "12.7.0",
-    "npm": "6.10.0"
-  },
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node bot.js"
-  },
-  "author": "HKing",
-  "dependencies": {
-    "discord.js": "^11.5.1",
-    "dynobot-framework": "^1.1.4",
-    "winston": "^3.2.1"
-  }
+    "name": "locke-bot",
+    "version": "0.0.1",
+    "description": "Special bot for Locke Server",
+    "main": "bot.js",
+    "engines": {
+        "node": "12.7.0",
+        "npm": "6.10.0"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node bot.js"
+    },
+    "author": "HKing",
+    "dependencies": {
+        "discord.js": "^11.5.1",
+        "dynobot-framework": "^1.1.4",
+        "winston": "^3.2.1",
+        "cloudmersive-virus-api-client": "^1.1.3"
+    }
 }
