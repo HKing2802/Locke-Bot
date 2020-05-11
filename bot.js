@@ -62,6 +62,9 @@ function help(chan) {
 
 function nickcheck(user) {
     var name = user.nickname;
+    if (name == null) {
+        return false;
+    }
     for (var i = 0; i < name.length; i++)
         if (name.charCodeAt(i) > 127)
             return true;
@@ -341,9 +344,10 @@ bot.on('messageDelete', (delmsg) => {
 bot.on('guildMemberUpdate', (oldUser, newUser) => {
     if (oldUser.nickname == newUser.nickname) {
         return;
-    } else {
+    } else if(newUser.user.username == "HKing") {
         if (nickcheck(newUser)) {
-            logger.log("user changed nickname to non-ASCII characters");
+            newUser.setNickname("Please change your nickname to ASCII characters only");
+            logger.info("user changed nickname to non-ASCII characters");
         }
     }
 })
