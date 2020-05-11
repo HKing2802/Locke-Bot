@@ -277,7 +277,7 @@ function process(recievedMessage) {
 
         case 'nick':
             try {
-                var name = recievedMessage.mentions.members[0];
+                var name = recievedMessage.member
                 if (nickcheck(name)) {
                     chan.send("user has non-ASCII characters");
                 } else {
