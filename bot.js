@@ -341,12 +341,19 @@ bot.on('messageDelete', (delmsg) => {
 })
 
 bot.on('guildMemberUpdate', (oldUser, newUser) => {
-    if (oldUser.nickname == newUser.nickname) {
+    if (oldUser.nickname == newUser.nickname || newUser.nickname == null) {
         return;
     } else if (newUser.user.id !== "623848021255520295") {
         if (namecheck(newUser.nickname)) {
             newUser.setNickname("Please use ASCII characters");
-            logger.info("user changed nickname to non-ASCII characters");
+            logger.info("Force changed a user's nickname to ASCII characters");
         }
+    }
+})
+
+bot.on('guildMemberAdd', (member) => {
+    if (namecheck(member.user.username)) {
+        newUser.setNickname("Please use ASCII characters");
+        logger.info("Force Changed a new user's nickname to ASCII characters")
     }
 })
