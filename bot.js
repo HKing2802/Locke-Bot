@@ -268,12 +268,13 @@ function process(recievedMessage) {
                                 }
 
                                 chan.send(result);
-                                break;
                             }
                         });
                     }
                 });
             }
+            break;
+
         case 'nick':
             try {
                 var name = recievedMessage.mentions.members[0];
