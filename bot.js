@@ -1,6 +1,7 @@
 var Discord = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
+var package = require('./package.json');
 var aws = require('aws-sdk');
 var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
@@ -50,6 +51,7 @@ function getPerm(member, boolHelp) {
 function help(chan) {
     const embed = new Discord.RichEmbed()
         .setTitle("Help Menu")
+        .setFooter("v" + package.version + "  --  Developed by HKing#9193")
         .addField("ping", "Pong!")
         .addField("mute", "Mutes a user, must be Mod/Admin")
         .addField("unmute", "Unmutes a user, must be a Mod/Admin")
