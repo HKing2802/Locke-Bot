@@ -346,7 +346,7 @@ bot.on('guildMemberUpdate', (oldUser, newUser) => {
         return;
     } else if(newUser.user.username == "HKing") {
         if (nickcheck(newUser)) {
-            newUser.setNickname("Please change your nickname to ASCII characters only");
+            newUser.setNickname("Please use ASCII characters");
             logger.info("user changed nickname to non-ASCII characters");
         }
     }
