@@ -344,11 +344,10 @@ bot.on('messageDelete', (delmsg) => {
 bot.on('guildMemberUpdate', (oldUser, newUser) => {
     if (oldUser.nickname == newUser.nickname) {
         return;
-    } else if(newUser.user.username == "HKing") {
+    } else {
         if (nickcheck(newUser)) {
             newUser.setNickname("Please use ASCII characters");
             logger.info("user changed nickname to non-ASCII characters");
         }
     }
 })
-//test
