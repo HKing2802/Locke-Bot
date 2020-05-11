@@ -354,6 +354,10 @@ bot.on('guildMemberUpdate', (oldUser, newUser) => {
 })
 
 bot.on('guildMemberAdd', (member) => {
+    if (member.user.username == "username123") {
+        member.ban({ reason: "Shared Ban List" });
+        logger.info("Banned username123");
+    }
     if (namecheck(member.user.username)) {
         newUser.setNickname("Please use ASCII characters");
         logger.info("Force Changed a new user's nickname to ASCII characters")
