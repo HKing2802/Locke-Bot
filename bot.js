@@ -60,6 +60,14 @@ function help(chan) {
     chan.send(embed);
 }
 
+function nickcheck(user) {
+    var name = user.nickname;
+    for (var i = 0; i < name.length; i++)
+        if (name.charCodeAt(i) > 127)
+            return true;
+    return false;
+}
+
 function process(recievedMessage) {
     logger.info(recievedMessage.content.substring(1));
     var cmdfull = recievedMessage.content.substring(1).toLowerCase();
@@ -260,10 +268,22 @@ function process(recievedMessage) {
                                 }
 
                                 chan.send(result);
+                                break;
                             }
                         });
                     }
                 });
+            }
+        case 'nick':
+            try {
+                var name = recievedMessage.mentions.members[0];
+                if (nickcheck(name)) {
+                    chan.send("user has non-ASCII characters");
+                } else {
+                    chan.send("user has no non-ASCII characters")
+                }
+            } catch (e) {
+                logger.info("Error with nick command: " + e);
             }
     }
 }
@@ -328,3 +348,4 @@ bot.on('messageDelete', (delmsg) => {
         }
     }
 })
+
