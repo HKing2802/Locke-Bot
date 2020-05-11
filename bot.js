@@ -274,18 +274,6 @@ function process(recievedMessage) {
                 });
             }
             break;
-
-        case 'nick':
-            try {
-                var name = recievedMessage.member
-                if (nickcheck(name)) {
-                    chan.send("user has non-ASCII characters");
-                } else {
-                    chan.send("user has no non-ASCII characters")
-                }
-            } catch (e) {
-                logger.info("Error with nick command: " + e);
-            }
     }
 }
 
@@ -346,6 +334,16 @@ bot.on('messageDelete', (delmsg) => {
         logger.info("Deleted Message Logged");
         if (delMsgs.length > 50) {
             delMsgs.pop();
+        }
+    }
+})
+
+bot.on('guildMemberUpdate', (oldUser, newUser) => {
+    if (oldUser.nickname == newUser.nickname) {
+        return;
+    } else {
+        if (nickcheck(newUser)) {
+            logger.log("user changed nickname to non-ASCII characters");
         }
     }
 })
