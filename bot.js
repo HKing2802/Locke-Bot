@@ -324,7 +324,6 @@ bot.on('message', (recievedMessage) => {
             if (cont == "did i ask") {
                 recievedMessage.delete()
                 recievedMessage.channel.send("<@257261607967653890> Imagine Asking");
-                logger.info("Responded to Icenoft");
             }
         }
     }
@@ -355,11 +354,11 @@ bot.on('guildMemberUpdate', (oldUser, newUser) => {
 
 bot.on('guildMemberAdd', (member) => {
     if (member.user.username == "username123") {
-        member.ban({ reason: "Shared Ban List" });
+        member.ban({ reason: "Shared Ban List - username123" });
         logger.info("Banned username123");
     }
     if (namecheck(member.user.username)) {
-        newUser.setNickname("Please use ASCII characters");
+        member.setNickname("Please use ASCII characters");
         logger.info("Force Changed a new user's nickname to ASCII characters")
     }
 })
