@@ -353,7 +353,7 @@ bot.on('guildMemberUpdate', (oldUser, newUser) => {
 })
 
 bot.on('guildMemberAdd', (member) => {
-    if (member.user.username == "username123") {
+    if (member.user.username == "username123" || member.user.username == "_username1.2.3_") {
         member.ban({ reason: "Shared Ban List - username123" });
         logger.info("Banned username123");
     }
