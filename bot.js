@@ -344,7 +344,7 @@ bot.on('messageDelete', (delmsg) => {
 bot.on('guildMemberUpdate', (oldUser, newUser) => {
     if (oldUser.nickname == newUser.nickname || newUser.nickname == null) {
         return;
-    } else if (newUser.user.id !== "623848021255520295") {
+    } else if (newUser.user.id !== "623848021255520295" || newUser.user.id !== "285475344817848320") {
         if (namecheck(newUser.nickname)) {
             newUser.setNickname("Please use ASCII characters");
             logger.info("Force changed a user's nickname to ASCII characters");
