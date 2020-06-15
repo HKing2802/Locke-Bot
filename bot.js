@@ -39,9 +39,9 @@ function getPerm(member, boolHelp) {
     var roles = member.roles;
     var ret = false;
     roles.forEach(role => {
-        if (role.name == "admin" || role.name == "dadmin" || role.name == "moderator") {
+        if (role.id == 560853657608781841 || role.id == 625898632830517249 || role.id == 560853468953313299) { //admin, dadmin, and moderator respectively
             ret = true;
-        } else if (boolHelp && role.name == "Helper") {
+        } else if (boolHelp && role.id == 560853327894806568) {
             ret = true;
         }
     })
