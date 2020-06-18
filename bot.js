@@ -5,7 +5,7 @@ var package = require('./package.json');
 var aws = require('aws-sdk');
 var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
-var active = true;
+var active = false;
 var logChan;
 var delMsgs = [];
 
@@ -36,16 +36,13 @@ function chanLog(message) {
 }
 
 function getPerm(member, boolHelp) {
-    var roles = member.roles;
-    var ret = false;
-    roles.forEach(role => {
-        if (role.id == 560853657608781841 || role.id == 625898632830517249 || role.id == 560853468953313299) { //admin, dadmin, and moderator respectively
-            ret = true;
-        } else if (boolHelp && role.id == 560853327894806568) {
-            ret = true;
-        }
-    })
-    return ret;
+    if (member.roles.cache.has("560853657608781841") || member.roles.cache.has("625898632830517249") || member.roles.cache.has("560853468953313299")) {
+        return true;
+    } else if (member.roles.cache.has("560853327894806568") && bolHelp) {
+        return true;
+    } else {
+        return false;
+    }
 }
 
 function help(chan) {
@@ -137,8 +134,8 @@ function process(recievedMessage) {
                         chan.send("You can't mute a Moderator/Admin!");
                         logger.info("Rejected - Target Mod/Admin");
                     } else {
-                        memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Muted'));
-                        memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Human'));
+                        memb.roles.add(recievedMessage.guild.roles.cache.get("562452717445054474"));
+                        memb.roles.remove(recievedMessage.guild.roles.cache.get("608319663780265989"));
                         chan.send("User has been muted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + recievedMessage.author.username + ".");
                         logger.info(memb.user.username + " muted");
@@ -166,8 +163,8 @@ function process(recievedMessage) {
                         chan.send("You can't unmute a Moderator/Admin!");
                         logger.info("Rejected - Target Mod/Admin");
                     } else {
-                        memb.addRole(recievedMessage.guild.roles.find(r => r.name === 'Human'));
-                        memb.removeRole(recievedMessage.guild.roles.find(r => r.name == 'Muted'));
+                        memb.roles.add(recievedMessage.guild.roles.cache.get("562452717445054474"));
+                        memb.roles.remove(recievedMessage.guild.roles.cache.get("608319663780265989"));
                         chan.send("User has been unmuted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been unmuted by " + recievedMessage.author.username + ".");
                         logger.info(memb.user.username + " unmuted");
