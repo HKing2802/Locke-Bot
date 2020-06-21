@@ -5,7 +5,7 @@ var package = require('./package.json');
 var aws = require('aws-sdk');
 var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
-var active = false;
+var active = true;
 var logChan;
 var delMsgs = [];
 
