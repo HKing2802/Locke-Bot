@@ -51,11 +51,11 @@ function help(chan) {
         .setTitle("Help Menu")
         .setDescription("Some Helpful Commands")
         .addFields(
-            { name: 'Ping', value: 'Pong!' }
-            { name: 'mute', value: 'Mutes a user, must ba a Mod/Admin' }
-            { name: 'unmute', value: 'Unmutes a user, must be a Mod/Admin' }
-            { name: 'snipe', value: 'gets the user\'s deleted messages, must be a Mod/Admin' }
-            { name: 'Help', value: 'Displays this Message' }
+            { name: 'Ping', value: 'Pong!' },
+            { name: 'mute', value: 'Mutes a user, must ba a Mod/Admin' },
+            { name: 'unmute', value: 'Unmutes a user, must be a Mod/Admin' },
+            { name: 'snipe', value: 'gets the user\'s deleted messages, must be a Mod/Admin' },
+            { name: 'Help', value: 'Displays this Message' },
             { name: 'malscan <message-id>', value: 'Runs a malware scan on the files attatched to a message' })
         .setFooter("v", package.version, " -- Developed by HKing#9193");
 
