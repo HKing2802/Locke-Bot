@@ -46,15 +46,19 @@ function getPerm(member, boolHelp) {
 }
 
 function help(chan) {
-    const embed = new Discord.RichEmbed()
+    const embed = new Discord.MessageEmbed()
+        .setAuthor("LockeBot")
         .setTitle("Help Menu")
-        .setFooter("v" + package.version + "  --  Developed by HKing#9193")
-        .addField("ping", "Pong!")
-        .addField("mute", "Mutes a user, must be Mod/Admin")
-        .addField("unmute", "Unmutes a user, must be a Mod/Admin")
-        .addField("snipe", "gets the user's deleted messages, must be a Mod/Admin")
-        .addField(".Help", "Displays this Message")
-        .addField(".malscan <message-id>", "Runs a malware scan on the files attatched to a message");
+        .setDescription("Some Helpful Commands")
+        .addFields(
+            { name: 'Ping', value: 'Pong!' }
+            { name: 'mute', value: 'Mutes a user, must ba a Mod/Admin' }
+            { name: 'unmute', value: 'Unmutes a user, must be a Mod/Admin' }
+            { name: 'snipe', value: 'gets the user\'s deleted messages, must be a Mod/Admin' }
+            { name: 'Help', value: 'Displays this Message' }
+            { name: 'malscan <message-id>', value: 'Runs a malware scan on the files attatched to a message' }
+        )
+        .setFooter("v", package.version, " -- Developed by HKing#9193");
 
     chan.send(embed);
 }
@@ -217,17 +221,35 @@ function process(recievedMessage) {
                 logger.info("Rejected - Author Perm");
             }
             break;
-        case 'dmpdel':
-            if (recievedMessage.author.id == "324302699460034561") {
-                var str = "";
-                for (var i = 0; i < delMsgs.length; i++) {
-                    str = str.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
+        case 'verify':
+            if (getPerm(recievedMessage.member, true)) {
+                if (recievedMessage.mention_everyone) {
+                    chan.send("I can't verify everyone");
+                    logger.info("Rejected - Everyone tag");
+                } else if (recievedMessage.mentions.members.first() == undefined) {
+                    chan.send("No member specified");
+                    logger.info("Rejected - No Mention");
+                } else {
+                    var targ = recievedMessage.mentions.members.first();
+                    if (targ.roles.cache.has("608319663780265989")) {
+                        chan.send("Member already Verified!");
+                        logger.info("Rejected - Already Verified");
+                    } else {
+                        targ.roles.add(recievedMessage.guild.roles.cache.get("608319663780265989"));
+                        chan.send("Member Verified!");
+                    }
                 }
-                str = str.concat("--End--");
-                chan.send(str);
+            } else {
+                chan.send("You don't have permission to verify someone!");
+                logger.info("Rejected - Author Perm");
             }
             break;
+        case 'kick':
 
+            break;
+        case 'ban':
+
+            break;
         case 'malscan':
             if (getPerm(recievedMessage.member, true)) {
                 msgId = args[0];
