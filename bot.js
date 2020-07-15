@@ -266,6 +266,9 @@ function process(recievedMessage) {
                     chan.send("Kicked " + recievedMessage.mentions.users.first().tag + " for " + reason);
                     logger.info("Kicked " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
                 }
+            } else {
+                chan.send("You don't have permission to kick someone!");
+                logger.info("Rejected - Author Perm");
             }
             break;
         case 'ban':
@@ -291,6 +294,9 @@ function process(recievedMessage) {
                     chan.send("Banned " + recievedMessage.mentions.users.first().tag + " for " + reason);
                     logger.info("Banned " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
                 }
+            } else {
+                chan.send("You don't have permission to ban someone!");
+                logger.info("Rejected - Author Perm");
             }
             break;
         case 'malscan':
