@@ -244,10 +244,54 @@ function process(recievedMessage) {
             }
             break;
         case 'kick':
-            
+            if (getPerm(recievedMessage.member, false)) {
+                if (recievedMessage.mention_everyone) {
+                    chan.send("I can't Kick everyone");
+                    logger.info("Rejected - Everyone tag");
+                } else if (recievedMessage.mentions.members.first() == undefined) {
+                    chan.send("No member specified");
+                    logger.info("Rejected - No Mention");
+                } else {
+                    var targ = recievedMessage.mentions.members.first();
+                    var reason = "";
+                    if (args.length > 1) {
+                        for (var i = 1; i < args.length; i++) {
+                            reason = reason + args[i] + " ";
+                        }
+                    }
+                    if (reason == undefined) {
+                        reason = "No reason given";
+                    }
+                    recievedMessage.mentions.members.first().kick(reason + " - Kicked by " + recievedMessage.author.tag);
+                    chan.send("Kicked " + recievedMessage.mentions.users.first().tag + " for " + reason);
+                    logger.info("Kicked " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
+                }
+            }
             break;
         case 'ban':
-
+            if (getPerm(recievedMessage.member, false)) {
+                if (recievedMessage.mention_everyone) {
+                    chan.send("I can't Ban everyone");
+                    logger.info("Rejected - Everyone tag");
+                } else if (recievedMessage.mentions.members.first() == undefined) {
+                    chan.send("No member specified");
+                    logger.info("Rejected - No Mention");
+                } else {
+                    var targ = recievedMessage.mentions.members.first();
+                    var reason = "";
+                    if (args.length > 1) {
+                        for (var i = 1; i < args.length; i++) {
+                            reason = reason + args[i] + " ";
+                        }
+                    }
+                    if (reason == undefined) {
+                        reason = "No reason given";
+                    }
+                    recievedMessage.mentions.members.first().ban({ reason: reason + " - Kicked by " + recievedMessage.author.tag });
+                    chan.send("Banned " + recievedMessage.mentions.users.first().tag + " for " + reason);
+                    logger.info("Banned " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
+                }
+            }
             break;
         case 'malscan':
             if (getPerm(recievedMessage.member, true)) {
@@ -362,7 +406,7 @@ bot.on('messageDelete', (delmsg) => {
 bot.on('guildMemberUpdate', (oldUser, newUser) => {
     if (oldUser.nickname == newUser.nickname || newUser.nickname == null) {
         return;
-    } else if (newUser.user.id !== "623848021255520295" || newUser.user.id !== "285475344817848320") {
+    } else if (newUser.id !== "623848021255520295" || newUser.id !== "285475344817848320") {
         if (namecheck(newUser.nickname)) {
             newUser.setNickname("Please use ASCII characters");
             logger.info("Force changed a user's nickname to ASCII characters");
