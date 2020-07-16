@@ -256,18 +256,30 @@ function process(recievedMessage) {
                     logger.info("Rejected - No Mention");
                 } else {
                     var targ = recievedMessage.mentions.members.first();
+                    if (targ.roles.cache.has("560853147367505943")) {
+                        chan.send("You can't kick a staff member!");
+                        logger.info("Rejected - Staff member");
+                        break;
+                    }
                     var reason = "";
                     if (args.length > 1) {
                         for (var i = 1; i < args.length; i++) {
                             reason = reason + args[i] + " ";
                         }
                     }
-                    if (reason == undefined) {
+                    if (reason == "") {
                         reason = "No reason given";
                     }
-                    recievedMessage.mentions.members.first().kick(reason + " - Kicked by " + recievedMessage.author.tag);
-                    chan.send("Kicked " + recievedMessage.mentions.users.first().tag + " for " + reason);
-                    logger.info("Kicked " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
+                    recievedMessage.mentions.members.first().kick(reason + " - Kicked by " + recievedMessage.author.tag)
+                        .then(() => {
+                            chan.send("Kicked " + recievedMessage.mentions.users.first().tag + " for " + reason);
+                            logger.info("Kicked " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
+                        })
+                        .catch(err => {
+                            chan.send("I was unable to kick the member");
+                            logger.info(err);
+                        });
+                    
                 }
             } else {
                 chan.send("You don't have permission to kick someone!");
@@ -284,6 +296,11 @@ function process(recievedMessage) {
                     logger.info("Rejected - No Mention");
                 } else {
                     var targ = recievedMessage.mentions.members.first();
+                    if (targ.roles.cache.has("560853147367505943")) {
+                        chan.send("You can't ban a staff member!");
+                        logger.info("Rejected - Staff member");
+                        break;
+                    }
                     var reason = "";
                     if (args.length > 1) {
                         for (var i = 1; i < args.length; i++) {
@@ -293,9 +310,17 @@ function process(recievedMessage) {
                     if (reason == undefined) {
                         reason = "No reason given";
                     }
-                    recievedMessage.mentions.members.first().ban({ reason: reason + " - Kicked by " + recievedMessage.author.tag });
-                    chan.send("Banned " + recievedMessage.mentions.users.first().tag + " for " + reason);
-                    logger.info("Banned " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
+
+                    recievedMessage.mentions.members.first().ban({ reason: reason + " - Kicked by " + recievedMessage.author.tag })
+                        .then(() => {
+                            chan.send("Banned " + recievedMessage.mentions.users.first().tag + " for " + reason);
+                            logger.info("Banned " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
+                        })
+                        .catch(err => {
+                            chan.send("I was unable to ban the member");
+                            logger.info(err);
+                    });
+                    
                 }
             } else {
                 chan.send("You don't have permission to ban someone!");
@@ -351,27 +376,6 @@ function process(recievedMessage) {
             break;
     }
 }
-
-//to-do
-/*
- * More Channel Logging
- * Hardcode Chan Log
- * add channel to snipe cmd
- * out snipe and dmpDel into one message
- * add single message only to snipe cmd
- * add purge DelMsgs array cmd
- * 
- * Personal (debug) Help Msg.
- * dumpLogs cmd -> dumps last 10-ish logs to channel
- * -> logging array, similar to delMsgs array setup
- * 
- * ban
- * kick
- * softban
- * purge(?)
- * 
- * update VS
- */
 
 bot.on('message', (recievedMessage) => {
     if (recievedMessage.author == bot.user) {
