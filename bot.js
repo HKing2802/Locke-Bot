@@ -38,7 +38,7 @@ function chanLog(message) {
 function getPerm(member, boolHelp) {
     if (member.roles.cache.has("560853657608781841") || member.roles.cache.has("625898632830517249") || member.roles.cache.has("560853468953313299")) {
         return true;
-    } else if (member.roles.cache.has("560853327894806568") && bolHelp) {
+    } else if (member.roles.cache.has("560853327894806568") && boolHelp) {
         return true;
     } else {
         return false;
@@ -169,8 +169,8 @@ function process(recievedMessage) {
                         chan.send("You can't unmute a Moderator/Admin!");
                         logger.info("Rejected - Target Mod/Admin");
                     } else {
-                        memb.roles.add(recievedMessage.guild.roles.cache.get("562452717445054474"));
-                        memb.roles.remove(recievedMessage.guild.roles.cache.get("608319663780265989"));
+                        memb.roles.add(recievedMessage.guild.roles.cache.get("608319663780265989"));
+                        memb.roles.remove(recievedMessage.guild.roles.cache.get("562452717445054474"));
                         chan.send("User has been unmuted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been unmuted by " + recievedMessage.author.username + ".");
                         logger.info(memb.user.username + " unmuted");
