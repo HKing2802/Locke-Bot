@@ -238,6 +238,8 @@ function process(recievedMessage) {
                                 chan.send(str);
                                 str = "`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content.substr + "`\n";
                                 sent = true;
+                            } else {
+                                str.concat(t);
                             }
                         }
                     }
