@@ -9,6 +9,9 @@ var active = true;
 var logChan;
 var delMsgs = [];
 
+//mute timer global var
+var muteusr;
+
 // Configure logger settings
 logger.remove(logger.transports.Console);
 logger.add(new logger.transports.Console, {
@@ -73,6 +76,11 @@ function namecheck(name) {
         if (name.charCodeAt(i) > 127)
             return true;
     return false;
+}
+
+function timeUnmute() {
+    var tuser = muteusr;
+
 }
 
 function process(recievedMessage) {
@@ -145,6 +153,14 @@ function process(recievedMessage) {
                         chan.send("User has been muted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + recievedMessage.author.username + ".");
                         logger.info(memb.user.username + " muted");
+                        if (args[0] !== undefined) {
+                            var time = parseInt(args[0], 10);
+                            if (time !== undefined) {
+                                muteusr = memb;
+                                setTimeout(timeUnmute, time * 60 * 1000);
+                                
+                            }
+                        }
                     }
                 }
             } else {
@@ -209,7 +225,13 @@ function process(recievedMessage) {
                     var str = "";
                     for (var i = 0; i < delMsgs.length; i++) {
                         if (delMsgs[i].author.id == memb.user.id) {
+                            var t = str.length;
                             str = str.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
+                            if (str.length >= 200) {
+                                chan.send(0, t);
+                                str = "";
+                                str = str.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
+                            }
                         }
                     }
                     if (str.length == 0) {
