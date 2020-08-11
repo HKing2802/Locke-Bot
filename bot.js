@@ -223,19 +223,25 @@ function process(recievedMessage) {
                     var memb = recievedMessage.mentions.members.first()
                     logger.info("Sniping " + memb.user.username);
                     var str = "";
+                    var sent = false;
                     for (var i = 0; i < delMsgs.length; i++) {
                         if (delMsgs[i].author.id == memb.user.id) {
-                            var t = str.length;
-                            logger.log(t);
-                            str = str.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
-                            if (str.length >= 200) {
-                                chan.send(0, t);
+                            var t = "";
+                            t = t.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
+                            if (t.length >= 200) {
+                                chan.send(str);
                                 str = "";
-                                str = str.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
+                                sent = true;
+                                chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content.substr(0, 100) + "`\n");
+                                chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content.substr(100) + "`\n");
+                            } else if (t.length + str.length >= 200) {
+                                chan.send(str);
+                                str = "`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content.substr + "`\n";
+                                sent = true;
                             }
                         }
                     }
-                    if (str.length == 0) {
+                    if (str.length == 0 && !sent) {
                         chan.send("There were no messages found!");
                     } else {
                         chan.send(str);
