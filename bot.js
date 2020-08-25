@@ -101,7 +101,6 @@ function process(recievedMessage) {
             } else {
                 chan.send("Pong!");
             }
-            logger.info("Returned");
             break;
         case 'ep':
         case 'endprocess':
