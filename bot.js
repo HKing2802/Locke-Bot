@@ -235,28 +235,21 @@ function process(recievedMessage) {
                     for (var i = 0; i < delMsgs.length; i++) {
                         if (delMsgs[i].author.id == memb.user.id) {
                             var t = "";
-                            t = t.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt.substr(0, 29), ": `", delMsgs[i].content, "`\n");
-                            logger.info(t.length);
-                            logger.info(str.length);
+                            t = t.concat("`", delMsgs[i].author.username, "` @ ", toString(delMsgs[i].createdAt).substr(0, 29), ": `", delMsgs[i].content, "`\n");
                             if (t.length >= 200) {
-                                logger.info("send");
                                 chan.send(str);
                                 str = "";
                                 sent = true;
-                                chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt.substr(0, 29) + ": `" + delMsgs[i].content.substr(0, 100) + "`\n");
-                                chan.send("`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt.substr(0, 29) + ": `" + delMsgs[i].content.substr(100) + "`\n");
+                                chan.send("`" + delMsgs[i].author.username + "` @ " + toString(delMsgs[i].createdAt).substr(0, 29) + ": `" + delMsgs[i].content.substr(0, 100) + "`\n");
+                                chan.send("`" + delMsgs[i].author.username + "` @ " + toString(delMsgs[i].createdAt).substr(0, 29) + ": `" + delMsgs[i].content.substr(100) + "`\n");
                             } else if (t.length + str.length >= 200) {
-                                logger.info("send 2: Electric Boogaloo");
                                 chan.send(str);
-                                str = "`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt.substr(0, 29) + ": `" + delMsgs[i].content + "`\n";
+                                str = "`" + delMsgs[i].author.username + "` @ " + toString(delMsgs[i].createdAt).substr(0, 29) + ": `" + delMsgs[i].content + "`\n";
                                 sent = true;
                             } else {
-                                logger.info("Concat");
                                 str = str.concat(t);
-                                logger.info(str);
                             }
                         }
-                        logger.info("-------------")
                     }
                     if (str.length == 0 && !sent) {
                         chan.send("There were no messages found!");
