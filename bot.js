@@ -86,17 +86,17 @@ function timeUnmute() {
 
 }
 
-function process(recievedMessage) {
-    logger.info(recievedMessage.content.substring(1));
-    var cmdfull = recievedMessage.content.substring(1).toLowerCase();
+function process(receivedMessage) {
+    logger.info(receivedMessage.content.substring(1));
+    var cmdfull = receivedMessage.content.substring(1).toLowerCase();
     var cmdparsed = cmdfull.split(" ");
     var cmd = cmdparsed[0];
     var args = cmdparsed.splice(1);
 
-    var chan = recievedMessage.channel;
+    var chan = receivedMessage.channel;
     switch (cmd) {
         case 'ping':
-            if (recievedMessage.author.username == "Icenoft") {
+            if (receivedMessage.author.username == "Icenoft") {
                 chan.send("Imagine .ping");
             } else {
                 chan.send("Pong!");
@@ -104,7 +104,7 @@ function process(recievedMessage) {
             break;
         case 'ep':
         case 'endprocess':
-            if (recievedMessage.author.id == "324302699460034561") {
+            if (receivedMessage.author.id == "324302699460034561") {
                 chan.send("Done");
                 bot.destroy()
             } else {
@@ -112,7 +112,7 @@ function process(recievedMessage) {
             }
             break;
         case 'shutdown':
-            if (recievedMessage.author.id == "324302699460034561") {
+            if (receivedMessage.author.id == "324302699460034561") {
                 chan.send("Stopping responses");
                 logger.info("Stopping");
                 active = false;
@@ -122,7 +122,7 @@ function process(recievedMessage) {
             }
             break;
         case 'activate':
-            if (recievedMessage.author.id == "324302699460034561") {
+            if (receivedMessage.author.id == "324302699460034561") {
                 chan.send("Restarting responses");
                 logger.info("Restarting");
                 active = true;
@@ -132,34 +132,34 @@ function process(recievedMessage) {
             }
             break;
         case 'mute':
-            var perm = getPerm(recievedMessage.member, true);
+            var perm = getPerm(receivedMessage.member, true);
             if (perm) {
-                if (recievedMessage.mention_everyone) {
+                if (receivedMessage.mention_everyone) {
                     chan.send("You can't mute everyone!");
                     logger.info("Rejected - Everyone tag");
                     break;
-                } else if (recievedMessage.mentions.members.first() == undefined) {
+                } else if (receivedMessage.mentions.members.first() == undefined) {
                     chan.send("You need to mention someone!");
                     logger.info("Rejected - no mention");
-                } else if (recievedMessage.mentions.members.first().user.id == "658702825689448466") {
+                } else if (receivedMessage.mentions.members.first().user.id == "658702825689448466") {
                     chan.send("I can't mute myself!");
                     logger.info("Rejected - Self Mention");
                 } else {
-                    var memb = recievedMessage.mentions.members.first()
+                    var memb = receivedMessage.mentions.members.first()
                     if (getPerm(memb, false)) {
                         chan.send("You can't mute a Moderator/Admin!");
                         logger.info("Rejected - Target Mod/Admin");
                     } else {
-                        memb.roles.add(recievedMessage.guild.roles.cache.get("562452717445054474"));
-                        memb.roles.remove(recievedMessage.guild.roles.cache.get("608319663780265989"));
+                        memb.roles.add(receivedMessage.guild.roles.cache.get("562452717445054474"));
+                        memb.roles.remove(receivedMessage.guild.roles.cache.get("608319663780265989"));
 
                         if (memb.roles.cache.has("561708861182967828")) {
-                            memb.roles.remove(recievedMessage.guild.roles.cache.get("561708861182967828"));
+                            memb.roles.remove(receivedMessage.guild.roles.cache.get("561708861182967828"));
                             muted.unshift(memb.id);
                         }
 
                         chan.send("User has been muted.");
-                        chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + recievedMessage.author.username + ".");
+                        chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + receivedMessage.author.username + ".");
                         logger.info(memb.user.username + " muted");
                         if (args[0] !== undefined) {
                             
@@ -173,26 +173,26 @@ function process(recievedMessage) {
             }
             break;
         case 'unmute':
-            if (getPerm(recievedMessage.member, true)) {
-                if (recievedMessage.mention_everyone) {
+            if (getPerm(receivedMessage.member, true)) {
+                if (receivedMessage.mention_everyone) {
                     chan.send("You can't unmute everyone!");
                     logger.info("Rejected - Everyone tag");
-                } else if (recievedMessage.mentions.members.first() == undefined) {
+                } else if (receivedMessage.mentions.members.first() == undefined) {
                     chan.send("You need to mention someone!");
                     logger.info("Rejected - no mention");
-                } else if (recievedMessage.mentions.members.first().user.id == "658702825689448466") {
+                } else if (receivedMessage.mentions.members.first().user.id == "658702825689448466") {
                     chan.send("I can't unmute myself!");
                     logger.info("Rejected - Self Mention");
                 } else {
-                    var memb = recievedMessage.mentions.members.first()
+                    var memb = receivedMessage.mentions.members.first()
                     if (getPerm(memb, false)) {
                         chan.send("You can't unmute a Moderator/Admin!");
                         logger.info("Rejected - Target Mod/Admin");
                     } else {
-                        memb.roles.add(recievedMessage.guild.roles.cache.get("608319663780265989"));
-                        memb.roles.remove(recievedMessage.guild.roles.cache.get("562452717445054474"));
+                        memb.roles.add(receivedMessage.guild.roles.cache.get("608319663780265989"));
+                        memb.roles.remove(receivedMessage.guild.roles.cache.get("562452717445054474"));
                         chan.send("User has been unmuted.");
-                        chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been unmuted by " + recievedMessage.author.username + ".");
+                        chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been unmuted by " + receivedMessage.author.username + ".");
                         logger.info(memb.user.username + " unmuted");
                     }
                 }
@@ -202,7 +202,7 @@ function process(recievedMessage) {
             }
             break;
         case 'setlog':
-            if (recievedMessage.author.id == "324302699460034561") {
+            if (receivedMessage.author.id == "324302699460034561") {
                 logChan = chan;
                 logger.info("Set Logging Channel");
                 chan.send("Setting Logging Channel");
@@ -216,18 +216,18 @@ function process(recievedMessage) {
             logger.info("Responded");
             break;
         case 'snipe':
-            if (getPerm(recievedMessage.member, true)) {
-                if (recievedMessage.mention_everyone) {
+            if (getPerm(receivedMessage.member, true)) {
+                if (receivedMessage.mention_everyone) {
                     chan.send("You can't snipe everyone!");
                     logger.info("Rejected - Everyone tag");
-                } else if (recievedMessage.mentions.members.first() == undefined) {
+                } else if (receivedMessage.mentions.members.first() == undefined) {
                     chan.send("You need to mention someone!");
                     logger.info("Rejected - no mention");
-                } else if (recievedMessage.mentions.members.first().user.id == "658702825689448466") {
+                } else if (receivedMessage.mentions.members.first().user.id == "658702825689448466") {
                     chan.send("I can't snipe myself!");
                     logger.info("Rejected - Self Mention");
                 } else {
-                    var memb = recievedMessage.mentions.members.first()
+                    var memb = receivedMessage.mentions.members.first()
                     logger.info("Sniping " + memb.user.username);
                     var str = "";
                     var sent = false;
@@ -262,20 +262,20 @@ function process(recievedMessage) {
             }
             break;
         case 'verify':
-            if (getPerm(recievedMessage.member, true)) {
-                if (recievedMessage.mention_everyone) {
+            if (getPerm(receivedMessage.member, true)) {
+                if (receivedMessage.mention_everyone) {
                     chan.send("I can't verify everyone");
                     logger.info("Rejected - Everyone tag");
-                } else if (recievedMessage.mentions.members.first() == undefined) {
+                } else if (receivedMessage.mentions.members.first() == undefined) {
                     chan.send("No member specified");
                     logger.info("Rejected - No Mention");
                 } else {
-                    var targ = recievedMessage.mentions.members.first();
+                    var targ = receivedMessage.mentions.members.first();
                     if (targ.roles.cache.has("608319663780265989")) {
                         chan.send("Member already Verified!");
                         logger.info("Rejected - Already Verified");
                     } else {
-                        targ.roles.add(recievedMessage.guild.roles.cache.get("608319663780265989"));
+                        targ.roles.add(receivedMessage.guild.roles.cache.get("608319663780265989"));
                         chan.send("Member Verified!");
                     }
                 }
@@ -285,15 +285,15 @@ function process(recievedMessage) {
             }
             break;
         case 'kick':
-            if (getPerm(recievedMessage.member, false)) {
-                if (recievedMessage.mention_everyone) {
+            if (getPerm(receivedMessage.member, false)) {
+                if (receivedMessage.mention_everyone) {
                     chan.send("I can't Kick everyone");
                     logger.info("Rejected - Everyone tag");
-                } else if (recievedMessage.mentions.members.first() == undefined) {
+                } else if (receivedMessage.mentions.members.first() == undefined) {
                     chan.send("No member specified");
                     logger.info("Rejected - No Mention");
                 } else {
-                    var targ = recievedMessage.mentions.members.first();
+                    var targ = receivedMessage.mentions.members.first();
                     if (targ.roles.cache.has("560853147367505943")) {
                         chan.send("You can't kick a staff member!");
                         logger.info("Rejected - Staff member");
@@ -308,10 +308,10 @@ function process(recievedMessage) {
                     if (reason == "") {
                         reason = "No reason given";
                     }
-                    recievedMessage.mentions.members.first().kick(reason + " - Kicked by " + recievedMessage.author.tag)
+                    receivedMessage.mentions.members.first().kick(reason + " - Kicked by " + receivedMessage.author.tag)
                         .then(() => {
-                            chan.send("Kicked " + recievedMessage.mentions.users.first().tag + " for " + reason);
-                            logger.info("Kicked " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
+                            chan.send("Kicked " + receivedMessage.mentions.users.first().tag + " for " + reason);
+                            logger.info("Kicked " + receivedMessage.mentions.users.first().tag + " by " + receivedMessage.author.tag);
                         })
                         .catch(err => {
                             chan.send("I was unable to kick the member");
@@ -325,15 +325,15 @@ function process(recievedMessage) {
             }
             break;
         case 'ban':
-            if (getPerm(recievedMessage.member, false)) {
-                if (recievedMessage.mention_everyone) {
+            if (getPerm(receivedMessage.member, false)) {
+                if (receivedMessage.mention_everyone) {
                     chan.send("I can't Ban everyone");
                     logger.info("Rejected - Everyone tag");
-                } else if (recievedMessage.mentions.members.first() == undefined) {
+                } else if (receivedMessage.mentions.members.first() == undefined) {
                     chan.send("No member specified");
                     logger.info("Rejected - No Mention");
                 } else {
-                    var targ = recievedMessage.mentions.members.first();
+                    var targ = receivedMessage.mentions.members.first();
                     if (targ.roles.cache.has("560853147367505943")) {
                         chan.send("You can't ban a staff member!");
                         logger.info("Rejected - Staff member");
@@ -349,10 +349,10 @@ function process(recievedMessage) {
                         reason = "No reason given";
                     }
 
-                    recievedMessage.mentions.members.first().ban({ reason: reason + " - Kicked by " + recievedMessage.author.tag })
+                    receivedMessage.mentions.members.first().ban({ reason: reason + " - Kicked by " + receivedMessage.author.tag })
                         .then(() => {
-                            chan.send("Banned " + recievedMessage.mentions.users.first().tag + " for " + reason);
-                            logger.info("Banned " + recievedMessage.mentions.users.first().tag + " by " + recievedMessage.author.tag);
+                            chan.send("Banned " + receivedMessage.mentions.users.first().tag + " for " + reason);
+                            logger.info("Banned " + receivedMessage.mentions.users.first().tag + " by " + receivedMessage.author.tag);
                         })
                         .catch(err => {
                             chan.send("I was unable to ban the member");
@@ -366,7 +366,7 @@ function process(recievedMessage) {
             }
             break;
         case 'malscan':
-            if (getPerm(recievedMessage.member, true)) {
+            if (getPerm(receivedMessage.member, true)) {
                 msgId = args[0];
                 if (args.length != 1 || isNaN(msgId)) {
                     chan.send("You must pass a single message id as an argument");
@@ -415,28 +415,28 @@ function process(recievedMessage) {
     }
 }
 
-bot.on('message', (recievedMessage) => {
-    if (recievedMessage.author == bot.user) {
+bot.on('message', (receivedMessage) => {
+    if (receivedMessage.author == bot.user) {
         return
         //prevent responding to its own message
     }
-    if (recievedMessage.content.substring(0, 1) == ".") {
-        if (active && recievedMessage.guild != null) {
-            process(recievedMessage);
+    if (receivedMessage.content.substring(0, 1) == ".") {
+        if (active && receivedMessage.guild != null) {
+            process(receivedMessage);
         } else {
-            if (recievedMessage.author.id == "324302699460034561") {
-                process(recievedMessage);
+            if (receivedMessage.author.id == "324302699460034561") {
+                process(receivedMessage);
             } else {
                 return
             }
         }
 
     } else {
-        if (recievedMessage.author.id == 257261607967653890 || recievedMessage.author.id == 178561941344616448) {
-            var cont = recievedMessage.content.toLowerCase();
+        if (receivedMessage.author.id == 257261607967653890 || receivedMessage.author.id == 178561941344616448) {
+            var cont = receivedMessage.content.toLowerCase();
             if (cont == "did i ask") {
-                recievedMessage.delete()
-                recievedMessage.channel.send("<@257261607967653890> Imagine Asking");
+                receivedMessage.delete()
+                receivedMessage.channel.send("<@257261607967653890> Imagine Asking");
             }
         }
     }
