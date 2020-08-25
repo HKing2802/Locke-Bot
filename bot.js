@@ -237,6 +237,7 @@ function process(recievedMessage) {
                             var t = "";
                             t = t.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
                             logger.info(t.length);
+                            logger.info(str.length);
                             if (t.length >= 200) {
                                 chan.send(str);
                                 str = "";
