@@ -12,6 +12,9 @@ var delMsgs = [];
 //mute timer global var
 var muteusr;
 
+//muted users stored in case they have member role
+var muted = [];
+
 // Configure logger settings
 logger.remove(logger.transports.Console);
 logger.add(new logger.transports.Console, {
@@ -150,16 +153,18 @@ function process(recievedMessage) {
                     } else {
                         memb.roles.add(recievedMessage.guild.roles.cache.get("562452717445054474"));
                         memb.roles.remove(recievedMessage.guild.roles.cache.get("608319663780265989"));
+
+                        if (memb.roles.cache.has("561708861182967828")) {
+                            memb.roles.remove(recievedMessage.guild.roles.cache.get("561708861182967828"));
+                            muted.unshift(memb.id);
+                        }
+
                         chan.send("User has been muted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + recievedMessage.author.username + ".");
                         logger.info(memb.user.username + " muted");
                         if (args[0] !== undefined) {
-                            var time = parseInt(args[0], 10);
-                            if (time !== undefined) {
-                                muteusr = memb;
-                                setTimeout(timeUnmute, time * 60 * 1000);
-                                
-                            }
+                            
+                            
                         }
                     }
                 }
@@ -202,6 +207,9 @@ function process(recievedMessage) {
                 logChan = chan;
                 logger.info("Set Logging Channel");
                 chan.send("Setting Logging Channel");
+            } else {
+                chan.send("You must be Admin to do that!");
+                logger.info("Rejected");
             }
             break;
         case 'help':
@@ -228,6 +236,7 @@ function process(recievedMessage) {
                         if (delMsgs[i].author.id == memb.user.id) {
                             var t = "";
                             t = t.concat("`", delMsgs[i].author.username, "` @ ", delMsgs[i].createdAt, ": `", delMsgs[i].content, "`\n");
+                            logger.info(t.length);
                             if (t.length >= 200) {
                                 chan.send(str);
                                 str = "";
