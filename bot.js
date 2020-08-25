@@ -421,7 +421,7 @@ bot.on('message', (recievedMessage) => {
         //prevent responding to its own message
     }
     if (recievedMessage.content.substring(0, 1) == ".") {
-        if (active) {
+        if (active && recievedMessage.guild != null) {
             process(recievedMessage);
         } else {
             if (recievedMessage.author.id == "324302699460034561") {
