@@ -248,7 +248,7 @@ function process(recievedMessage) {
                             } else if (t.length + str.length >= 200) {
                                 logger.info("send 2: Electric Boogaloo");
                                 chan.send(str);
-                                str = "`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content.substr + "`\n";
+                                str = "`" + delMsgs[i].author.username + "` @ " + delMsgs[i].createdAt + ": `" + delMsgs[i].content + "`\n";
                                 sent = true;
                             } else {
                                 logger.info("Concat");
