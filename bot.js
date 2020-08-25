@@ -252,7 +252,7 @@ function process(recievedMessage) {
                                 sent = true;
                             } else {
                                 logger.info("Concat");
-                                str.concat(t);
+                                str = str.concat(t);
                                 logger.info(str);
                             }
                         }
