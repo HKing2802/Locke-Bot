@@ -253,8 +253,10 @@ function process(recievedMessage) {
                             } else {
                                 logger.info("Concat");
                                 str.concat(t);
+                                logger.info(str);
                             }
                         }
+                        logger.info("-------------")
                     }
                     if (str.length == 0 && !sent) {
                         chan.send("There were no messages found!");
