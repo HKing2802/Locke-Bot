@@ -15,6 +15,10 @@ var muteusr;
 //muted users stored in case they have member role
 var muted = [];
 
+//event Queue used for timed events
+//setup: [str eventType, int time, [any extra_data]]
+var eventQueue = new Array(0);
+
 // Configure logger settings
 logger.remove(logger.transports.Console);
 logger.add(new logger.transports.Console, {
@@ -22,9 +26,7 @@ logger.add(new logger.transports.Console, {
 });
 logger.level = 'debug';
 
-//var token = s3.auth_token;
 var token = auth.token;
-//logger.info(token);
 
 var bot = new Discord.Client();
 bot.login(token);
@@ -81,10 +83,49 @@ function namecheck(name) {
     return false;
 }
 
-function timeUnmute() {
-    var tuser = muteusr;
+//---------------------------Event Iterator-----------------------------------\\
 
+function eviter() {
+    if (eventQueue.length == 0) {
+        return;
+    }
+    for (var i = 0; i < eventQueue.length; i++) {
+        if (eventQueue[i][1] == null) {
+            eventQueue.length = eventQueue.length - 1;
+            return;
+        }
+        eventQueue[i][1] = eventQueue[i][1] - 1;
+        if (eventQueue[i][1] == 0) {
+            switch (eventQueue[i][0]) {
+                case "mute":
+                    eventQueue[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("608319663780265989"));
+                    eventQueue[i][2].roles.remove(bot.guilds.cache.get("560847285874065408").roles.cache.get("562452717445054474"));
+                    logger.info("time unmuted " + eventQueue[i][2].user.username);
+                    if (muted.length != 0) {
+                        for (var i = 0; i < muted.length; i++) {
+                            if (muted[i] == memb.id) {
+                                eventQueue[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("561708861182967828"))
+                                logger.info("Reinstated member role");
+                            }
+                        }
+                    }
+                    break;
+            }
+            var sarray = eventQueue.splice(0, i);
+            var farray = eventQueue.splice(i + 1);
+            if (i == 0) {
+                eventQueue = farray;
+            } else {
+                sarray.push(farray);
+                eventQueue = sarray;
+            }
+        }
+    }
 }
+
+setInterval(eviter, 10000);
+
+//----------------------------------------------------------------------------\\
 
 function process(receivedMessage) {
     logger.info(receivedMessage.content.substring(1));
@@ -161,10 +202,24 @@ function process(receivedMessage) {
                         chan.send("User has been muted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + receivedMessage.author.username + ".");
                         logger.info(memb.user.username + " muted");
-                        //if (args[0] !== undefined) {
+                        if (args[1] != undefined) {
+                            var time = parseInt(args[1]);
+                            if (time == "NaN") {
+                                chan.send("Time is not a number!");
+                            } else if (time < 0) {
+                                chan.send("Invalid time, try again");
+                            } else if (time == 0) {
+                                chan.send("Cannot mute for 0 minutes!");
+                            } else {
+                                eventQueue.push(["mute", time, receivedMessage.mentions.members.first()]);
+                                if (time == 1) {
+                                    chan.send("Muted " + receivedMessage.mentions.users.first().username + " for " + time + " minute");
+                                } else {
+                                    chan.send("Muted " + receivedMessage.mentions.users.first().username + " for " + time + " minutes");
+                                }
+                            }
                             
-                            
-                        //}
+                        }
                     }
                 }
             } else {
