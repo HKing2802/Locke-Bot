@@ -104,6 +104,7 @@ function eviter() {
                     if (muted.length != 0) {
                         for (var i = 0; i < muted.length; i++) {
                             if (muted[i] == eventQueue[i][2].id) {
+                                muted[i] = null;
                                 eventQueue[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("561708861182967828"))
                                 logger.info("Reinstated member role");
                             }
@@ -125,7 +126,28 @@ function eviter() {
 
 setInterval(eviter, 10000);
 
-//----------------------------------------------------------------------------\\
+//--------------------Muted Members Garbage Collection------------------------\\
+
+function clearMuted() {
+    if (muted.length == 0) {
+        return;
+    }
+    for (var i = 0; i < muted.length; i++) {
+        if (muted[i] == null) {
+            var smarray = muted.splice(0, i);
+            var fmarray = muted.splice(i + 1);
+            if (i == 0) {
+                muted = fmarray;
+            } else {
+                smarray.push(fmarray);
+                muted = smarray;
+            }
+        }
+    }
+}
+
+setInterval(clearMuted, 600000);
+//-----------------------------------------------------------------------------\\
 
 function process(receivedMessage) {
     logger.info(receivedMessage.content.substring(1));
