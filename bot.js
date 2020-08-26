@@ -106,7 +106,7 @@ function process(receivedMessage) {
         case 'endprocess':
             if (receivedMessage.author.id == "324302699460034561") {
                 chan.send("Done");
-                bot.destroy()
+                bot.destroy();
             } else {
                 chan.send("You must be Admin to do that!");
             }
@@ -161,10 +161,10 @@ function process(receivedMessage) {
                         chan.send("User has been muted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + receivedMessage.author.username + ".");
                         logger.info(memb.user.username + " muted");
-                        if (args[0] !== undefined) {
+                        //if (args[0] !== undefined) {
                             
                             
-                        }
+                        //}
                     }
                 }
             } else {
@@ -191,6 +191,16 @@ function process(receivedMessage) {
                     } else {
                         memb.roles.add(receivedMessage.guild.roles.cache.get("608319663780265989"));
                         memb.roles.remove(receivedMessage.guild.roles.cache.get("562452717445054474"));
+
+                        if (muted.length != 0) {
+                            for (var i = 0; i < muted.length; i++) {
+                                if (muted[i] == memb.id) {
+                                    memb.roles.add(receivedMessage.guild.roles.cache.get("561708861182967828"));
+                                    logger.info("Reinstated member role");
+                                }
+                            }
+                        }
+
                         chan.send("User has been unmuted.");
                         chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been unmuted by " + receivedMessage.author.username + ".");
                         logger.info(memb.user.username + " unmuted");
