@@ -102,9 +102,9 @@ function eviter() {
                     eventQueue[i][2].roles.remove(bot.guilds.cache.get("560847285874065408").roles.cache.get("562452717445054474"));
                     logger.info("time unmuted " + eventQueue[i][2].user.username);
                     if (muted.length != 0) {
-                        for (var i = 0; i < muted.length; i++) {
-                            if (muted[i] == eventQueue[i][2].id) {
-                                muted[i] = null;
+                        for (var j = 0; j < muted.length; j++) {
+                            if (muted[j] == eventQueue[i][2].id) {
+                                muted[j] = null;
                                 eventQueue[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("561708861182967828"))
                                 logger.info("Reinstated member role");
                             }
@@ -230,7 +230,7 @@ function process(receivedMessage) {
                             } else if (time == 0) {
                                 chan.send("Cannot mute for 0 minutes!");
                             } else {
-                                eventQueue.push(["mute", time, receivedMessage.mentions.members.first()]);
+                                eventQueue.push(["mute", time + 1, receivedMessage.mentions.members.first()]);
                                 if (time == 1) {
                                     chan.send("Muted " + receivedMessage.mentions.users.first().username + " for " + time + " minute");
                                 } else {
