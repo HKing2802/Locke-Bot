@@ -1,6 +1,6 @@
 {
     "name": "locke-bot",
-    "version": "1.4.0",
+    "version": "1.4.1",
     "description": "Special bot for Locke Server",
     "main": "bot.js",
     "engines": {
