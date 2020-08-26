@@ -103,7 +103,7 @@ function eviter() {
                     logger.info("time unmuted " + eventQueue[i][2].user.username);
                     if (muted.length != 0) {
                         for (var i = 0; i < muted.length; i++) {
-                            if (muted[i] == memb.id) {
+                            if (muted[i] == eventQueue[i][2].id) {
                                 eventQueue[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("561708861182967828"))
                                 logger.info("Reinstated member role");
                             }
