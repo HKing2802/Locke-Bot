@@ -199,10 +199,7 @@ function process(receivedMessage) {
                             muted.unshift(memb.id);
                         }
 
-                        chan.send("User has been muted.");
-                        chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + receivedMessage.author.username + ".");
-                        logger.info(memb.user.username + " muted");
-                        if (args[1] != undefined) {
+                        if (args[1] != null) {
                             var time = parseInt(args[1]);
                             if (time == "NaN") {
                                 chan.send("Time is not a number!");
@@ -218,7 +215,11 @@ function process(receivedMessage) {
                                     chan.send("Muted " + receivedMessage.mentions.users.first().username + " for " + time + " minutes");
                                 }
                             }
-                            
+
+                        } else {
+                            chan.send("User has been muted.");
+                            chanLog("**" + memb.user.username + "#" + memb.user.discriminator + "** Has been muted by " + receivedMessage.author.username + ".");
+                            logger.info(memb.user.username + " muted");
                         }
                     }
                 }
