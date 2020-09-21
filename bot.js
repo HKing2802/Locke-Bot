@@ -15,9 +15,9 @@ var muteusr;
 //muted users stored in case they have member role
 var muted = [];
 
-//event Queue used for timed events
+//event List used for timed events
 //setup: [str eventType, int time, [any extra_data]]
-var eventQueue = new Array(0);
+var eventList = new Array(0);
 
 // Configure logger settings
 logger.remove(logger.transports.Console);
@@ -86,45 +86,45 @@ function namecheck(name) {
 //---------------------------Event Iterator-----------------------------------\\
 
 function eviter() {
-    if (eventQueue.length == 0) {
+    if (eventList.length == 0) {
         return;
     }
-    for (var i = 0; i < eventQueue.length; i++) {
-        if (eventQueue[i][1] == null) {
-            eventQueue.length = eventQueue.length - 1;
+    for (var i = 0; i < eventList.length; i++) {
+        if (eventList[i][1] == null) {
+            eventList.length = eventList.length - 1;
             return;
         }
-        eventQueue[i][1] = eventQueue[i][1] - 1;
-        if (eventQueue[i][1] == 0) {
-            switch (eventQueue[i][0]) {
+        eventList[i][1] = eventList[i][1] - 1;
+        if (eventList[i][1] == 0) {
+            switch (eventList[i][0]) {
                 case "mute":
-                    eventQueue[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("608319663780265989"));
-                    eventQueue[i][2].roles.remove(bot.guilds.cache.get("560847285874065408").roles.cache.get("562452717445054474"));
-                    logger.info("time unmuted " + eventQueue[i][2].user.username);
+                    eventList[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("608319663780265989"));
+                    eventList[i][2].roles.remove(bot.guilds.cache.get("560847285874065408").roles.cache.get("562452717445054474"));
+                    logger.info("time unmuted " + eventList[i][2].user.username);
                     if (muted.length != 0) {
                         for (var j = 0; j < muted.length; j++) {
-                            if (muted[j] == eventQueue[i][2].id) {
+                            if (muted[j] == eventList[i][2].id) {
                                 muted[j] = null;
-                                eventQueue[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("561708861182967828"))
+                                eventList[i][2].roles.add(bot.guilds.cache.get("560847285874065408").roles.cache.get("561708861182967828"))
                                 logger.info("Reinstated member role");
                             }
                         }
                     }
                     break;
             }
-            var sarray = eventQueue.splice(0, i);
-            var farray = eventQueue.splice(i + 1);
+            var sarray = eventList.splice(0, i);
+            var farray = eventList.splice(i + 1);
             if (i == 0) {
-                eventQueue = farray;
+                eventList = farray;
             } else {
                 sarray.push(farray);
-                eventQueue = sarray;
+                eventList = sarray;
             }
         }
     }
 }
 
-setInterval(eviter, 10000);
+setInterval(eviter, 1000);
 
 //--------------------Muted Members Garbage Collection------------------------\\
 
@@ -230,7 +230,7 @@ function process(receivedMessage) {
                             } else if (time == 0) {
                                 chan.send("Cannot mute for 0 minutes!");
                             } else {
-                                eventQueue.push(["mute", time + 1, receivedMessage.mentions.members.first()]);
+                                eventList.push(["mute", (time + 1) * 60, receivedMessage.mentions.members.first()]);
                                 if (time == 1) {
                                     chan.send("Muted " + receivedMessage.mentions.users.first().username + " for " + time + " minute");
                                 } else {
