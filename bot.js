@@ -450,7 +450,7 @@ function process(receivedMessage) {
                 logger.info("Rejected - Author Perm");
             }
             break;
-        case 'reactKae':
+        case 'reactkae':
             if (getPerm(receivedMessage.member, false)) {
                 if (kaeMessageReact) {
                     kaeMessageReact = false;
