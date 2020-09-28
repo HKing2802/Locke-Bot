@@ -16,7 +16,7 @@ methods.reactKae = function() {
 }
 
 methods.ping = function() {
-    if (receivedMessage.author.username == "Icenoft") {
+    if (bot.receivedMessage.author.username == "Icenoft") {
         bot.chan.send("Imagine .ping");
     } else {
         bot.chan.send("Pong!");
