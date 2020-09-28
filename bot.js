@@ -2,6 +2,7 @@ var Discord = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
 var package = require('./package.json');
+var command = require('./commands.js');
 //var aws = require('aws-sdk');
 //var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
@@ -156,11 +157,7 @@ function process(receivedMessage) {
     var chan = receivedMessage.channel;
     switch (cmd) {
         case 'ping':
-            if (receivedMessage.author.username == "Icenoft") {
-                chan.send("Imagine .ping");
-            } else {
-                chan.send("Pong!");
-            }
+            command.ping()
             break;
         case 'ep':
         case 'endprocess':
@@ -451,15 +448,8 @@ function process(receivedMessage) {
             }
             break;
         case 'reactkae':
-            if (getPerm(receivedMessage.member, false) || receivedMessage.author.id == "324302699460034561") {
-                if (kaeMessageReact) {
-                    kaeMessageReact = false;
-                    logger.info("Disabled Auto-react");
-                } else {
-                    kaeMessageReact = true;
-                    logger.info("Enabled Auto-react");
-                }
-            }
+            command.reactKae(receivedMessage);
+            break;
         //case 'malscan':
             //if (getPerm(receivedMessage.member, true)) {
             //    msgId = args[0];
