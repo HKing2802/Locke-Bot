@@ -157,7 +157,11 @@ function process(receivedMessage) {
     var chan = receivedMessage.channel;
     switch (cmd) {
         case 'ping':
-            command.ping()
+            if (receivedMessage.author.username == "Icenoft") {
+                chan.send("Imagine .ping");
+            } else {
+                chan.send("Pong!");
+            }
             break;
         case 'ep':
         case 'endprocess':
@@ -448,7 +452,15 @@ function process(receivedMessage) {
             }
             break;
         case 'reactkae':
-            command.reactKae(receivedMessage);
+            if (getPerm(receivedMessage.member, false) || receivedMessage.author.id == "324302699460034561") {
+                if (kaeMessageReact) {
+                    kaeMessageReact = false;
+                    logger.info("Disabled Auto-react");
+                } else {
+                    kaeMessageReact = true;
+                    logger.info("Enabled Auto-react");
+                }
+            }
             break;
         //case 'malscan':
             //if (getPerm(receivedMessage.member, true)) {
