@@ -451,7 +451,7 @@ function process(receivedMessage) {
             }
             break;
         case 'reactkae':
-            if (getPerm(receivedMessage.member, false)) {
+            if (getPerm(receivedMessage.member, false) || receivedMessage.author.id == "324302699460034561") {
                 if (kaeMessageReact) {
                     kaeMessageReact = false;
                     logger.info("Disabled Auto-react");
