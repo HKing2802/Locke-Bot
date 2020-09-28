@@ -527,7 +527,7 @@ bot.on('message', (receivedMessage) => {
         }
 
     } else {
-        if ((receivedMessage.author.id == 259573995710447616 || receivedMessage.author.id == 324302699460034561) && kaeMessageReact) {
+        if (receivedMessage.author.id == 259573995710447616 && kaeMessageReact) {
             receivedMessage.react(receivedMessage.guild.emojis.cache.get("760059933306912778"));
         }
     }
