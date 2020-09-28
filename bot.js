@@ -2,16 +2,13 @@ var Discord = require('discord.js');
 var logger = require('winston');
 var auth = require('./auth.json');
 var package = require('./package.json');
-var aws = require('aws-sdk');
-var cloudMersiveApi = require('cloudmersive-virus-api-client');
+//var aws = require('aws-sdk');
+//var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
 var active = true;
 var kaeMessageReact = false;
 var logChan;
 var delMsgs = [];
-
-//mute timer global var
-var muteusr;
 
 //muted users stored in case they have member role
 var muted = [];
@@ -67,8 +64,7 @@ function help(chan) {
             { name: 'verify', value: 'verifies a user, must be a staff member'},
             { name: 'kick', value: 'Kicks a user from the server, must be a Mod/Admin' },
             { name: 'ban', value: 'Bans a user from the server, must be a Mod/Admin'},
-            { name: 'Help', value: 'Displays this Message' },
-            { name: 'malscan <message-id>', value: 'Runs a malware scan on the files attached to a message' })
+            { name: 'Help', value: 'Displays this Message' })
         .setFooter("v" + package.version + " -- Developed by HKing#9193");
 
     chan.send(embed);
@@ -458,8 +454,10 @@ function process(receivedMessage) {
             if (getPerm(receivedMessage.member, false)) {
                 if (kaeMessageReact) {
                     kaeMessageReact = false;
+                    logger.info("Disabled Auto-react");
                 } else {
                     kaeMessageReact = true;
+                    logger.info("Enabled Auto-react");
                 }
             }
         //case 'malscan':
@@ -529,12 +527,8 @@ bot.on('message', (receivedMessage) => {
         }
 
     } else {
-        if (receivedMessage.author.id == 257261607967653890 || receivedMessage.author.id == 178561941344616448) {
-            var cont = receivedMessage.content.toLowerCase();
-            if (cont == "did i ask") {
-                receivedMessage.delete()
-                receivedMessage.channel.send("<@257261607967653890> Imagine Asking");
-            }
+        if ((receivedMessage.author.id == 259573995710447616 || receivedMessage.author.id == 324302699460034561) && kaeMessageReact) {
+            receivedMessage.react(receivedMessage.guild.emojis.cache.get("760060061225189416"));
         }
     }
 })
@@ -569,6 +563,6 @@ bot.on('guildMemberAdd', (member) => {
     }
     if (namecheck(member.user.username)) {
         member.setNickname("Please use ASCII characters");
-        logger.info("Force Changed a new user's nickname to ASCII characters")
+        logger.info("Force Changed a new user's nickname to ASCII characters");
     }
 })
