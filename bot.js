@@ -6,6 +6,7 @@ var aws = require('aws-sdk');
 var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
 var active = true;
+var kaeMessageReact = false;
 var logChan;
 var delMsgs = [];
 
@@ -230,7 +231,7 @@ function process(receivedMessage) {
                             } else if (time == 0) {
                                 chan.send("Cannot mute for 0 minutes!");
                             } else {
-                                eventList.push(["mute", (time + 1) * 60, receivedMessage.mentions.members.first()]);
+                                eventList.push(["mute", time * 60, receivedMessage.mentions.members.first()]);
                                 if (time == 1) {
                                     chan.send("Muted " + receivedMessage.mentions.users.first().username + " for " + time + " minute");
                                 } else {
@@ -453,53 +454,61 @@ function process(receivedMessage) {
                 logger.info("Rejected - Author Perm");
             }
             break;
-        case 'malscan':
-            if (getPerm(receivedMessage.member, true)) {
-                msgId = args[0];
-                if (args.length != 1 || isNaN(msgId)) {
-                    chan.send("You must pass a single message id as an argument");
-                    return
+        case 'reactKae':
+            if (getPerm(receivedMessage.member, false)) {
+                if (kaeMessageReact) {
+                    kaeMessageReact = false;
+                } else {
+                    kaeMessageReact = true;
                 }
-
-                chan.fetchMessage(msgId).then(message => {
-                    var attachments = message.attachments;
-                    if (attachments.size < 1) {
-                        chan.send("The message contains no attached files");
-                    } else {
-
-                        var url = attachments.first().url;
-
-                        var defaultClient = cloudMersiveApi.ApiClient.instance;
-                        var Apikey = defaultClient.authentications['Apikey'];
-                        //Apikey.apiKey = s3.cloudmersive_token;
-                        Apikey.apiKey = auth.cloudmersive_token;
-
-                        var apiInstance = new cloudMersiveApi.ScanApi();
-                        var input = new cloudMersiveApi.WebsiteScanRequest();
-                        input.Url = url;
-
-                        apiInstance.scanWebsite(input, (error, data, response) => {
-                            if (error) {
-                                console.error(error);
-                            } else {
-
-                                var viruses = data.FoundViruses;
-
-                                var result = new Discord.RichEmbed()
-                                    .setTitle("Scan resuts")
-                                    .addField("Safe file", data.CleanResult);
-
-                                for (var i = 0; viruses && i < viruses; i++) {
-                                    result.addField(viruses[i].FileName, viruses[i].VirusName);
-                                }
-
-                                chan.send(result);
-                            }
-                        });
-                    }
-                });
             }
-            break;
+        //case 'malscan':
+            //if (getPerm(receivedMessage.member, true)) {
+            //    msgId = args[0];
+            //    if (args.length != 1 || isNaN(msgId)) {
+            //        chan.send("You must pass a single message id as an argument");
+            //        return
+            //    }
+
+            //    chan.fetchMessage(msgId).then(message => {
+            //        var attachments = message.attachments;
+            //        if (attachments.size < 1) {
+            //            chan.send("The message contains no attached files");
+            //        } else {
+
+            //            var url = attachments.first().url;
+
+            //            var defaultClient = cloudMersiveApi.ApiClient.instance;
+            //            var Apikey = defaultClient.authentications['Apikey'];
+            //            //Apikey.apiKey = s3.cloudmersive_token;
+            //            Apikey.apiKey = auth.cloudmersive_token;
+
+            //            var apiInstance = new cloudMersiveApi.ScanApi();
+            //            var input = new cloudMersiveApi.WebsiteScanRequest();
+            //            input.Url = url;
+
+            //            apiInstance.scanWebsite(input, (error, data, response) => {
+            //                if (error) {
+            //                    console.error(error);
+            //                } else {
+
+            //                    var viruses = data.FoundViruses;
+
+            //                    var result = new Discord.RichEmbed()
+            //                        .setTitle("Scan resuts")
+            //                        .addField("Safe file", data.CleanResult);
+
+            //                    for (var i = 0; viruses && i < viruses; i++) {
+            //                        result.addField(viruses[i].FileName, viruses[i].VirusName);
+            //                    }
+
+            //                    chan.send(result);
+            //                }
+            //            });
+            //        }
+            //    });
+            //}
+            //break;
     }
 }
 
