@@ -6,6 +6,8 @@ var command = require('./commands.js');
 //var aws = require('aws-sdk');
 //var cloudMersiveApi = require('cloudmersive-virus-api-client');
 
+const file_blacklist = require('./file_blacklist.json')
+
 var active = true;
 var kaeMessageReact = false;
 var logChan;
@@ -512,7 +514,34 @@ function process(receivedMessage) {
     }
 }
 
+function filterAttachment(message) {
+
+    function isBlacklisted(filename) {
+        for (let i = 0; i < file_blacklist.length; i++) {
+            if (filename.endsWith(file_blacklist[i]))
+                return true
+        }
+
+        return false
+    }
+
+    let abuseAttachement = message.attachments.find(attachment => isBlacklisted(attachment.name))
+    if (abuseAttachement !== undefined) {
+        message.delete()
+            .then(msg => msg.channel.send(`Sorry ${msg.author}, I deleted file because it's file-type `
+             + "is blacklisted in our spam filter"))
+        return true
+    }
+
+    return false
+}
+
 bot.on('message', (receivedMessage) => {
+
+    // Skip command processing if massage was zapped out by attachment filter
+    if (filterAttachment(receivedMessage))
+        return
+
     if (receivedMessage.author == bot.user) {
         return
         //prevent responding to its own message
