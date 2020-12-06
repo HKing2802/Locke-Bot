@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const logger = require('winston');
 const mysql = require('mysql');
+const unidecode = require('unidecode');
 const auth = require('./auth.json');
 const package = require('./package.json');
 const file_blacklist = require('./file_blacklist.json');
@@ -44,9 +45,9 @@ bot.on('message', (message) => {
 
     if (message.content.substring(0, 1) == config.prefix) {
         if (config.active == 'true' && message.guild != null) {  //checks if bot response is active and is in a guild and not a DM
-            //call to processor
+            // TODO: call to processor
         } else if (message.author.id == config.authorID) {  // checks if message author is author and then processes even if active is false
-            //call to processor
+            // TODO: call to processor
         } else
             return;
     } else if (message.author.id == config.kaeID && config.kaeReact == 'true') {  //checks if message author is Kae and reaction is active
@@ -68,3 +69,28 @@ bot.on('messageDelete', (delmsg) => {
     }
 })
 
+bot.on('guildMemberUpdate', (oldUser, newUser) => {
+    if (oldUser.nickname == newUser.nickname || newUser.nickname == null)
+        return;
+    else {
+        for (let i = 0; i < config.nicknamePass.length; i++) {
+            if (oldUser.id == config.nicknamePass[i]) {
+                return;
+            }
+        }
+        
+        newNick = unidecode(newUser.nickname);
+        if (newNick != newUser.nickname) {
+            newUser.setNickname(newNick);
+            logger.info(`Force changed a user's nickname to ${newNick}`);
+        }
+    }
+})
+
+bot.on('guildMemberAdd', (member) => {
+    newNick = unidecode(member.user.username);
+    if (newNick != member.user.username) {
+        member.setNickname(newNick);
+        logger.info(`Force changed a new user's nickname to ${newNick}`);
+    }
+})
