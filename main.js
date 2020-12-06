@@ -38,7 +38,33 @@ bot.on('ready', () => {
 
  
 //message catching
+bot.on('message', (message) => {
+    if (util.filterAttachment(message))
+        return;
 
+    if (message.content.substring(0, 1) == config.prefix) {
+        if (config.active == 'true' && message.guild != null) {  //checks if bot response is active and is in a guild and not a DM
+            //call to processor
+        } else if (message.author.id == config.authorID) {  // checks if message author is author and then processes even if active is false
+            //call to processor
+        } else
+            return;
+    } else if (message.author.id == config.kaeID && config.kaeReact == 'true') {  //checks if message author is Kae and reaction is active
+        message.react(message.guild.emojis.cache.get(config.modsgayEmojiID));  //reacts with emoji
+    }
+})
 
-//call to processor
+bot.on('messageDelete', (delmsg) => {
+    if (delmsg.author.bot) {
+        return;
+    } else {
+        con.query(`INSERT INTO messages(user_id, message) VALUES (${delmsg.author.id}, ${delmsg.content})`, function (err, result) {
+            if (err) {
+                logger.warn(`Error in inserting deleted message to database: ${err}`);
+            } else {
+                logger.info("Logged Deleted Message")
+            }
+        })
+    }
+})
 
