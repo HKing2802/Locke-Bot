@@ -17,30 +17,25 @@ logger.add(new logger.transports.Console, {
 logger.level = 'debug';
 
 //db connection
-const dbCon = mysql.createConnection({
+const con = mysql.createConnection({
     host: auth.db_host,
     user: auth.db_user,
     password: auth.db_pass,
     database: 'lockebot_db'
 })
-
-//bot login
-//const bot = new Discord.Client();
-//bot.login(auth.token)
-
-//bot.on('ready', () => {
-//    logger.info(`Logged in as ${bot.user.tag}!`)
-//})
-
-dbCon.connect(function (err) {
+con.connect(function (err) {
     if (err) throw err;
-    con.query("SELECT * FROM messages", function (err, result, fields) {
-        if (err) throw err;
-        console.log(result)
-    })
 })
 
+//bot login
+const bot = new Discord.Client();
+bot.login(auth.token)
 
+bot.on('ready', () => {
+    logger.info(`Logged in as ${bot.user.tag}!`)
+})
+
+ 
 //message catching
 
 
