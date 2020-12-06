@@ -3,7 +3,7 @@ const config = require('./config.json')
 const package = require('./package.json')
 
 
-export function getPerm(member, boolHelp) {
+function getPerm(member, boolHelp) {
     if (member.roles.cache.has(config.modRoleID) || member.roles.cache.has(config.dadminRoleID) || member.roles.cache.has(config.adminRoleID)) {
         return true;
     } else if (member.roles.cache.has(config.helperRoleID) && boolHelp) {
@@ -13,7 +13,7 @@ export function getPerm(member, boolHelp) {
     }
 }
 
-export function help(chan) {
+function help(chan) {
     const embed = new Discord.MessageEmbed()
         .setAuthor("LockeBot")
         .setTitle("Help Menu")
@@ -31,3 +31,6 @@ export function help(chan) {
 
     chan.send(embed);
 }
+
+exports.getPerm = getPerm;
+exports.help = help;
