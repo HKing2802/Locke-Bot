@@ -15,6 +15,7 @@
     "dependencies": {
         "discord.js": "^12.2.0",
         "mysql": "^2.18.1",
+        "unidecode": "^0.1.8",
         "winston": "^3.2.1"
     }
 }
