@@ -1,8 +1,3 @@
-/* 
- * LockeBot main file
- * Created by HKing#9193
-*/
-
 const Discord = require('discord.js');
 const logger = require('winston');
 const mysql = require('mysql');
