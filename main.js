@@ -7,7 +7,7 @@ const file_blacklist = require('./file_blacklist.json');
 const config = require('./config.json');
 
 // Function Imports
-import {getPerm, help} from './util.js'
+//import {getPerm, help} from './util.js'
 
 // Configure Winston logger
 logger.remove(logger.transports.Console);
@@ -25,7 +25,23 @@ const dbCon = mysql.createConnection({
 })
 
 //bot login
-const bot = new Discord.Client();
-bot.login(auth.token)
+//const bot = new Discord.Client();
+//bot.login(auth.token)
+
+//bot.on('ready', () => {
+//    logger.info(`Logged in as ${bot.user.tag}!`)
+//})
+
+dbCon.connect(function (err) {
+    if (err) throw err;
+    con.query("SELECT * FROM messages", function (err, result, fields) {
+        if (err) throw err;
+        console.log(result)
+    })
+})
+
+
+//message catching
+
 
 //call to processor
