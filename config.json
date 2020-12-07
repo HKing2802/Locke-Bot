@@ -9,8 +9,22 @@
   "kaeID": "259573995710447616",
   "kaeReact": "false",
 
-  "nicknamePass": [ "623848021255520295", "285475344817848320" ]
+  "nicknamePass": [ "623848021255520295", "285475344817848320" ],
 
   "active": "true",
-  "prefix": "."
+  "prefix": ".",
+
+  "commands": [
+    "ping",
+    "endprocess",
+    "shutdown",
+    "activate",
+    "mute",
+    "unmute",
+    "help",
+    "snipe",
+    "verify",
+    "kick",
+    "ban"
+  ]
 }
