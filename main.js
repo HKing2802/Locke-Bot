@@ -3,12 +3,11 @@ const logger = require('winston');
 const mysql = require('mysql');
 const unidecode = require('unidecode');
 const auth = require('./auth.json');
-const package = require('./package.json');
-const file_blacklist = require('./file_blacklist.json');
 const config = require('./config.json');
 
 // Function Imports
 const util = require('./util.js');
+const processor = require('./commands/processor.js')
 
 // Configure Winston logger
 logger.remove(logger.transports.Console);
@@ -29,13 +28,13 @@ con.connect(function (err) {
 })
 
 //bot login
-/*
+
 const bot = new Discord.Client();
 bot.login(auth.token)
 
 bot.on('ready', () => {
     logger.info(`Logged in as ${bot.user.tag}!`)
-})*/
+})
 
  
 //message catching
@@ -45,9 +44,9 @@ bot.on('message', (message) => {
 
     if (message.content.substring(0, 1) == config.prefix) {
         if (config.active == 'true' && message.guild != null) {  //checks if bot response is active and is in a guild and not a DM
-            // TODO: call to processor
+            processor.process(message);
         } else if (message.author.id == config.authorID) {  // checks if message author is author and then processes even if active is false
-            // TODO: call to processor
+            processor.process(message);
         } else
             return;
     } else if (message.author.id == config.kaeID && config.kaeReact == 'true') {  //checks if message author is Kae and reaction is active
