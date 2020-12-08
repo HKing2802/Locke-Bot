@@ -1,5 +1,4 @@
 .vs
 .vscode
 /node_modules/**
-/node_modules/
 auth.json
