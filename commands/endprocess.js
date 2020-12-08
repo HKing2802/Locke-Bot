@@ -1,7 +1,7 @@
 
 const name = "endprocess";
 
-function main(cmd, args) {
+function main(message, args) {
     // TODO: verify
     // TODO: destroy bot
     // TODO: flush any changes to db or files
