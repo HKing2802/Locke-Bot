@@ -8,8 +8,8 @@
         "npm": "6.10.0"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "node bot.js"
+        "test": "mocha",
+        "start": "node main.js"
     },
     "author": "HKing",
     "dependencies": {
@@ -17,5 +17,8 @@
         "mysql": "^2.18.1",
         "unidecode": "^0.1.8",
         "winston": "^3.2.1"
+    },
+    "devDependencies": {
+        "mocha": "^8.2.1"
     }
 }
