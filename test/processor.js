@@ -1,5 +1,6 @@
 const processor = require('../commands/processor.js');
 const assert = require('assert');
+const Discord = require('discord.js');
 const ping = require('../commands/ping.js')
 
 describe('Get Functions', function () {
@@ -20,4 +21,21 @@ describe('Get Functions', function () {
         assert.equal(commands.size, 1);
         assert.equal(commands.get('ping'), ping.main);
     });
+})
+
+describe('processor', function () {
+    it('runs command', function () {
+        // setting up a message to pass to the processor.
+        const client = new Discord.Client()
+        const guild = new Discord.Guild(client)
+        let message = new Discord.Message(client, { content: ".testcmd" }, guild)
+
+        // destroys client for smooth test exit
+        client.destroy();
+
+        let commands = processor.getFunctions(["testcmd"]);
+        let response = processor.process(message, commands);
+
+        assert.equal(response, ".testcmd");
+    })
 })
