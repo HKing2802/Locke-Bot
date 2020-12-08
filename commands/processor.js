@@ -3,6 +3,11 @@ const config = require('../config.json');
 const logger = require('winston');
 const fs = require('fs');
 
+logger.add(new logger.transports.Console, {
+    colorize: true
+});
+logger.level = 'debug';
+
 function getFunctions(nameList) {
     let commands = new Map()
 
@@ -36,12 +41,23 @@ function getFunctions(nameList) {
 }
 
 function process(message, commands) {
+    // verifies that commands parameter is a map
+    if (!(commands instanceof Map)) {
+        logger.error(`Commands parameter is not Map, instead is ${typeof commands}`);
+        return;
+    }
+
+    // parses messgae to command and arguments
     const cmdparsed = message.content.substring(1).toLowerCase().split(" ");
     const cmd = cmdparsed[0];
     const args = cmdparsed.splice(1);
 
-    for (let [name, func] of commands) {
 
+    // iterates over commands map to find function of command
+    for (let [name, func] of commands) {
+        if (name === cmd) {
+            return func(message, args);
+        }
     }
 }
 
