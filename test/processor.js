@@ -3,6 +3,24 @@ const assert = require('assert');
 const Discord = require('discord.js');
 const ping = require('../commands/ping.js')
 
+function captureStream(stream) {
+    var oldWrite = stream.write;
+    var buf = '';
+    stream.write = function (chunk, encoding, callback) {
+        buf += chunk.toString();
+        oldWrite.apply(stream, arguments);
+    }
+
+    return {
+        unhook: function unhook() {
+            stream.write = oldWrite;
+        },
+        captured: function () {
+            return buf;
+        }
+    };
+}
+
 describe('Get Functions', function () {
     it('gets functions', function () {
         let commands = processor.getFunctions(["ping"])
@@ -37,5 +55,5 @@ describe('processor', function () {
         let response = processor.process(message, commands);
 
         assert.equal(response, ".testcmd");
-    })
+    });
 })
