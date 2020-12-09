@@ -1,2 +1,0 @@
-C:\Users\smart\OneDrive\Desktop\DiscordBots\Locke Bot\obj\Debug\Locke Bot.njsproj.CoreCompileInputs.cache
-C:\Users\smart\OneDrive\Desktop\DiscordBots\Locke Bot\bin\Microsoft.NodejsTools.WebRole.dll
