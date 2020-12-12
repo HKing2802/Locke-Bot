@@ -26,9 +26,9 @@ describe('Get Functions', function () {
 describe('processor', function () {
     it('runs command', function () {
         // setting up a message to pass to the processor.
-        const client = new Discord.Client()
-        const guild = new Discord.Guild(client)
-        let message = new Discord.Message(client, { content: ".testcmd" }, guild)
+        const client = new Discord.Client();
+        const guild = new Discord.Guild(client);
+        let message = new Discord.Message(client, { content: ".testcmd" }, guild);
 
         // destroys client for smooth test exit
         client.destroy();
