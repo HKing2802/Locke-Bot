@@ -1,5 +1,3 @@
-const util = require('../util.js');
-const config = require('../config.json');
 const logger = require('winston');
 const fs = require('fs');
 
