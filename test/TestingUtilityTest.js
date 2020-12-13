@@ -472,8 +472,8 @@ describe('Test Member', function () {
                 } else {
                     done(err);
                 }
-            })
-    })
+            });
+    });
 
     it('ban throws error on wrong test guild setup', function (done) {
         const client = new Discord.Client();
@@ -493,6 +493,6 @@ describe('Test Member', function () {
                 } else {
                     done(err);
                 }
-            })
-    })
-})
+            });
+    });
+});
