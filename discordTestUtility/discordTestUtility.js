@@ -1,4 +1,5 @@
 const Discord = require('discord.js');
+const classOverrides = require('./testClassOverrides.js');
 
 function captureStream(stream) {
     var oldWrite = stream.write;
@@ -31,7 +32,7 @@ function createUser(client, username, discriminator, bot = false, extraData = {}
 
 // roles - array of role ids
 function createMember(client, guild, user, roles = [], nickname = undefined, extraData = {}) {
-    const member = new Discord.GuildMember(client, {user: user, roles: roles, nick: nickname, id: user.id, ...extraData}, guild);
+    const member = new classOverrides.TestMember(client, {user: user, roles: roles, nick: nickname, id: user.id, ...extraData}, guild);
     guild.members.add(member);
     return member;
 }
@@ -64,7 +65,7 @@ function createGuild(client, id) {
     if (typeof id === 'undefined') {
         id = Discord.SnowflakeUtil.generate();
     }
-    const guild = new Discord.Guild(client, { id: id });
+    const guild = new classOverrides.TestGuild(client, { id: id });
     const role = new Discord.Role(client, { id: id, name: "everyone" }, guild);
     guild.roles.add(role);
     return guild;
