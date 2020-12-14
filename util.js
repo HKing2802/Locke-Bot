@@ -14,6 +14,8 @@ function getPerm(member, boolHelp) {
         return true;
     } else if (member.roles.cache.has(config.helperRoleID) && boolHelp) {
         return true;
+    } else if (member.guild.ownerID == member.id) {
+        return true;
     } else {
         return false;
     }
