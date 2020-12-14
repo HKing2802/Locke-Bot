@@ -38,9 +38,9 @@ class TestChannel extends Discord.TextChannel {
      * @param {string[]} [mentions=[]] - Array of string names for mentions in the message
      * @param {Object} [extraData={}] - Object of any additional extra data
      * @param {boolean} [pingEveryone=false] - Boolean if there is an everyone ping in the message
-     * @returns {Discord.Snowflake} ID of the message
+     * @returns {Promise<Discord.Message>}
      */
-    send(content, authorUser, authorMember, mentions = [], extraData = {}, pingEveryone = false) {
+    async send(content, authorUser, authorMember, mentions = [], extraData = {}, pingEveryone = false) {
         const id = Discord.SnowflakeUtil.generate()
         let data;
         if (mentions == []) {
@@ -56,12 +56,12 @@ class TestChannel extends Discord.TextChannel {
         }
         this.testMessages.add(data, this);
         this.lastMessageID = id;
-        return id;
+        return this.testMessages.fetchIdCache(id);
     }
 
     /**
      * Gets a message sent in the test channel
-     * @param {Snowflake} id - ID of the message
+     * @param {import('discord.js').Snowflake} id - ID of the message
      * @returns {Discord.Message}
      */
     getMessage(id) {
