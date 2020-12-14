@@ -24,7 +24,7 @@ describe('Get Functions', function () {
 })
 
 describe('processor', function () {
-    it('runs command', function () {
+    it('runs command', function (done) {
         // setting up a message to pass to the processor.
         const client = new Discord.Client();
         const guild = new Discord.Guild(client);
@@ -34,8 +34,11 @@ describe('processor', function () {
         client.destroy();
 
         let commands = processor.getFunctions(["testcmd"]);
-        let response = processor.process(message, commands);
-
-        assert.equal(response, ".testcmd");
+        processor.process(message, commands)
+            .then((response) => {
+                assert.equal(response, ".testcmd");
+                done()
+            })
+            .catch(err => done(err))
     });
-})
+});
