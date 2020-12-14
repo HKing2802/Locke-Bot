@@ -4,109 +4,133 @@ const classOverrides = require('../discordTestUtility/testclassOverrides.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
 
 describe('TestChannel', function () {
-    it('sends messages', function () {
+    it('sends messages', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
         const channel = new classOverrides.TestChannel(guild);
 
-        const id = channel.send("test");
-        const message = channel.getMessage(id);
-
-        assert.equal(message.content, "test");
-        assert.equal(message.id, id);
-        client.destroy();
+        channel.send("test")
+            .then((m) => {
+                const message = channel.getMessage(m.id);
+                assert(m instanceof Discord.Message);
+                assert.equal(m.content, "test");
+                assert.equal(m.content, message.content);
+                client.destroy();
+                done()
+            })
+            .catch((err) => {
+                client.destroy();
+                done(err);
+            });
     });
 
-    it('sends multiple messages', function () {
-        const client = new Discord.Client();
-        const guild = testUtil.createGuild(client);
-        const channel = new classOverrides.TestChannel(guild);
-        channel.send("test 1", undefined);
-        const id2 = channel.send("test 2", undefined);
-        const id3 = channel.send("test 3", undefined);
-
-        const message = channel.getMessage(id2);
-
-        assert.equal(message.content, "test 2");
-        assert.equal(channel.lastMessageID, id3);
-        client.destroy();
-    });
-
-    it('adds extra data', function () {
+    it('adds extra data', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
         const channel = new classOverrides.TestChannel(guild);
 
-        const id = channel.send("Test", undefined, undefined, [], { tts: "123" });
-        const message = channel.getMessage(id);
-
-        assert.equal(message.content, "Test");
-        assert.equal(message.tts, "123");
-        client.destroy();
+        channel.send("Test", undefined, undefined, [], { tts: "123" })
+            .then((m) => {
+                client.destroy();
+                assert.equal(m.content, "Test");
+                assert.equal(m.tts, "123");
+                done()
+            })
+            .catch((err) => {
+                client.destroy();
+                done(err);
+            });
     });
 
-    it('has mentions', function () {
+    it('has mentions', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
         const channel = new classOverrides.TestChannel(guild);
 
-        const id = channel.send("test message", undefined, undefined, ["test mention"]);
-        const message = channel.getMessage(id);
-
-        assert.equal(message.mentions.users.first(), "test mention");
-        client.destroy();
+        channel.send("test message", undefined, undefined, ["test mention"])
+            .then((m) => {
+                client.destroy();
+                assert.equal(m.mentions.users.first(), "test mention");
+                done();
+            })
+            .catch((err) => {
+                client.destroy();
+                done(err);
+            });
     });
 
-    it('has ordered mentions', function () {
+    it('has ordered mentions', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
         const channel = new classOverrides.TestChannel(guild);
 
-        const id = channel.send("test message", undefined, undefined, ["test mention 1", "test mention 2"]);
-        const message = channel.getMessage(id);
-
-        assert.equal(message.mentions.users.first(), "test mention 1");
-        assert.equal(message.mentions.users.last(), "test mention 2");
-        client.destroy();
+        channel.send("test message", undefined, undefined, ["test mention 1", "test mention 2"])
+            .then((m) => {
+                client.destroy();
+                assert.equal(m.mentions.users.first(), "test mention 1");
+                assert.equal(m.mentions.users.last(), "test mention 2");
+                done();
+            })
+            .catch((err) => {
+                client.destroy();
+                done(err);
+            });
     });
 
-    it('pings everyone', function () {
+    it('pings everyone', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
         const channel = new classOverrides.TestChannel(guild);
 
-        const id = channel.send("test message", undefined, undefined, [], {}, true);
-        const message = channel.getMessage(id);
-
-        assert.equal(message.mentions.everyone, true);
-        client.destroy();
+        channel.send("test message", undefined, undefined, [], {}, true)
+            .then((m) => {
+                client.destroy();
+                assert.equal(m.mentions.everyone, true);
+                done();
+            })
+            .catch((err) => {
+                client.destroy();
+                done(err);
+            });
     });
 
-    it('has user author', function () {
+    it('has user author', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
         const channel = new classOverrides.TestChannel(guild);
         const user = testUtil.createUser(client, "test username", "1234");
 
-        const id = channel.send("test message", user, undefined);
-
-        assert.equal(channel.getMessage(id).author.username, "test username");
-        assert.equal(channel.getMessage(id).author.discriminator, "1234");
-        client.destroy();
+        channel.send("test message", user, undefined)
+            .then((m) => {
+                client.destroy();
+                assert.equal(m.author.username, "test username");
+                assert.equal(m.author.discriminator, "1234");
+                done()
+            })
+            .catch((err) => {
+                client.destroy();
+                done(err);
+            });
     });
 
-    it('has member author', function () {
+    it('has member author', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
         const channel = new classOverrides.TestChannel(guild);
         const user = testUtil.createUser(client, "test username", "1234");
         const member = testUtil.createMember(client, guild, user);
 
-        const id = channel.send("test message", user, member);
-
-        assert.equal(channel.getMessage(id).member.user.username, "test username");
-        assert.equal(channel.getMessage(id).member.user.discriminator, "1234");
-        client.destroy();
+        channel.send("test message", user, member)
+            .then((m) => {
+                client.destroy();
+                assert.equal(m.member.user.username, "test username");
+                assert.equal(m.member.user.discriminator, "1234");
+                done();
+            })
+            .catch((err) => {
+                client.destroy();
+                done(err);
+            });
     })
 });
 
