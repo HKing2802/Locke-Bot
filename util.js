@@ -64,30 +64,41 @@ async function filterAttachment(message) {
     }
 }
 
+/**
+ * Constructs a map of ids for logging channels. Returns Map<GuildID, ChannelID> or string on error
+ * @param {Array<Array<string>>} idList Nested array that contains [GuildID, ChannelID]
+ * @returns {Map<string, string>|string}
+ */
 function getLogChannels(idList) {
     if (!(Array.isArray(idList))) {
-        logger.warn(`Logging channel not set up properly, array is of type ${typeof idList}`);
-        return undefined;
+        return `Logging channel not set up properly, array is of type ${typeof idList}`;
     } else if (idList.length <= 0) {
-        logger.warn("Logging channel idList is empty");
-        return undefined;
+        return "Logging channel idList is empty";
     } else if (!(Array.isArray(idList[0]))) {
-        logger.warn(`Logging channel not set up properly, array is of type ${typeof idList[0]}`);
-        return undefined;
+        return `Logging channel not set up properly, array is of type ${typeof idList[0]}`;
     } else {
         return new Map(idList);
     }
 }
 
-function log(client, content, channel = true, logChannelOverride) {
+/**
+ * Logs a message to the console, logging channels and file logs.
+ * @param {string} content The content of the log message
+ * @param {Discord.Client} [client] The instantiating client, can be omitted if not logging to channels
+ * @param {boolean} [channel] Boolean if the message is also logged to logging channels
+ * @param {string} [level] The level of the log, can be info, warn or error. Defaults to info
+ * @param {Map<string, string>} logChannelOverride A map of <GuildID, ChannelID> to override the default logging channels defined in the cofig.
+ * @returns {void}
+ */
+function log(content, client, channel = true, level = 'info', logChannelOverride) {
     // Checks if logging channel ids are loaded and loads if not present or if there is an override provided
     let logChannels;
     logChannelOverride ? logChannels = logChannelOverride : logChannels = LOG_CHANNELS;
     if (!logChannels) {
         logChannels = getLogChannels(config.logChannels);
-        if (!logChannels) {
+        if (!(logChannels instanceof Map)) {
             channel = false;
-            logger.warn("Could not load logging channel ids, skipping channel log...");
+            logger.warn(`Could not load logging channel ids: ${logChannels}, skipping channel log...`);
         }
     }
 
@@ -95,10 +106,21 @@ function log(client, content, channel = true, logChannelOverride) {
     if (!logChannelOverride && logChannels != LOG_CHANNELS) LOG_CHANNELS = logChannels;
 
     // logs to console
-    logger.info(content);
+    switch (level) {
+        case 'warn':
+            logger.warn(content);
+            break;
+        case 'error':
+            logger.error(content);
+            break;
+        case 'info':
+        default:
+            logger.info(content);
+            break;
+    }
 
     // logs to channel
-    if (channel) {
+    if (channel && client) {
         logChannels.forEach((value, key, map) => {
             const guild = client.guilds.fetch(key);
             if (!guild) {
