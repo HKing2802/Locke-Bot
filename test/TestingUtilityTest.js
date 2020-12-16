@@ -11,7 +11,7 @@ describe('TestChannel', function () {
 
         channel.send("test")
             .then((m) => {
-                const message = channel.getMessage(m.id);
+                const message = channel.messages.fetch(m.id);
                 assert(m instanceof Discord.Message);
                 assert.equal(m.content, "test");
                 assert.equal(m.content, message.content);
@@ -131,7 +131,25 @@ describe('TestChannel', function () {
                 client.destroy();
                 done(err);
             });
-    })
+    });
+
+    it('saves last message id', function (done) {
+        const client = new Discord.Client();
+        const guild = testUtil.createGuild(client);
+        const channel = new classOverrides.TestChannel(guild);
+
+        channel.send("test message")
+            .then((m) => {
+                assert.equal(m.id, channel.lastMessageID);
+                assert.equal(m.content, channel.lastMessage.content);
+                client.destroy();
+                done();
+            })
+            .catch(err => {
+                client.destroy();
+                done(err)
+            });
+    });
 });
 
 describe('create user', function () {
@@ -271,6 +289,14 @@ describe('create Guild', function () {
         assert.equal(guild.roles.cache.get("12").name, "everyone");
         client.destroy();
     });
+
+    it('passes extra data', function () {
+        const client = new Discord.Client();
+        const guild = testUtil.createGuild(client, undefined, { name: "test" });
+
+        assert.equal(guild.name, "test");
+        client.destroy();
+    })
 });
 
 describe('Test Guild', function () {
