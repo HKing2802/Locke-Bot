@@ -2,28 +2,6 @@ const Discord = require('discord.js');
 const classOverrides = require('./testClassOverrides.js');
 
 /**
- * Captures the provided stream
- * @param {stream} stream The stream to capture
- */
-function captureStream(stream) {
-    var oldWrite = stream.write;
-    var buf = '';
-    stream.write = function (chunk, encoding, callback) {
-        buf += chunk.toString();
-        oldWrite.apply(stream, arguments);
-    }
-
-    return {
-        unhook: function unhook() {
-            stream.write = oldWrite;
-        },
-        captured: function () {
-            return buf;
-        }
-    };
-}
-
-/**
  * Creates a Discord User object
  * @param {Discord.Client} client The instantiating client
  * @param {string} username The username of the user
@@ -93,12 +71,14 @@ function createRole(client, guild, extraData = {}) {
  * Creates a Discord Guild with an @everyone role
  * @param {Discord.Client} client - the instantiating client
  * @param {import('discord.js').Snowflake} id - the id for the server
+ * @param {Object} extraData - Extra Data to be passed to the guild object
+ * @returns {Discord.Guild}
  */
-function createGuild(client, id) {
+function createGuild(client, id, extraData = {}) {
     if (typeof id === 'undefined') {
         id = Discord.SnowflakeUtil.generate();
     }
-    const guild = new classOverrides.TestGuild(client, { id: id });
+    const guild = new classOverrides.TestGuild(client, { id: id, ...extraData });
     const role = new Discord.Role(client, { id: id, name: "everyone" }, guild);
     guild.roles.add(role);
     return guild;
