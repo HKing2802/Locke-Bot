@@ -2,11 +2,6 @@ const logger = require('winston');
 const fs = require('fs');
 const { Message } = require('discord.js');
 
-logger.add(new logger.transports.Console, {
-    colorize: true
-});
-logger.level = 'debug';
-
 /**
  * Gets functions from a wordlist and their provided file
  * See ping file for proper structure to a command file
