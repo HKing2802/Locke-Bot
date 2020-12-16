@@ -10,8 +10,19 @@ class TestMessageManager extends Discord.MessageManager {
      * Gets a message from this channel
      * @param {Snowflake} id - The Id of the message to fetch
      */
-    fetchIdCache(id) {
+    fetch(id) {
         return this.cache.get(id);
+    }
+
+    /**
+     * deletes a message from the cache
+     * @param {import('discord.js').MessageResolvable} message The message to delete
+     * @param {string} reason Reason for deleting this message, if it does not belong to the client user
+     * @returns {Promise<void>}
+     */
+    async delete(message, reason) {
+        message = this.resolveID(message);
+        if (message) this.cache.delete(message);
     }
 }
 
@@ -55,8 +66,8 @@ class TestChannel extends Discord.TextChannel {
             data = { id: id, content: content, author: authorUser, member: authorMember, mentions: mentionsCollection, mention_everyone: pingEveryone, ...extraData };
         }
         this.testMessages.add(data, this);
-        this.lastMessageID = id;
-        return this.testMessages.fetchIdCache(id);
+        this.lastMessageID = this.messages.fetch(id).id;
+        return this.messages.fetch(id);
     }
 
     /**
@@ -64,9 +75,11 @@ class TestChannel extends Discord.TextChannel {
      * @param {import('discord.js').Snowflake} id - ID of the message
      * @returns {Discord.Message}
      */
-    getMessage(id) {
-        return this.testMessages.fetchIdCache(id);
+    get messages() {
+        return this.testMessages;
     }
+
+    set messages(m) { }
 }
 
 class TestMember extends Discord.GuildMember {
