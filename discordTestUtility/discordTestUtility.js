@@ -84,7 +84,6 @@ function createGuild(client, id, extraData = {}) {
     return guild;
 }
 
-exports.captureStream = captureStream;
 exports.createUser = createUser;
 exports.createMember = createMember;
 exports.createRole = createRole;
