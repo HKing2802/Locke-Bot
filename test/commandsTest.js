@@ -13,7 +13,7 @@ describe('ping', function () {
             .then((m) => {
                 processor.process(m, commands)
                     .then(() => {
-                        const message = channel.getMessage(channel.lastMessageID);
+                        const message = channel.messages.fetch(channel.lastMessageID);
                         assert.equal(message.content, "Pong!");
                         client.destroy();
                         done()
