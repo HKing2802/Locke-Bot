@@ -16,9 +16,12 @@
         "discord.js": "^12.2.0",
         "mysql": "^2.18.1",
         "unidecode": "^0.1.8",
-        "winston": "^3.2.1"
+        "winston": "^3.2.1",
+        "winston-daily-rotate-file": "^4.5.0"
     },
     "devDependencies": {
-        "mocha": "^8.2.1"
+        "@chrisalderson/winston-spy": "^1.0.2",
+        "mocha": "^8.2.1",
+        "sinon": "^9.2.2"
     }
 }
