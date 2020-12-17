@@ -104,23 +104,143 @@ describe('filter attachment', function () {
 });
 
 describe('get log channels', function () {
-    it('returns a map', function () {
-        const channelMap = util.getLogChannels([["123", "456"]]);
+    it('returns an array', function () {
+        const channelMap = util.testing.checkLogChannels([["123", "456"]]);
 
-        assert(channelMap instanceof Map);
+        assert(Array.isArray(channelMap));
     });
 
-    it('returns ids mapped correctly', function () {
-        const channelMap = util.getLogChannels([["123", "456"], ["987", "654"]])
+    it('errors on bad parameter type', function () {
+        const channelMap = util.testing.checkLogChannels("test");
 
-        assert(channelMap instanceof Map);
-        assert.equal(channelMap.get("123"), "456");
-        assert.equal(channelMap.get("987"), "654");
+        assert.equal(channelMap, "Logging channel not set up properly, parameter is of type string");
     });
 
+    it('errors on empty array', function () {
+        const channelMap = util.testing.checkLogChannels([]);
 
+        assert.equal(channelMap, "Logging channel Array is empty");
+    });
+
+    it('errors on non-nested array', function () {
+        const channelMap = util.testing.checkLogChannels(["123", "456"]);
+
+        assert.equal(channelMap, "Logging channel not set up properly, array is of type string");
+    });
 });
 
 describe('log', function () {
+    const client = new Discord.Client();
+    const guild = testUtil.createGuild(client, undefined, { name: "test guild" });
+    const channel1 = new testUtil.testChannel(guild);
+    const channel2 = new testUtil.testChannel(guild);
 
+    const winston = require('winston');
+    const SpyTransport = require('@chrisalderson/winston-spy');
+    let logger;
+    let transport;
+
+    beforeEach(() => {
+        transport = new winston.transports.SpyTransport();
+        logger = winston.createLogger({
+            level: 'info',
+            transports: [
+                new winston.transports.Console({ silent: true }),
+                transport
+            ]
+        })
+    });
+
+    after(() => {
+        client.destroy();
+    })
+
+    it('logs info to console', function (done) {
+        util.log("test", undefined, false, 'info', undefined, logger)
+            .then(() => {
+                assert(transport.spy.calledOnce);
+                assert(transport.spy.calledWithExactly({ message: "test", level: "info" }));
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('logs error to console', function (done) {
+        util.log("test 2", undefined, false, 'error', undefined, logger)
+            .then(() => {
+                assert(transport.spy.calledOnce);
+                assert(transport.spy.calledWithExactly({ message: "test 2", level: "error" }));
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('logs to channels', function (done) {
+        const channels = [[guild.id, channel1.id], [guild.id, channel2.id]];
+
+        util.log("channel test", client, true, "warn", channels, logger)
+            .then((msg) => {
+                assert(transport.spy.calledOnce);
+                assert(transport.spy.calledWithExactly({ message: "channel test", level: "warn" }));
+                assert.equal(channel1.messages.fetch(msg[0].id).content, "channel test");
+                assert.equal(channel2.messages.fetch(msg[1].id).content, "channel test");
+                done()
+            })
+            .catch(err => done(err));
+    });
+
+    it('warns on bad guild id', function (done) {
+        const channels = [["12", channel1.id]];
+
+        util.log("channel test", client, true, "info", channels, logger)
+            .then((msg) => {
+                assert(transport.spy.calledTwice);
+                assert(transport.spy.calledWithExactly({ message: "channel test", level: "info" }));
+                assert(transport.spy.calledWithExactly({ message: `Could not load guild for ID 12 and channel ID ${channel1.id}`, level: "warn" }));
+                assert.equal(msg[0], undefined);
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('warns on bad channel id', function (done) {
+        const channels = [[guild.id, "1"]]
+        util.log("channel test", client, true, "info", channels, logger)
+            .then((msg) => {
+                assert(transport.spy.calledTwice);
+                assert(transport.spy.calledWithExactly({ message: "channel test", level: "info" }));
+                assert(transport.spy.calledWithExactly({ message: `Could not load channel for ID 1 in guild ${guild.name}`, level: "warn" }));
+                assert.equal(msg[0], undefined);
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('continues when bad guild id given', function (done) {
+        const channels = [["1", channel1.id], [guild.id, channel2.id]];
+        util.log("Continue test", client, true, "info", channels, logger)
+            .then((msg) => {
+                assert(transport.spy.calledTwice);
+                assert(transport.spy.calledWithExactly({ message: `Could not load guild for ID 1 and channel ID ${channel1.id}`, level: "warn" }));
+                assert.equal(msg[0], undefined);
+                assert.equal(msg[1].content, "Continue test");
+                assert.equal(channel2.lastMessage.content, "Continue test");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('continues when bad channel id given', function (done) {
+        const channels = [[guild.id, "1"], [guild.id, channel2.id]];
+        util.log("Continue test 2", client, true, "info", channels, logger)
+            .then((msg) => {
+                assert(transport.spy.calledTwice);
+                assert(transport.spy.calledWithExactly({ message: `Could not load channel for ID 1 in guild ${guild.name}`, level: "warn" }));
+                assert.equal(msg[0], undefined);
+                assert.equal(msg[1].content, "Continue test 2");
+                assert.equal(channel2.lastMessage.content, "Continue test 2");
+                done();
+            })
+            .catch(err => done(err));
+    });
 });
