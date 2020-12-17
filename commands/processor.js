@@ -1,6 +1,7 @@
 const logger = require('winston');
 const fs = require('fs');
 const { Message } = require('discord.js');
+const { log } = require('../util.js');
 
 /**
  * Gets functions from a wordlist and their provided file
@@ -14,7 +15,7 @@ function getFunctions(nameList) {
     for (let i = 0; i < nameList.length; i++) {
         // iterates over list of filenames and imports their name and main functions
         if (commands.has(nameList[i])) {
-            logger.warn("Attempting to import command already in command list. Skipping over...");
+            log("Attempting to import command already in command list. Skipping over...");
             continue;
         }
 
@@ -34,7 +35,7 @@ function getFunctions(nameList) {
             // adds command to dictionary
             commands.set(name, func);
         } else {
-            logger.warn("Attempting to import command with missing file. Skipping over...");
+            log("Attempting to import command with missing file. Skipping over...");
         }
     }
     return commands;
