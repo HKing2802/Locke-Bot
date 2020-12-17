@@ -34,9 +34,21 @@ class TestMessageManager extends Discord.MessageManager {
 class TestChannel extends Discord.TextChannel {
     /**
      * @param {Discord.Guild} Guild The guild the text channel is part of
+     * @param {Object} [extraData] Extra data to be passed to the constructor
      */
-    constructor(Guild) {
-        super(Guild, { type: 0 });
+    constructor(Guild, extraData = {}) {
+        let data;
+        if (extraData.id) {
+            data = { type: 0, ...extraData };
+        } else {
+            const id = Discord.SnowflakeUtil.generate();
+            data = { type: 0, id: id, ...extraData };
+        }
+        super(Guild, data);
+
+        //Guild.client.channels.add(data, Guild);
+        Guild.channels.cache.set(this.id, this);
+        Guild.client.guilds.cache.set(Guild.id, Guild)
 
         this.testMessages = new TestMessageManager(this);
     }
