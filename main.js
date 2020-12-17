@@ -49,7 +49,7 @@ bot.on('message', (message) => {
             processor.process(message);
         } else
             return;
-    } else if (message.author.id == config.kaeID && config.kaeReact == 'true') {  //checks if message author is Kae and reaction is active
+    } else if (message.author.id == config.kaeID) {  //checks if message author is Kae
         message.react(message.guild.emojis.cache.get(config.modsgayEmojiID));  //reacts with emoji
     }
 })
