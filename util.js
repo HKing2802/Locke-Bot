@@ -3,6 +3,7 @@ const config = require('./config.json');
 const Discord = require('discord.js');
 const winston = require('winston');
 const file_blacklist = require('./file_blacklist.json');
+require('winston-daily-rotate-file');
 
 // Initializes the logger and transports
 const defaultLogger = winston.createLogger({
@@ -13,8 +14,15 @@ const defaultLogger = winston.createLogger({
     transports: [
         new winston.transports.Console(),
         new winston.transports.File({
-            filename: 'error.log',
+            filename: './logs/error.log',
             level: 'error'
+        }),
+        new winston.transports.DailyRotateFile({
+            frequency: '1d',
+            filename: 'LockeBot-logs-%DATE%.log',
+            dirname: '.\\logs\\',
+            datePattern: 'YYYY-MM-DD',
+            maxFiles: '10d'
         })
     ]
 })
