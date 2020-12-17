@@ -17,7 +17,9 @@ function createUser(client, username, discriminator, bot = false, extraData = {}
         const id = Discord.SnowflakeUtil.generate();
         data = { username: username, discriminator: discriminator, bot: bot, id: id, ...extraData };
     }
-    return new Discord.User(client, data);
+    const user = new Discord.User(client, data);
+    client.users.add(user);
+    return user;
 }
 
 // roles - array of role ids
@@ -81,6 +83,7 @@ function createGuild(client, id, extraData = {}) {
     const guild = new classOverrides.TestGuild(client, { id: id, ...extraData });
     const role = new Discord.Role(client, { id: id, name: "everyone" }, guild);
     guild.roles.add(role);
+    client.guilds.add({ id: id, roles: [{ id: id, name: "everyone" }], ...extraData })
     return guild;
 }
 
