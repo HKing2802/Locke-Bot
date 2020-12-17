@@ -7,4 +7,4 @@ auth.json
 /Locke Bot.njsproj.user
 /obj/**
 /bin/**
-/error.log
+/logs/*
