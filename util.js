@@ -149,5 +149,5 @@ exports.getPerm = getPerm;
 exports.filterAttachment = filterAttachment;
 exports.log = log;
 exports.testing = {
-    checkLogChannels: checkLogChannels,
+    checkLogChannels: checkLogChannels
 };
