@@ -24,7 +24,7 @@ function getFunctions(nameList) {
         let pathcheck = "./commands/" + nameList[i] + ".js";
         let functionImport;
 
-        // checks that the file exists that the file exists
+        // checks that the file exists
         if (fs.existsSync(pathcheck)) {
             functionImport = require(path);
 
