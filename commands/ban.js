@@ -1,6 +1,10 @@
+/* Command to ban a member
+ */
 const util = require('../util.js');
 
 const name = "ban";
+const description = "Bans a member from the server";
+const type = "Moderation";
 
 function ban(message, args) {
     const chan = message.channel;
@@ -44,3 +48,5 @@ function ban(message, args) {
 
 exports.main = ban;
 exports.name = name;
+exports.description = description;
+exports.type = type;

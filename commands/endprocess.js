@@ -1,3 +1,6 @@
+/* command to end the bot process
+ * used for testing and debugging purposes
+ */
 
 const name = "endprocess";
 
