@@ -29,3 +29,61 @@ describe('ping', function () {
             });
     });
 });
+
+describe('help', function () {
+    describe('getData', function () {
+        const { testing } = require('../commands/help.js')
+        it('gets standard data', function () {
+            const { data, categories } = testing.getData(["testcmd"]);
+
+            assert(data instanceof Map);
+            assert(categories instanceof Map);
+            assert.equal(data.get('testcmd'), "Test Description");
+            assert.equal(categories.get('Test Type')[0], 'testcmd');
+            assert.equal(data.size, 1);
+            assert.equal(categories.size, 1);
+        });
+
+        it('skips commands with no description', function () {
+            const { data, categories } = testing.getData(['endprocess', 'testcmd'])
+
+            assert.equal(data.size, 1);
+            assert.equal(categories.size, 1);
+            assert(data.has("testcmd"));
+            assert(categories.has("Test Type"))
+        });
+    });
+
+    describe('main', function () {
+        const { main } = require('../commands/help.js');
+        const package = require('../package.json');
+        const client = new Discord.Client();
+        const guild = testUtil.createGuild(client);
+        let channel;
+
+        beforeEach(function () {
+            channel = new testUtil.testChannel(guild)
+        })
+
+        after(function () {
+            client.destroy();
+        })
+
+        it('sends embed', function (done) {
+            channel.send(".help")
+                .then((m) => {
+                    main(m, undefined, ['testcmd'])
+                        .then((msg) => {
+                            assert.equal(msg.content.title, 'Help Menu');
+                            assert.equal(msg.content.footer.text, `v${package.version} -- Developed by HKing#9193`)
+                            assert.equal(msg.content.author.name, "LockeBot");
+                            assert.equal(msg.content.fields[0].name, "Test Type");
+                            assert.equal(msg.content.fields[0].value, "testcmd: Test Description\n");
+                            done()
+                        })
+                        .catch(err => done(err));
+                })
+                .catch(err => done(err));
+        })
+    });
+})
