@@ -86,4 +86,12 @@ describe('help', function () {
                 .catch(err => done(err));
         })
     });
+});
+
+describe('ban', function () {
+    const ban = require('../commands/ban.js');
+
+    describe('getReason', function () {
+        assert(true);
+    });
 })
