@@ -145,9 +145,19 @@ async function log(content, client, channel = true, level = 'info', logChannelOv
     }
 }
 
+/**
+ * Helper function to silence the winston logger during testing
+ * @param {boolean} state The state of the transport silent flag
+ */
+function silenceLogging(state) {
+    if (typeof state != 'boolean') return;
+    defaultLogger.transports.forEach((t) => {t.silent = state})
+}
+
 exports.getPerm = getPerm;
 exports.filterAttachment = filterAttachment;
 exports.log = log;
 exports.testing = {
-    checkLogChannels: checkLogChannels
+    checkLogChannels: checkLogChannels,
+    silenceLogging: silenceLogging
 };
