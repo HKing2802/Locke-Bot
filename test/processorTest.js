@@ -4,6 +4,15 @@ const Discord = require('discord.js');
 const ping = require('../commands/ping.js')
 
 describe('Get Functions', function () {
+    const util = require('../util.js')
+    before(() => {
+        util.testing.silenceLogging(true);
+    })
+
+    after(() => {
+        util.testing.silenceLogging(false);
+    })
+
     it('gets functions', function () {
         let commands = processor.getFunctions(["ping"])
         assert.equal(commands.size, 1);
