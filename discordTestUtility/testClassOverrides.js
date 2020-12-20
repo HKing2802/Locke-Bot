@@ -65,9 +65,13 @@ class TestChannel extends Discord.TextChannel {
      */
     async send(content, authorUser, authorMember, mentions = [], extraData = {}, pingEveryone = false) {
         const id = Discord.SnowflakeUtil.generate()
+        let authorMemberData;
+        if (authorMember) {
+            authorMemberData = {nick: authorMember.nickname, joined_at: authorMember.joinedTimestamp, premium_since: authorMember.premiumSinceTimestamp, user: authorMember.user, roles: authorMember._roles}
+        }
         let data;
         if (mentions == []) {
-            data = { id: id, content: content, author: authorUser, member: authorMember, mention_everyone: pingEveryone, ...extraData };
+            data = { id: id, content: content, author: authorUser, member: authorMemberData, mention_everyone: pingEveryone, ...extraData };
         } else {
             let mentionsArray = [];
             for (const name of mentions) {
@@ -75,7 +79,7 @@ class TestChannel extends Discord.TextChannel {
                 mentionsArray.push(kvpair);
             }
             const mentionsCollection = new Discord.Collection(mentionsArray);
-            data = { id: id, content: content, author: authorUser, member: authorMember, mentions: mentionsCollection, mention_everyone: pingEveryone, ...extraData };
+            data = { id: id, content: content, author: authorUser, member: authorMemberData, mentions: mentionsCollection, mention_everyone: pingEveryone, ...extraData };
         }
         this.testMessages.add(data, this);
         this.lastMessageID = this.messages.fetch(id).id;
@@ -115,7 +119,7 @@ class TestMember extends Discord.GuildMember {
      */
     ban(options) {
         if (!(this.guild instanceof TestGuild)) return Promise.reject(new Error('BAD_GUILD_SETUP'));
-        return this.guild.members.ban(this, options);
+        return this.guild.members.ban(this.id, options);
     }
 }
 
