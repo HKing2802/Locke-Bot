@@ -493,8 +493,8 @@ describe('Test Member', function () {
         member.ban()
             .then((m) => {
                 assert.equal(m.id, member.id);
-                assert.equal(m.user.username, user.username);
-                assert.equal(m.user.discriminator, user.discriminator);
+                assert.equal(m.username, user.username);
+                assert.equal(m.discriminator, user.discriminator);
                 assert.equal(guild.members.fetch(member.id), undefined);
                 assert(guild.members.bans.get(member.id));
                 client.destroy()
