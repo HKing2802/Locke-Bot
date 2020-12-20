@@ -2,7 +2,7 @@
  */
 const util = require('../util.js');
 const config = require('../config.json');
-const { GuildMember, Message } = require(discord.js);
+const { GuildMember, Message } = require('discord.js');
 
 // Command information
 const name = "ban";
@@ -19,7 +19,7 @@ const type = "Moderation";
  * @returns {string}
  */
 function getReason(args, target) {
-    const name = `@${target.user.username}#${target.user.discriminator}`;
+    const name = `<@!${target.id}>`;
     let reason = "";
 
     for (let i = 0; i < args.length; i++) {
@@ -28,7 +28,7 @@ function getReason(args, target) {
         else
             reason += `${args[i].substr(name.length)} `;
     }
-    return reason
+    return reason.trim();
 }
 
 /**
@@ -45,11 +45,14 @@ function ban(message, args, target) {
     }
 
     let reason = getReason(args, target);
-    if (reason == "") reason = "No reason given";
 
     return target.ban({ reason: `${reason} - Banned by ${message.author.tag}` })
         .then((m) => {
-            chan.send(`Banned ${m.user.tag | m.tag | m} for ${reason}`);
+            if (reason == "")
+                chan.send(`Banned ${m.user.tag | m.tag | m}, No reason given.`);
+            else
+                chan.send(`Banned ${m.user.tag | m.tag | m} for ${reason}`)
+
             util.log(`${message.author.tag} banned ${m.user.tag | m.tag | m} for ${reason}`, message.client, true);
             return true;
         })
