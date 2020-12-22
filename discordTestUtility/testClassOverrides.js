@@ -14,6 +14,16 @@ class TestMessageManager extends Discord.MessageManager {
         return this.cache.get(id);
     }
 
+    add(data, cache = true) {
+        const existing = this.cache.get(data.id);
+        if (existing && existing._patch && cache) existing._patch(data);
+        if (existing) return existing;
+
+        const entry = new TestMessage(this.client, data, this.channel);
+        if (cache) this.cache.set(entry.id, entry);
+        return entry;
+    }
+
     /**
      * deletes a message from the cache
      * @param {import('discord.js').MessageResolvable} message The message to delete
@@ -23,6 +33,56 @@ class TestMessageManager extends Discord.MessageManager {
     async delete(message, reason) {
         message = this.resolveID(message);
         if (message) this.cache.delete(message);
+    }
+}
+
+/**
+ * Override of the MessageMentions class to fix problem with testing
+ * @extends {Discord.MessageMentions}
+ * @class
+ */
+class TestMessageMentions extends Discord.MessageMentions {
+    constructor(message, users, members, roles, everyone, crosspostedChannels) {
+        super(message, users, roles, everyone, crosspostedChannels);
+
+
+        if (members) {
+            this.member_collection = new Discord.Collection();
+            for (const mention of members) {
+                this.member_collection.set(mention.id, mention);
+            }
+        }
+    }
+
+    get members() {
+        if (!this.guild) return null;
+        return this.member_collection;
+    }
+}
+
+/**
+ * Override of the Message class to better instantiate message mentions for testing
+ * @extends {Discord.Message}
+ * @class
+ */
+class TestMessage extends Discord.Message {
+    constructor(client, data, channel) {
+        super(client, data, channel);
+
+        if (data.mentions) {
+            let mentionUser = [];
+            let mentionMember = [];
+            for (const mention of data.mentions) {
+                if (mention instanceof Discord.User) mentionUser.push(mention);
+                if (mention instanceof Discord.GuildMember) {
+                    mentionMember.push(mention);
+                    mentionUser.push(mention.user);
+                }
+            }
+            this.mentions = new TestMessageMentions(this, mentionUser, mentionMember, data.mention_roles, data.mention_everyone, data.mention_channels);
+        } else {
+            this.mentions = new TestMessageMentions(this, data.mentions, data.mention_roles, data.mention_everyone, data.mention_channels);
+        }
     }
 }
 
@@ -58,8 +118,8 @@ class TestChannel extends Discord.TextChannel {
      * @param {string} content - Message content
      * @param {Discord.User} [authorUser] - Author of the message as a user
      * @param {Discord.GuildMember} [authorMember] - Author of the message as a GuildMember
-     * @param {string[]} [mentions=[]] - Array of string names for mentions in the message
-     * @param {Object} [extraData={}] - Object of any additional extra data
+     * @param {Array<Discord.User>} [mentions] - Array of User objects for mentions in the message
+     * @param {Object} [extraData] - Object of any additional extra data
      * @param {boolean} [pingEveryone=false] - Boolean if there is an everyone ping in the message
      * @returns {Promise<Discord.Message>}
      */
@@ -69,18 +129,7 @@ class TestChannel extends Discord.TextChannel {
         if (authorMember) {
             authorMemberData = {nick: authorMember.nickname, joined_at: authorMember.joinedTimestamp, premium_since: authorMember.premiumSinceTimestamp, user: authorMember.user, roles: authorMember._roles}
         }
-        let data;
-        if (mentions == []) {
-            data = { id: id, content: content, author: authorUser, member: authorMemberData, mention_everyone: pingEveryone, ...extraData };
-        } else {
-            let mentionsArray = [];
-            for (const name of mentions) {
-                const kvpair = [Discord.SnowflakeUtil.generate(), name];
-                mentionsArray.push(kvpair);
-            }
-            const mentionsCollection = new Discord.Collection(mentionsArray);
-            data = { id: id, content: content, author: authorUser, member: authorMemberData, mentions: mentionsCollection, mention_everyone: pingEveryone, ...extraData };
-        }
+        const data = { id: id, content: content, author: authorUser, member: authorMemberData, mentions: mentions, mention_everyone: pingEveryone, ...extraData };
         this.testMessages.add(data, this);
         this.lastMessageID = this.messages.fetch(id).id;
         return this.messages.fetch(id);
@@ -146,7 +195,8 @@ class TestGuildMemberManager extends Discord.GuildMemberManager {
      * be resolved, the user ID will be the result.
      */
     async ban(user, options = { days: 0 }) {
-        const id = this.client.users.resolveID(user);
+        let id = this.client.users.resolveID(user);
+        if (!id) id = this.guild.members.resolveID(user);
         if (!id) return Promise.reject(new Error('BAN_RESOLVE_ID', true));
         this.bans.set(id, options);
         this.cache.delete(id);
@@ -207,3 +257,4 @@ class TestGuild extends Discord.Guild {
 exports.TestChannel = TestChannel;
 exports.TestGuild = TestGuild;
 exports.TestMember = TestMember;
+exports.TestMessage = TestMessage;
