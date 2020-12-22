@@ -42,41 +42,6 @@ describe('TestChannel', function () {
             });
     });
 
-    it('has mentions', function (done) {
-        const client = new Discord.Client();
-        const guild = testUtil.createGuild(client);
-        const channel = new classOverrides.TestChannel(guild);
-
-        channel.send("test message", undefined, undefined, ["test mention"])
-            .then((m) => {
-                client.destroy();
-                assert.equal(m.mentions.users.first(), "test mention");
-                done();
-            })
-            .catch((err) => {
-                client.destroy();
-                done(err);
-            });
-    });
-
-    it('has ordered mentions', function (done) {
-        const client = new Discord.Client();
-        const guild = testUtil.createGuild(client);
-        const channel = new classOverrides.TestChannel(guild);
-
-        channel.send("test message", undefined, undefined, ["test mention 1", "test mention 2"])
-            .then((m) => {
-                client.destroy();
-                assert.equal(m.mentions.users.first(), "test mention 1");
-                assert.equal(m.mentions.users.last(), "test mention 2");
-                done();
-            })
-            .catch((err) => {
-                client.destroy();
-                done(err);
-            });
-    });
-
     it('pings everyone', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
@@ -545,4 +510,37 @@ describe('Test Member', function () {
                 }
             });
     });
+});
+
+describe('Test Message', function () {
+    const client = new Discord.Client();
+    let guild;
+    let channel;
+
+    beforeEach(() => {
+        guild = testUtil.createGuild(client);
+        channel = new classOverrides.TestChannel(guild);
+    });
+
+    after(() => {
+        client.destroy();
+    });
+
+    it('has user mentions', function () {
+        const user = testUtil.createUser(client, "test user", "1234");
+        const msg = new classOverrides.TestMessage(client, { content: "test", mentions: [user] }, channel)
+
+        assert.equal(msg.mentions.users.first().username, user.username);
+        assert.equal(msg.mentions.members.first(), undefined);
+    });
+
+    it('has member mentions', function () {
+        const user = testUtil.createUser(client, "test member", "1234");
+        const member = testUtil.createMember(client, guild, user);
+        const msg = new classOverrides.TestMessage(client, { content: "test", mentions: [member] }, channel);
+
+        assert.equal(msg.mentions.users.first().username, user.username);
+        assert.equal(msg.mentions.members.first().user.username, member.user.username)
+    });
+
 });
