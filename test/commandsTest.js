@@ -2,7 +2,7 @@ const assert = require('assert');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
 const Discord = require('Discord.js');
 const processor = require('../commands/processor.js');
-const util = require('../util.js');
+const util = require('../src/util.js');
 const config = require('../config.json');
 
 describe('ping', function () {
@@ -273,7 +273,6 @@ describe('ban', function () {
                 .then((msg) => {
                     ban.main(msg, [`<@!${member.id}>`, "Reasoning"])
                         .then((complete) => {
-                            console.log(complete);
                             assert(complete);
                             assert.equal(channel.lastMessage.content, `Banned ${user.tag} for Reasoning`);
                             assert.equal(guild.members.cache.get(member.id), undefined);

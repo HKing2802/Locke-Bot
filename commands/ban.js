@@ -1,6 +1,6 @@
 /* Command to ban a member
  */
-const util = require('../util.js');
+const util = require('../src/util.js');
 const config = require('../config.json');
 const { GuildMember, Message } = require('discord.js');
 

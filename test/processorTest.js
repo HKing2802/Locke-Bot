@@ -4,7 +4,7 @@ const Discord = require('discord.js');
 const ping = require('../commands/ping.js')
 
 describe('Get Functions', function () {
-    const util = require('../util.js')
+    const util = require('../src/util.js')
     before(() => {
         util.testing.silenceLogging(true);
     })

@@ -1,7 +1,7 @@
 const logger = require('winston');
 const fs = require('fs');
 const { Message } = require('discord.js');
-const { log } = require('../util.js');
+const { log } = require('../src/util.js');
 
 /**
  * Gets functions from a wordlist and their provided file

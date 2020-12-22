@@ -2,7 +2,7 @@
  */
 
 const config = require('../config.json');
-const { log } = require('../util.js');
+const { log } = require('../src/util.js');
 const fs = require('fs');
 const Discord = require('discord.js');
 const package = require('../package.json');
