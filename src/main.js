@@ -3,11 +3,11 @@ const logger = require('winston');
 const mysql = require('mysql');
 const unidecode = require('unidecode');
 const auth = require('./auth.json');
-const config = require('./config.json');
+const config = require('../config.json');
 
 // Function Imports
 const util = require('./util.js');
-const processor = require('./commands/processor.js')
+const processor = require('../commands/processor.js')
 
 // Configure Winston logger
 logger.remove(logger.transports.Console);
@@ -16,7 +16,7 @@ logger.add(new logger.transports.Console, {
 });
 logger.level = 'debug';
 
-//db connection
+// db connection
 const con = mysql.createConnection({
     host: auth.db_host,
     user: auth.db_user,
@@ -27,8 +27,7 @@ con.connect(function (err) {
     if (err) throw err;
 })
 
-//bot login
-
+// bot login
 const bot = new Discord.Client();
 bot.login(auth.token)
 
@@ -37,7 +36,7 @@ bot.on('ready', () => {
 })
 
  
-//message catching
+// message catching
 bot.on('message', (message) => {
     if (util.filterAttachment(message))
         return;

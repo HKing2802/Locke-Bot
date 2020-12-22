@@ -1,8 +1,8 @@
 // Set of utility functions for Lockebot
-const config = require('./config.json');
+const config = require('../config.json');
 const Discord = require('discord.js');
 const winston = require('winston');
-const file_blacklist = require('./file_blacklist.json');
+const file_blacklist = require('../file_blacklist.json');
 require('winston-daily-rotate-file');
 
 // Initializes the logger and transports
