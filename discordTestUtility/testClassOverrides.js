@@ -222,6 +222,12 @@ class TestGuildMemberManager extends Discord.GuildMemberManager {
         return this.client.users.resolve(user)
     }
 
+    fetchBan(user) {
+        const id = this.client.users.resolveID(user);
+        if (!id) throw new Error('FETCH_BAN_RESOLVE_ID');
+        return this.bans.get(id);
+    }
+
     _fetchSingle({ user, cache }) {
         return this.cache.get(user);
     }
