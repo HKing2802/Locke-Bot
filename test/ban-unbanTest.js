@@ -221,3 +221,179 @@ describe('ban', function () {
         });
     });
 })
+
+describe('unban', function () {
+    const unban = require('../commands/unban.js');
+    let client;
+    let guild;
+    let user;
+    let authorUser;
+    let channel;
+
+    before(() => {
+        util.testing.silenceLogging(true);
+    })
+
+    after(() => {
+        util.testing.silenceLogging(false);
+    })
+
+    beforeEach(() => {
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        user = testUtil.createUser(client, "Test User", "1234");
+        authorUser = testUtil.createUser(client, "Test Author User", "4321");
+        channel = new testUtil.testChannel(guild);
+        guild.members.bans.set(user.id, { reason: "test ban" });
+    })
+
+    afterEach(() => {
+        client.destroy();
+    })
+
+    describe('getReason', function () {
+        it('gets the reason', function () {
+            const args = [`<@!${user.id}>`, "This", "is", "a", "test", "unban"];
+            const reason = unban.testing.getReason(args, user);
+
+            assert.equal(reason, "This is a test unban");
+        });
+
+        it('removes the tag', function () {
+            const args = [`<@!${user.id}>This`, "is", "another", "test", "unban!"];
+            const reason = unban.testing.getReason(args, user);
+
+            assert.equal(reason, "This is another test unban!");
+        });
+
+        it('removes ID', function () {
+            const args = [`${user.id}This`, "is", "a", "third", "unban!"];
+            const reason = unban.testing.getReason(args, user);
+
+            assert.equal(reason, "This is a third unban!");
+        });
+    });
+
+    describe('unban', function () {
+        it('unbans from the guild', function (done) {
+            channel.send(".unban", authorUser)
+                .then((msg) => {
+                    unban.testing.unban(msg, ["This", "Reasoning"], user)
+                        .then((complete) => {
+                            assert(complete)
+                            assert.equal(guild.members.bans.get(user.id), undefined);
+                            assert.equal(channel.lastMessage.content, `Unbanned ${user.tag} for This Reasoning`);
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('uses No reason given', function (done) {
+            channel.send(".unban", authorUser)
+                .then((msg) => {
+                    unban.testing.unban(msg, [], user)
+                        .then((complete) => {
+                            assert(complete);
+                            assert.equal(guild.members.bans.get(user.id), undefined);
+                            assert.equal(channel.lastMessage.content, `Unbanned ${user.tag}`);
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('checks if user has been banned', function (done) {
+            guild.members.bans.delete(user.id);
+            channel.send(".unban", authorUser)
+                .then((msg) => {
+                    unban.testing.unban(msg, [], user)
+                        .then((complete) => {
+                            assert(!complete);
+                            assert.equal(channel.lastMessage.content, "This user is not banned");
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+    });
+
+    describe('main', function () {
+        let authorMember
+        beforeEach(() => {
+            const adminRole = testUtil.createRole(client, guild, { id: config.adminRoleID });
+            authorMember = testUtil.createMember(client, guild, authorUser, [adminRole.id]);
+        })
+        it('checks author perm', function (done) {
+            const member = testUtil.createMember(client, guild, user);
+            channel.send(".unban No one", user, member)
+                .then((msg) => {
+                    unban.main(msg, ["No", "one"])
+                        .then((complete) => {
+                            assert.equal(complete, undefined);
+                            assert.equal(channel.lastMessage.content, ".unban No one");
+                            assert.equal(guild.members.bans.get(user.id).reason, "test ban");
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('checks everyone ping', function (done) {
+
+            channel.send(".unban", authorUser, authorMember, [], {}, true)
+                .then((msg) => {
+                    unban.main(msg, [])
+                        .then((complete) => {
+                            assert(!complete && complete !== undefined);
+                            assert.equal(channel.lastMessage.content, "I can't unban everyone");
+                            assert.equal(guild.members.bans.get(user.id).reason, "test ban");
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('sends message on no mention or ID', function (done) {
+            channel.send(".unban", authorUser, authorMember)
+                .then((msg) => {
+                    unban.main(msg, [])
+                        .then((complete) => {
+                            assert(!complete && complete !== undefined);
+                            assert.equal(channel.lastMessage.content, "No user or ID specified");
+                            assert.equal(guild.members.bans.get(user.id).reason, "test ban");
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('unbans by mention', function (done) {
+            channel.send(".unban", authorUser, authorMember, [user])
+                .then((msg) => {
+                    unban.main(msg, [`<@!${user.id}>`, "Reasoning"])
+                        .then((complete) => {
+                            assert(complete);
+                            assert.equal(channel.lastMessage.content, `Unbanned ${user.tag} for Reasoning`);
+                            assert.equal(guild.members.bans.get(user.id), undefined);
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('unbans by ID', function (done) {
+            channel.send(`.unban ${user.id} Reasoning`, authorUser, authorMember)
+                .then((msg) => {
+                    unban.main(msg, [`${user.id}`, "Reasoning"])
+                        .then((complete) => {
+                            assert(complete);
+                            assert.equal(channel.lastMessage.content, `Unbanned ${user.tag} for Reasoning`);
+                            assert.equal(guild.members.bans.get(user.id), undefined);
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+    });
+});
