@@ -8,7 +8,7 @@ const { GuildMember, Message } = require('discord.js');
 const name = "ban";
 const description = "Bans a member from the server";
 const usage = `${config.prefix}ban <member mention> [reason]` +
-    `${config.prefix}ban <member ID> [reason]`;
+    '\n' + `${config.prefix}ban <member ID> [reason]`;
 const type = "Moderation";
 
 /**
@@ -112,9 +112,11 @@ async function main(message, args) {
 
 exports.main = main;
 exports.name = name;
-exports.description = description;
-exports.usage = usage;
-exports.type = type;
+exports.data = {
+    description: description,
+    usage: usage,
+    type: type
+}
 exports.testing = {
     getReason: getReason,
     ban: ban
