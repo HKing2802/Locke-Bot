@@ -2,6 +2,14 @@
 */
 const util = require('../src/util.js');
 const { Message, User } = require('discord.js');
+const { prefix } = require('../config.json');
+
+const name = "unban";
+const description = "Unbans a user from the server";
+const usage = `${prefix}unban <user mention> [reason]` +
+    '\n' + `${prefix}unban <user ID> [reason]`;
+const type = "Moderation";
+const aliases = ['ub'];
 
 /**
  * Gets the reason for unban from the arguments
@@ -41,10 +49,10 @@ async function unban(message, args, target) {
         return false;
     }
 
-    const reason = getReason(args, target);
+    let reason = getReason(args, target);
     if (reason == "") reason = "No reason given";
 
-    message.guild.members.unban(target, `${reason} - Unbanned by ${message.author.tag}`)
+    return message.guild.members.unban(target, `${reason} - Unbanned by ${message.author.tag}`)
         .then((u) => {
             let msg;
             if (reason == "No reason given")
@@ -61,7 +69,7 @@ async function unban(message, args, target) {
         .catch(err => {
             return message.channel.send("Unable to unban the user")
                 .then(() => {
-                    util.log(`Unable to unban user ${$target.tag} By: ${message.author.tag} Reason: ${reason} Error: ${err}`, undefined, false, 'error');
+                    util.log(`Unable to unban user ${target.tag} By: ${message.author.tag} Reason: ${reason} Error: ${err}`, undefined, false, 'error');
                     return false;
                 })
         })
@@ -89,4 +97,17 @@ async function main(message, args) {
             }
         }
     }
+}
+
+exports.main = main;
+exports.name = name;
+exports.data = {
+    description: description,
+    usage: usage,
+    type: type,
+    aliases: aliases
+}
+exports.testing = {
+    getReason: getReason,
+    unban: unban
 }
