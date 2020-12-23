@@ -40,7 +40,7 @@ function getReason(args, target) {
  * @param {Message} message The message received by the bot
  * @param {Array<string>} args The arguments provided to the command and split by processor
  * @param {GuildMember} target The target member to ban
- * @returns {boolean}
+ * @returns {Promise<boolean>}
  */
 async function ban(message, args, target) {
     if (util.getPerm(target, true)) {
@@ -49,6 +49,8 @@ async function ban(message, args, target) {
     }
 
     let reason = getReason(args, target);
+
+    if (reason == "") reason = "No reason given";
 
     return target.ban({ reason: `${reason} - Banned by ${message.author.tag}` })
         .then((m) => {
@@ -64,7 +66,7 @@ async function ban(message, args, target) {
                 tag = m.user.tag;
             }
 
-            if (reason == "")
+            if (reason == "No reason given")
                 msg = `Banned ${tag}, No reason given.`;
             else
                 msg = `Banned ${tag} for ${reason}`;
@@ -88,7 +90,7 @@ async function ban(message, args, target) {
  * Checks message author permission and if a mention/ID is given
  * @param {Message} message The message received by the bot
  * @param {Array<string>} args The arguments provided to the command and split by processor
- * @returns {boolean|undefined}
+ * @returns {Promise<boolean|undefined>}
  */
 async function main(message, args) {
     if (util.getPerm(message.member)) {
