@@ -458,7 +458,7 @@ describe('Test Guild Unban', function () {
         guild.members.unban("")
             .then((m) => done(`unban returned with non-error value${m}`))
             .catch((err) => {
-                if (err instanceof Error && err.message == "BAN_RESOLVE_ID") {
+                if (err instanceof Error && err.message == "UNBAN_RESOLVE_ID") {
                     client.destroy();
                     done()
                 } else {

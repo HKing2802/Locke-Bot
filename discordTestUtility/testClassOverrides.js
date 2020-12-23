@@ -216,14 +216,16 @@ class TestGuildMemberManager extends Discord.GuildMemberManager {
      * @returns {Promise<user>}
      */
     async unban(user, reason) {
-        const id = this.client.users.resolveID(user);
-        if (!id) return Promise.reject(new Error('BAN_RESOLVE_ID'));
+        let id = this.client.users.resolveID(user);
+        if (!id) id = user.id;
+        if (!id) return Promise.reject(new Error('UNBAN_RESOLVE_ID'));
         this.bans.delete(id);
-        return this.client.users.resolve(user)
+        return this.client.users.resolve(id)
     }
 
     fetchBan(user) {
-        const id = this.client.users.resolveID(user);
+        let id = this.client.users.resolveID(user);
+        if (!id) id = user.id;
         if (!id) throw new Error('FETCH_BAN_RESOLVE_ID');
         return this.bans.get(id);
     }
