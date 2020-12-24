@@ -39,7 +39,7 @@ async function kick(message, args, target) {
         .then((m) => {
             let msg;
             if (reason == "No reason given")
-                msg = `Kicked ${m.user.tag}, No reason given.`;
+                msg = `Kicked ${m.user.tag}`;
             else
                 msg = `Kicked ${m.user.tag} for ${reason}`;
 
@@ -65,9 +65,9 @@ async function main(message, args) {
                 .then(() => { return false });
         } else {
             const target = message.guild.members.resolve(message.mentions.members.first());
-            if (target) return await ban(message, args, target);
+            if (target) return await kick(message, args, target);
             const IDtarget = message.guild.members.resolve(args[0]);
-            if (IDtarget) return await ban(message, args, IDtarget);
+            if (IDtarget) return await kick(message, args, IDtarget);
             else {
                 return message.channel.send("No member or ID specified")
                     .then(() => { return false });
