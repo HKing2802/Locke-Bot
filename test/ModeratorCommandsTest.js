@@ -405,6 +405,7 @@ describe('kick', function () {
     let user;
     let member;
     let channel;
+    let authorUser;
 
     beforeEach(() => {
         client = new Discord.Client();
@@ -412,14 +413,15 @@ describe('kick', function () {
         user = testUtil.createUser(client, "Test", "1234");
         member = testUtil.createMember(client, guild, user);
         channel = new testUtil.testChannel(guild);
+        authorUser = testUtil.createUser(client, "Test Author", "4321");
     });
 
     before(() => {
-        util.testing.silenceLogging(true);
+        util.testing.silenceLogging(false);
     });
 
     after(() => {
-        util.testing.silenceLogging(true);
+        util.testing.silenceLogging(false);
     });
 
     afterEach(() => {
@@ -449,5 +451,113 @@ describe('kick', function () {
         });
     });
 
+    describe('kick', function () {
+        it('kicks the member', function (done) {
+            channel.send(".kick", authorUser)
+                .then((msg) => {
+                    kick.testing.kick(msg, ['Reasoning'], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert.equal(channel.lastMessage.content, `Kicked ${user.tag} for Reasoning`);
+                            assert(!guild.members.cache.has(user.id));
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
 
-})
+        it('checks if target is staff', function (done) {
+            const helperRole = testUtil.createRole(client, guild, { id: config.helperRoleID });
+            member = testUtil.createMember(client, guild, user, [helperRole.id]);
+            channel.send(".kick", authorUser)
+                .then((msg) => {
+                    kick.testing.kick(msg, [], member)
+                        .then((complete) => {
+                            assert(!complete);
+                            assert.equal(channel.lastMessage.content, "Can't kick a staff member");
+                            assert(guild.members.cache.has(user.id));
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('uses no reason given', function (done) {
+            channel.send(".kick", authorUser)
+                .then((msg) => {
+                    kick.testing.kick(msg, [], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert.equal(channel.lastMessage.content, `Kicked ${user.tag}`);
+                            assert(!guild.members.cache.has(user.id));
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+    });
+
+    describe('main', function () {
+        let authorMember;
+
+        beforeEach(() => {
+            const adminRole = testUtil.createRole(client, guild, { id: config.adminRoleID });
+            authorMember = testUtil.createMember(client, guild, authorUser, [adminRole.id]);
+        });
+
+        it('checks author perm', function (done) {
+            channel.send(".kick", user, member, [member])
+                .then((msg) => {
+                    kick.main(msg, [])
+                        .then((complete) => {
+                            assert(complete == undefined);
+                            assert(guild.members.cache.has(user.id));
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('returns on no mention or ID', function (done) {
+            channel.send(".kick", authorUser, authorMember)
+                .then((msg) => {
+                    kick.main(msg, [])
+                        .then((complete) => {
+                            assert(!complete && complete !== undefined);
+                            assert.equal(channel.lastMessage.content, "No member or ID specified");
+                            assert(guild.members.cache.has(user.id));
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('kicks by mention', function (done) {
+            channel.send(".kick", authorUser, authorMember, [member])
+                .then((msg) => {
+                    kick.main(msg, [])
+                        .then((complete) => {
+                            assert(complete);
+                            assert.equal(channel.lastMessage.content, `Kicked ${user.tag}`);
+                            assert(!guild.members.cache.has(user.id));
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('kicks by ID', function (done) {
+            channel.send(".kick", authorUser, authorMember)
+                .then((msg) => {
+                    kick.main(msg, [`${member.id}`, `Reasoning`])
+                        .then((complete) => {
+                            //assert(complete);
+                            assert.equal(channel.lastMessage.content, `Kicked ${user.tag} for Reasoning`);
+                            assert(!guild.members.cache.has(user.id));
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+    });
+});
