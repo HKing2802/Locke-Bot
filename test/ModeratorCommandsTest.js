@@ -397,3 +397,57 @@ describe('unban', function () {
         });
     });
 });
+
+describe('kick', function () {
+    const kick = require('../commands/kick.js');
+    let client;
+    let guild;
+    let user;
+    let member;
+    let channel;
+
+    beforeEach(() => {
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        user = testUtil.createUser(client, "Test", "1234");
+        member = testUtil.createMember(client, guild, user);
+        channel = new testUtil.testChannel(guild);
+    });
+
+    before(() => {
+        util.testing.silenceLogging(true);
+    });
+
+    after(() => {
+        util.testing.silenceLogging(true);
+    });
+
+    afterEach(() => {
+        client.destroy();
+    });
+
+    describe('getReason', function () {
+        it('gets the reason', function () {
+            const args = [`<@!${user.id}>`, "This", "is", "a", "test", "kick"];
+            const reason = kick.testing.getReason(args, user);
+
+            assert.equal(reason, "This is a test kick");
+        });
+
+        it('removes the tag', function () {
+            const args = [`<@!${user.id}>This`, "is", "another", "test", "kick!"];
+            const reason = kick.testing.getReason(args, user);
+
+            assert.equal(reason, "This is another test kick!");
+        });
+
+        it('removes ID', function () {
+            const args = [`${user.id}This`, "is", "a", "third", "kick!"];
+            const reason = kick.testing.getReason(args, user);
+
+            assert.equal(reason, "This is a third kick!");
+        });
+    });
+
+
+})
