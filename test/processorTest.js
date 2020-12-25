@@ -46,7 +46,7 @@ describe('processor', function () {
         // setting up a message to pass to the processor.
         const client = new Discord.Client();
         const guild = new Discord.Guild(client);
-        let message = new Discord.Message(client, { content: ".testcmd" }, guild);
+        let message = new Discord.Message(client, { content: ".testcmd", id: Discord.SnowflakeUtil.generate() }, guild);
 
         // destroys client for smooth test exit
         client.destroy();

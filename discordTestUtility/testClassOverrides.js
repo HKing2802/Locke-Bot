@@ -125,11 +125,12 @@ class TestChannel extends Discord.TextChannel {
      */
     async send(content, authorUser, authorMember, mentions = [], extraData = {}, pingEveryone = false) {
         const id = Discord.SnowflakeUtil.generate()
-        let authorMemberData;
+        let data = { id: id, content: content, mentions: mentions, mention_everyone: pingEveryone, ...extraData };
+        if (authorUser) data = { author: authorUser, ...data };
         if (authorMember) {
-            authorMemberData = {nick: authorMember.nickname, joined_at: authorMember.joinedTimestamp, premium_since: authorMember.premiumSinceTimestamp, user: authorMember.user, roles: authorMember._roles}
+            const authorMemberData = { nick: authorMember.nickname, joined_at: authorMember.joinedTimestamp, premium_since: authorMember.premiumSinceTimestamp, user: authorMember.user, roles: authorMember._roles }
+            data = { member: authorMemberData, ...data };
         }
-        const data = { id: id, content: content, author: authorUser, member: authorMemberData, mentions: mentions, mention_everyone: pingEveryone, ...extraData };
         this.testMessages.add(data, this);
         this.lastMessageID = this.messages.fetch(id).id;
         return this.messages.fetch(id);

@@ -567,7 +567,7 @@ describe('Test Message', function () {
 
     it('has user mentions', function () {
         const user = testUtil.createUser(client, "test user", "1234");
-        const msg = new classOverrides.TestMessage(client, { content: "test", mentions: [user] }, channel)
+        const msg = new classOverrides.TestMessage(client, { content: "test", mentions: [user], id: Discord.SnowflakeUtil.generate() }, channel)
 
         assert.equal(msg.mentions.users.first().username, user.username);
         assert.equal(msg.mentions.members.first(), undefined);
@@ -576,7 +576,7 @@ describe('Test Message', function () {
     it('has member mentions', function () {
         const user = testUtil.createUser(client, "test member", "1234");
         const member = testUtil.createMember(client, guild, user);
-        const msg = new classOverrides.TestMessage(client, { content: "test", mentions: [member] }, channel);
+        const msg = new classOverrides.TestMessage(client, { content: "test", mentions: [member], id: Discord.SnowflakeUtil.generate() }, channel);
 
         assert.equal(msg.mentions.users.first().username, user.username);
         assert.equal(msg.mentions.members.first().user.username, member.user.username)
