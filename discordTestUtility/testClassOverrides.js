@@ -185,6 +185,22 @@ class TestGuildMemberManager extends Discord.GuildMemberManager {
     }
 
     /**
+     * Overrdies the BaseManager add to use TestMember objects instead of GuildMember
+     * @param {Object} data The data passed to TestMember creation
+     * @param {boolean} cache If the newly created member will be added to the guild's cache
+     * @returns {TestMember}
+     */
+    add(data, cache = true) {
+        const existing = this.cache.get(data.id);
+        if (existing && existing._patch && cache) existing._patch(data);
+        if (existing) return existing;
+
+        const entry = new TestMember(this.client, data, this.guild);
+        if (cache) this.cache.set(entry.id, entry);
+        return entry;
+    }
+
+    /**
      * Bans a user in the test guild
      * @param {Discord.UserResolvable} user - The user to ban
      * @param {Object} options - Options for the ban
