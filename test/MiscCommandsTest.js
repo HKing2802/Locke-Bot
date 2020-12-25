@@ -40,7 +40,7 @@ describe('help', function () {
 
             assert(data instanceof Map);
             assert(categories instanceof Map);
-            assert.equal(data.get('testcmd'), "Test Description");
+            assert.equal(data.get('testcmd'), "Test Description\n  Usage: Test Usage\n  Aliases: tc1, tc2");
             assert.equal(categories.get('Test Type')[0], 'testcmd');
             assert.equal(data.size, 1);
             assert.equal(categories.size, 1);
@@ -80,7 +80,7 @@ describe('help', function () {
                             assert.equal(msg.content.footer.text, `v${package.version} -- Developed by HKing#9193`)
                             assert.equal(msg.content.author.name, "LockeBot");
                             assert.equal(msg.content.fields[0].name, "Test Type");
-                            assert.equal(msg.content.fields[0].value, "testcmd: Test Description\n");
+                            assert.equal(msg.content.fields[0].value, "testcmd: Test Description\n  Usage: Test Usage\n  Aliases: tc1, tc2\n");
                             done()
                         })
                         .catch(err => done(err));
