@@ -30,14 +30,17 @@ function getData(nameList) {
         // checks that the file exists
         if (fs.existsSync(pathcheck)) {
             const functionImport = require(path);
-            if (functionImport.description == "" || !(functionImport.description)) continue;
+            const functionData = functionImport.data;
+
+            if (!functionData) continue;
+            if (functionData.description == "" || !(functionData.description)) continue;
             if (!(functionImport.name) || data.has(functionImport.name)) continue;
 
             let type;
-            if (functionImport.type == "" || !(functionImport.type)) {
+            if (functionData.type == "" || !(functionData.type)) {
                 type = "Misc";
             } else {
-                type = functionImport.type;
+                type = functionData.type;
             }
 
             if (categories.has(type)) {
@@ -48,7 +51,16 @@ function getData(nameList) {
                 categories.set(type, [functionImport.name]);
             }
 
-            data.set(functionImport.name, functionImport.description);
+            let desc = functionData.description;
+            if (functionData.usage && functionData.usage != "") desc += `\n  Usage: ${functionData.usage}`;
+            if (functionData.aliases && functionData.aliases != "" && Array.isArray(functionData.aliases)) {
+                desc += `\n  Aliases: ${functionData.aliases[0]}`;
+                for (let i = 1; i < functionData.aliases.length; i++) {
+                    desc += `, ${functionData.aliases[i]}`;
+                }
+            }
+
+            data.set(functionImport.name, desc);
 
         } else {
             log("Attempting to import command data from a missing file. Skipping over...", undefined, false, "warn");
