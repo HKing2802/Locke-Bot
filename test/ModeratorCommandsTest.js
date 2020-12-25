@@ -551,7 +551,7 @@ describe('kick', function () {
                 .then((msg) => {
                     kick.main(msg, [`${member.id}`, `Reasoning`])
                         .then((complete) => {
-                            //assert(complete);
+                            assert(complete);
                             assert.equal(channel.lastMessage.content, `Kicked ${user.tag} for Reasoning`);
                             assert(!guild.members.cache.has(user.id));
                             done();
