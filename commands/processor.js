@@ -34,6 +34,12 @@ function getFunctions(nameList) {
 
             // adds command to dictionary
             commands.set(name, func);
+
+            // checks for aliases and adds them to the command dictionary
+            if (functionImport.data && functionImport.data.aliases && Array.isArray(functionImport.data.aliases)) {
+                for (const alias of functionImport.data.aliases)
+                    commands.set(alias, func);
+            }
         } else {
             log("Attempting to import command with missing file. Skipping over...");
         }
