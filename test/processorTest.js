@@ -30,6 +30,15 @@ describe('Get Functions', function () {
         assert.equal(commands.size, 1);
         assert.equal(commands.get('ping'), ping.main);
     });
+
+    it('gets aliases', function () {
+        const testcmd = require('../commands/testcmd.js');
+        const commands = processor.getFunctions(['testcmd']);
+        assert.equal(commands.size, 3);
+        assert.equal(commands.get('tc1'), testcmd.main);
+        assert.equal(commands.get('tc2'), testcmd.main);
+        assert.equal(commands.get('testcmd'), testcmd.main);
+    })
 })
 
 describe('processor', function () {
