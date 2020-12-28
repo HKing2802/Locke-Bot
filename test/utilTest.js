@@ -52,6 +52,44 @@ describe('getPerm', function () {
     client.destroy();
 });
 
+describe('getReason', function () {
+    const client = new Discord.Client();
+    let guild;
+    let user;
+    let member;
+
+    beforeEach(() => {
+        guild = testUtil.createGuild(client);
+        user = testUtil.createUser(client, "test", "1234");
+        member = testUtil.createMember(client, guild, user);
+    });
+
+    after(() => {
+        client.destroy();
+    })
+
+    it('gets the reason', function () {
+        const args = [`<@!${member.id}>`, "This", "is", "a", "test", "ban"];
+        const reason = util.getReason(args, member);
+
+        assert.equal(reason, "This is a test ban");
+    });
+
+    it('removes the tag', function () {
+        const args = [`<@!${member.id}>This`, "is", "another", "test", "ban!"];
+        const reason = util.getReason(args, member);
+
+        assert.equal(reason, "This is another test ban!");
+    });
+
+    it('removes ID', function () {
+        const args = [`${member.id}This`, "is", "a", "third", "ban!"];
+        const reason = util.getReason(args, member);
+
+        assert.equal(reason, "This is a third ban!");
+    });
+});
+
 describe('filter attachment', function () {
     const path = "../config.json";
     const client = new Discord.Client();
@@ -239,6 +277,21 @@ describe('log', function () {
                 assert.equal(msg[0], undefined);
                 assert.equal(msg[1].content, "Continue test 2");
                 assert.equal(channel2.lastMessage.content, "Continue test 2");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('skips embeds', function (done) {
+        const channels = [[guild.id, channel1.id], [guild.id, channel2.id]];
+        const embed = new Discord.MessageEmbed().setAuthor("LockeBot Test").setTitle("Test Embed");
+        util.log(embed, client, true, "info", channels, logger)
+            .then((msg) => {
+                assert.equal(transport.spy.callCount, 0);
+                assert(channel1.lastMessage.content instanceof Discord.MessageEmbed);
+                assert(channel2.lastMessage.content instanceof Discord.MessageEmbed);
+                assert.equal(channel1.lastMessage.content.title, "Test Embed");
+                assert.equal(channel2.lastMessage.content.title, "Test Embed");
                 done();
             })
             .catch(err => done(err));
