@@ -2,6 +2,7 @@ const assert = require('assert');
 const Discord = require('discord.js');
 const classOverrides = require('../discordTestUtility/testclassOverrides.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
+const util = require("../src/util.js");
 
 describe('TestChannel', function () {
     it('sends messages', function (done) {
@@ -583,3 +584,91 @@ describe('Test Message', function () {
     });
 
 });
+
+describe('TestMemberRoleManager', function () {
+    let client;
+    let guild;
+    let role;
+    let role2;
+    let user;
+    let member;
+
+    before(() => {
+        util.testing.silenceLogging(true);
+    });
+
+    beforeEach(() => {
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        user = testUtil.createUser(client, "test", "1234");
+        member = testUtil.createMember(client, guild, user);
+        role = testUtil.createRole(client, guild, { name: "test 1" }).role;
+        role2 = testUtil.createRole(client, guild, { name: "test 2" }).role;
+    });
+
+    afterEach(() => {
+        client.destroy();
+    });
+
+    after(() => {
+        util.testing.silenceLogging(false);
+    });
+
+    describe('add', function () {
+        it('adds a single role', function (done) {
+            member.roles.add(role)
+                .then((m) => {
+                    assert(m.roles.cache.has(role.id));
+                    assert(member.roles.cache.has(role.id));
+                    assert.equal(member.roles.cache.get(role.id).name, "test 1");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('adds multiple roles', function (done) {
+            member.roles.add([role, role2])
+                .then((m) => {
+                    assert(m.roles.cache.has(role.id));
+                    assert(m.roles.cache.has(role2.id));
+                    assert(member.roles.cache.has(role.id));
+                    assert(member.roles.cache.has(role2.id));
+                    assert.equal(member.roles.cache.get(role.id).name, "test 1");
+                    assert.equal(member.roles.cache.get(role2.id).name, "test 2");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+    });
+
+    describe('remove', function () {
+        beforeEach(() => {
+            member = testUtil.createMember(client, guild, user, [role.id, role2.id]);
+        })
+
+        it('removes a single role', function (done) {
+            member.roles.remove(role)
+                .then((m) => {
+                    assert(m.roles.cache.has(role2.id));
+                    assert(!m.roles.cache.has(role.id));
+                    assert(member.roles.cache.has(role2.id));
+                    assert(!member.roles.cache.has(role.id));
+                    assert.equal(member.roles.cache.get(role2.id).name, "test 2");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('removes multiple roles', function (done) {
+            member.roles.remove([role, role2])
+                .then((m) => {
+                    assert(!m.roles.cache.has(role.id));
+                    assert(!m.roles.cache.has(role2.id));
+                    assert(!member.roles.cache.has(role.id));
+                    assert(!member.roles.cache.has(role2.id));
+                    done();
+                })
+                .catch(err => done(err));
+        });
+    })
+})
