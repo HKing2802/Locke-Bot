@@ -47,6 +47,31 @@ function getPerm(member, boolHelp=false) {
 }
 
 /**
+ * Gets the reason for the command from the arguments
+ * Strips the mention or ID of the member/user
+ * @param {Array<string>} args The arguments provided to the command and split by processor
+ * @param {GuildMember} target The target of the command
+ * @param {number} startIndex The starting index of the args 
+ * @returns {string}
+ */
+function getReason(args, target, startIndex=0) {
+    const name = `<@!${target.id}>`;
+    const id = `${target.id}`;
+    let reason = "";
+
+    for (let i = startIndex; i < args.length; i++) {
+        if (args[i].indexOf(name) == -1) {
+            if (args[i].indexOf(id) == -1)
+                reason += `${args[i]} `;
+            else
+                reason += `${args[i].substr(id.length)} `;
+        } else
+            reason += `${args[i].substr(name.length)} `;
+    }
+    return reason.trim();
+}
+
+/**
  * Checks if a file ends with a certain extension
  * @param {string} filename - filename to check
  * @returns {boolean}
@@ -123,8 +148,8 @@ async function log(content, client, channel = true, level = 'info', logChannelOv
         }
     }
 
-    // logs to console
-    logger.log(level, content);
+    // logs to console if not an embed
+    if (!(content instanceof Discord.MessageEmbed)) logger.log(level, content);
 
     // logs to channel
     if (channel && client) {
@@ -157,6 +182,7 @@ function silenceLogging(state) {
 exports.getPerm = getPerm;
 exports.filterAttachment = filterAttachment;
 exports.log = log;
+exports.getReason = getReason;
 exports.testing = {
     checkLogChannels: checkLogChannels,
     silenceLogging: silenceLogging

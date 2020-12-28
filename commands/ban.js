@@ -1,6 +1,6 @@
 /* Command to ban a member
  */
-const util = require('../src/util.js');
+const { getPerm, getReason, log } = require('../src/util.js');
 const config = require('../config.json');
 const { GuildMember, Message } = require('discord.js');
 
@@ -12,30 +12,6 @@ const usage = `${config.prefix}ban <member mention> [reason]` +
 const type = "Moderation";
 
 /**
- * Gets the reason for ban from the arguments
- * Strips the mention or ID of the member being banned
- * @param {Array<string>} args The arguments provided to the command and split by processor
- * @param {GuildMember} target The target of the ban
- * @returns {string}
- */
-function getReason(args, target) {
-    const name = `<@!${target.id}>`;
-    const id = `${target.id}`;
-    let reason = "";
-
-    for (let i = 0; i < args.length; i++) {
-        if (args[i].indexOf(name) == -1) {
-            if (args[i].indexOf(id) == -1)
-                reason += `${args[i]} `;
-            else
-                reason += `${args[i].substr(id.length)} `;
-        } else
-            reason += `${args[i].substr(name.length)} `;
-    }
-    return reason.trim();
-}
-
-/**
  * Checks to ensure that the target can be banned, and performs the ban
  * @param {Message} message The message received by the bot
  * @param {Array<string>} args The arguments provided to the command and split by processor
@@ -43,7 +19,7 @@ function getReason(args, target) {
  * @returns {Promise<boolean>}
  */
 async function ban(message, args, target) {
-    if (util.getPerm(target, true)) {
+    if (getPerm(target, true)) {
         return message.channel.send("Can't ban a staff member")
             .then(() => { return false });
     }
@@ -73,14 +49,14 @@ async function ban(message, args, target) {
 
             return message.channel.send(msg)
                 .then(() => {
-                    util.log(`${message.author.tag} banned ${tag} for ${reason}`, message.client, true);
+                    log(`${message.author.tag} banned ${tag} for ${reason}`, message.client, true);
                     return true;
                 });
         })
         .catch(err => {
             return message.channel.send(`Unable to ban the member`)
                 .then(() => {
-                    util.log(`Unable to ban member ${target.user.tag} By: ${message.author.tag} Reason: ${reason} Error: ${err}`, undefined, false, 'error');
+                    log(`Unable to ban member ${target.user.tag} By: ${message.author.tag} Reason: ${reason} Error: ${err}`, undefined, false, 'error');
                     return false;
                 });
         });
@@ -93,7 +69,7 @@ async function ban(message, args, target) {
  * @returns {Promise<boolean|undefined>}
  */
 async function main(message, args) {
-    if (util.getPerm(message.member)) {
+    if (getPerm(message.member)) {
         if (message.mentions.everyone) {
             return message.channel.send("I can't Ban everyone")
                 .then(() => { return false });
@@ -118,6 +94,5 @@ exports.data = {
     type: type
 }
 exports.testing = {
-    getReason: getReason,
     ban: ban
 }

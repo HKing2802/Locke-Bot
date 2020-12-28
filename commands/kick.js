@@ -9,30 +9,13 @@ const usage = `${prefix}kick <member mention> [reason]` +
     '\n' + `${prefix}kick <member ID> [reason]`;
 const type = "Moderation";
 
-function getReason(args, target) {
-    const name = `<@!${target.id}>`;
-    const id = `${target.id}`;
-    let reason = "";
-
-    for (let i = 0; i < args.length; i++) {
-        if (args[i].indexOf(name) == -1) {
-            if (args[i].indexOf(id) == -1)
-                reason += `${args[i]} `;
-            else
-                reason += `${args[i].substr(id.length)} `;
-        } else
-            reason += `${args[i].substr(name.length)} `;
-    }
-    return reason.trim();
-}
-
 async function kick(message, args, target) {
     if (util.getPerm(target, true)) {
         return message.channel.send("Can't kick a staff member")
             .then(() => { return false });
     }
 
-    let reason = getReason(args, target);
+    let reason = util.getReason(args, target);
     if (reason == "") reason = "No reason given";
 
     return target.kick({ reason: `${reason} - Kicked by ${message.author.tag}` })
@@ -84,6 +67,5 @@ exports.data = {
     type: type
 }
 exports.testing = {
-    getReason: getReason,
     kick: kick
 }

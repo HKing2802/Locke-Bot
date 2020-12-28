@@ -12,30 +12,6 @@ const type = "Moderation";
 const aliases = ['ub'];
 
 /**
- * Gets the reason for unban from the arguments
- * Strips the mention or ID of the user
- * @param {Array<string>} args The arguments provided to the command and split by processor
- * @param {User} target The target user to unban
- * @returns {string}
- */
-function getReason(args, target) {
-    const name = `<@!${target.id}>`;
-    const id = `${target.id}`;
-    let reason = "";
-
-    for (let i = 0; i < args.length; i++) {
-        if (args[i].indexOf(name) == -1) {
-            if (args[i].indexOf(id) == -1)
-                reason += `${args[i]} `;
-            else
-                reason += `${args[i].substr(id.length)} `;
-        } else
-            reason += `${args[i].substr(name.length)} `;
-    }
-    return reason.trim();
-}
-
-/**
  * Checks to ensure that the target has been banned before, and performs the unban
  * @param {Message} message The message received by the bot
  * @param {Array<string>} args The arguments provided to the command and split by processor
@@ -49,7 +25,7 @@ async function unban(message, args, target) {
         return false;
     }
 
-    let reason = getReason(args, target);
+    let reason = util.getReason(args, target);
     if (reason == "") reason = "No reason given";
 
     return message.guild.members.unban(target, `${reason} - Unbanned by ${message.author.tag}`)
@@ -108,6 +84,5 @@ exports.data = {
     aliases: aliases
 }
 exports.testing = {
-    getReason: getReason,
     unban: unban
 }
