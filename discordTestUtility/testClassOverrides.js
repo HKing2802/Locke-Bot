@@ -148,6 +148,77 @@ class TestChannel extends Discord.TextChannel {
     set messages(m) { }
 }
 
+class TestMemberRoleManager extends Discord.GuildMemberRoleManager {
+    /**
+     * Adds a role (or multiple roles) to the member.
+     * @param {Discord.RoleResolvable|Discord.RoleResolvable[]|Discord.Collection<Snowflake, Discord.Role} roleOrRoles The role or roles to add
+     * @param {string} [reason] Reason for adding the role(s)
+     * @returns {Promise<Discord.GuildMember>}
+     */
+    async add(roleOrRoles, reason) {
+        if (roleOrRoles instanceof Discord.Collection || Array.isArray(roleOrRoles)) {
+            roleOrRoles = roleOrRoles.map(r => this.guild.roles.resolve(r));
+            if (roleOrRoles.includes(null)) throw new TypeError('INVALID_TYPE', 'roles', 'Array or Collection of Roles or Snowflakes', true);
+
+            // constructs an array of new and existing role IDs
+            let newRoles = [];
+            for (const role of roleOrRoles) newRoles.push(role.id);
+            newRoles.concat(this._roles.keys());
+
+            // patches new roles
+            this.member._patch({ roles: newRoles });
+
+            return this.member;
+        } else {
+            roleOrRoles = this.guild.roles.resolve(roleOrRoles);
+            if (roleOrRoles === null) {
+                throw new TypeError('INVALID_TYPE', 'roles', 'Role, Snowflake or Array or Collection of Roles or Snowflakes');
+            }
+
+            // gets old role IDs
+            const RoleIDs = Array.from(this.cache.keys());
+
+            // adds new role
+            RoleIDs.push(roleOrRoles.id);
+
+            // patches new roles
+            this.member._patch({ roles: RoleIDs });
+            return this.member;
+        }
+    }
+
+    /**
+     * Removes a role (or multiple roles) from the member.
+     * @param {Discord.RoleResolvable|Discord.RoleResolvable[]|Discord.Collection<Snowflake, Discord.Role>} roleOrRoles The role or roles to remove
+     * @param {any} [reason] Reason for removing the role(s);
+     * @returns {Promise<Discord.GuildMember>}
+     */
+    async remove(roleOrRoles, reason) {
+        if (roleOrRoles instanceof Discord.Collection || Array.isArray(roleOrRoles)) {
+            roleOrRoles = roleOrRoles.map(r => this.guild.roles.resolve(r));
+            if (roleOrRoles.includes(null)) throw new TypeError('INVALID_TYPE', 'roles', "Array or Collection of Roles or Snowflakes", true);
+
+            const newRoles = this._roles.filter(role => !roleOrRoles.includes(role));
+            let roleArr = [];
+            for (const role of newRoles) roleArr.push(role.id);
+            this.member._patch({ roles: roleArr });
+            return this.member;
+        } else {
+            roleOrRoles = this.guild.roles.resolve(roleOrRoles);
+            if (roleOrRoles === null) throw new TypeError('INVALID_TYPE', 'roles', 'Array or Collection of Roles or Snowflakes', true);
+
+            //const newRoles = this._roles.filter(role => role.id !== roleOrRoles.id);
+            let newRoles = [];
+            for (const roleID of this._roles.keys()) {
+                if (roleID !== roleOrRoles.id) newRoles.push(roleID);
+            }
+
+            this.member._patch({ roles: newRoles });
+            return this.member;
+        }
+    }
+}
+
 class TestMember extends Discord.GuildMember {
     /**
      * Kicks a member from the guild
@@ -170,6 +241,10 @@ class TestMember extends Discord.GuildMember {
     ban(options) {
         if (!(this.guild instanceof TestGuild)) return Promise.reject(new Error('BAD_GUILD_SETUP'));
         return this.guild.members.ban(this.id, options);
+    }
+
+    get roles() {
+        return new TestMemberRoleManager(this);
     }
 }
 
