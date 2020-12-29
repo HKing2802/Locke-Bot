@@ -37,5 +37,12 @@
     "ban",
     "repository",
     "restart"
+  ],
+
+  "modules": [
+    {
+      "name": "message",
+      "path": "events/message.js"
+    }
   ]
 }
