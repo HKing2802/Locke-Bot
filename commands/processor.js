@@ -1,4 +1,3 @@
-const logger = require('winston');
 const fs = require('fs');
 const { Message } = require('discord.js');
 const { log } = require('../src/util.js');
@@ -10,27 +9,26 @@ const { log } = require('../src/util.js');
  * @returns {Map<string, Function>}
  */
 function getFunctions(nameList) {
-    let commands = new Map()
+    let commands = new Map();
 
     for (let i = 0; i < nameList.length; i++) {
         // iterates over list of filenames and imports their name and main functions
         if (commands.has(nameList[i])) {
-            log("Attempting to import command already in command list. Skipping over...");
+            log("Attempting to import command already in command list. Skipping over...", undefined, false, 'warn');
             continue;
         }
 
         // constructs path from filename
-        let path = "./" + nameList[i] + ".js";
-        let pathcheck = "./commands/" + nameList[i] + ".js";
-        let functionImport;
+        const path = "./" + nameList[i] + ".js";
+        const pathcheck = "./commands/" + nameList[i] + ".js";
 
         // checks that the file exists
         if (fs.existsSync(pathcheck)) {
-            functionImport = require(path);
+            const functionImport = require(path);
 
             // imports name and function
-            let name = functionImport.name;
-            let func = functionImport.main;
+            const name = functionImport.name;
+            const func = functionImport.main;
 
             // adds command to dictionary
             commands.set(name, func);
@@ -41,7 +39,7 @@ function getFunctions(nameList) {
                     commands.set(alias, func);
             }
         } else {
-            log("Attempting to import command with missing file. Skipping over...");
+            log("Attempting to import command with missing file. Skipping over...", undefined, false, 'warn');
         }
     }
     return commands;
@@ -56,7 +54,7 @@ function getFunctions(nameList) {
 async function process(message, commands) {
     // verifies that commands parameter is a map
     if (!(commands instanceof Map)) {
-        logger.error(`Commands parameter is not Map, instead is ${typeof commands}`);
+        log(`Commands parameter is not Map, instead is ${typeof commands}`, undefined, false, 'error');
         return;
     }
 
