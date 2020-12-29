@@ -15,7 +15,7 @@ const type = "Moderation";
 /**
  * Parses the time argument to get a timestamp when the member is meant to be unmuted
  * @param {Array<string>} args The arguments provided to the command and split by processor
- * @param {any} target The target member of the mute
+ * @param {Discord.GuildMember} target The target member of the mute
  * @returns {Date}
  */
 function parseTime(args, target) {
@@ -52,6 +52,12 @@ function parseTime(args, target) {
     return { time: time, unit: unit, timeUnban: timeUnban };
 }
 
+/**
+ * Checks permissions of the target and carries out the role exchange
+ * @param {Discord.Message} message
+ * @param {Array<string>} args
+ * @param {Discord.GuildMember} target
+ */
 async function mute(message, args, target) {
     if (getPerm(target)) {
         message.channel.send("Can't mute a staff member")
@@ -84,8 +90,10 @@ async function mute(message, args, target) {
     // constructs log embed
     const logEmbed = Discord.MessageEmbed()
         .setAuthor(message.author.tag)
+        .setDescription(target.user.tag)
         .setTitle("Mute")
-        .addField("Reason", reason);
+        .addField("Reason", reason)
+        .setFooter(moment().format("dddd, MMMM Do YYYY, HH:mm:ss"))
 
     if (muteTime) logEmbed.addField("Duration", muteTime.timeUnban.toNow(true));
     log(logEmbed, message.client);
@@ -93,7 +101,7 @@ async function mute(message, args, target) {
 
 /**
  * Checks message author permission and if a mention/ID is given
- * @param {Message} message The message received by the bot
+ * @param {Discord.Message} message The message received by the bot
  * @param {Array<string>} args The arguments provided to the command and split by processor
  * @returns {Promise<boolean|undefined>}
  */
