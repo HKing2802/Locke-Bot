@@ -59,4 +59,13 @@ describe('processor', function () {
             })
             .catch(err => done(err))
     });
+
+    it('checks commands param is type Map', function (done) {
+        processor.process({ content: "test" }, "test")
+            .then((response) => {
+                assert.equal(response, undefined);
+                done();
+            })
+            .catch(err => done(err));
+    });
 });
