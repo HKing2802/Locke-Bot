@@ -30,29 +30,6 @@ describe('ban', function () {
         client.destroy();
     })
 
-    describe('getReason', function () {
-        it('gets the reason', function () {
-            const args = [`<@!${member.id}>`, "This", "is", "a", "test", "ban"];
-            const reason = ban.testing.getReason(args, member);
-
-            assert.equal(reason, "This is a test ban");
-        });
-
-        it('removes the tag', function () {
-            const args = [`<@!${member.id}>This`, "is", "another", "test", "ban!"];
-            const reason = ban.testing.getReason(args, member);
-
-            assert.equal(reason, "This is another test ban!");
-        });
-
-        it('removes ID', function () {
-            const args = [`${member.id}This`, "is", "a", "third", "ban!"];
-            const reason = ban.testing.getReason(args, member);
-
-            assert.equal(reason, "This is a third ban!");
-        });
-    });
-
     describe('ban', function () {
         it('bans from the guild', function (done) {
             assert(guild.members.cache.get(member.id) != undefined);
@@ -251,29 +228,6 @@ describe('unban', function () {
         client.destroy();
     })
 
-    describe('getReason', function () {
-        it('gets the reason', function () {
-            const args = [`<@!${user.id}>`, "This", "is", "a", "test", "unban"];
-            const reason = unban.testing.getReason(args, user);
-
-            assert.equal(reason, "This is a test unban");
-        });
-
-        it('removes the tag', function () {
-            const args = [`<@!${user.id}>This`, "is", "another", "test", "unban!"];
-            const reason = unban.testing.getReason(args, user);
-
-            assert.equal(reason, "This is another test unban!");
-        });
-
-        it('removes ID', function () {
-            const args = [`${user.id}This`, "is", "a", "third", "unban!"];
-            const reason = unban.testing.getReason(args, user);
-
-            assert.equal(reason, "This is a third unban!");
-        });
-    });
-
     describe('unban', function () {
         it('unbans from the guild', function (done) {
             channel.send(".unban", authorUser)
@@ -417,7 +371,7 @@ describe('kick', function () {
     });
 
     before(() => {
-        util.testing.silenceLogging(false);
+        util.testing.silenceLogging(true);
     });
 
     after(() => {
@@ -426,29 +380,6 @@ describe('kick', function () {
 
     afterEach(() => {
         client.destroy();
-    });
-
-    describe('getReason', function () {
-        it('gets the reason', function () {
-            const args = [`<@!${user.id}>`, "This", "is", "a", "test", "kick"];
-            const reason = kick.testing.getReason(args, user);
-
-            assert.equal(reason, "This is a test kick");
-        });
-
-        it('removes the tag', function () {
-            const args = [`<@!${user.id}>This`, "is", "another", "test", "kick!"];
-            const reason = kick.testing.getReason(args, user);
-
-            assert.equal(reason, "This is another test kick!");
-        });
-
-        it('removes ID', function () {
-            const args = [`${user.id}This`, "is", "a", "third", "kick!"];
-            const reason = kick.testing.getReason(args, user);
-
-            assert.equal(reason, "This is a third kick!");
-        });
     });
 
     describe('kick', function () {
@@ -561,3 +492,62 @@ describe('kick', function () {
         });
     });
 });
+
+describe('mute', function () {
+    const mute = require('../commands/mute.js');
+    let client;
+    let guild;
+    let user;
+    let member;
+
+    beforeEach(() => {
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        user = testUtil.createUser(client, "test", "1234");
+        member = testUtil.createMember(client, guild, user);
+    });
+
+    afterEach(() => {
+        client.destroy();
+    });
+
+    before(() => {
+        util.testing.silenceLogging(true);
+    });
+
+    after(() => {
+        util.testing.silenceLogging(false);
+    });
+
+    describe('parseTime', function () {
+        it('gets time', function () {
+            const moment = require('moment');
+            const time = mute.testing.parseTime(["", "60m"], member);
+
+            assert.equal(time.time, 60);
+            assert.equal(time.unit, 'm')
+            assert(time.timeUnban instanceof moment);
+        });
+
+        it('checks first arg', function () {
+            const time2 = mute.testing.parseTime([`<@!${member.id}>2d`], member);
+
+            assert.equal(time2.time, 2);
+            assert.equal(time2.unit, "d");
+        });
+
+        it('parses time with no space', function () {
+            const time = mute.testing.parseTime([`${member.id}20h`], member);
+
+            assert.equal(time.time, 20);
+            assert.equal(time.unit, 'h');
+        });
+
+        it('has a default unit', function () {
+            const time = mute.testing.parseTime(["", "30"], member);
+
+            assert.equal(time.time, 30);
+            assert.equal(time.unit, 'm');
+        });
+    })
+})
