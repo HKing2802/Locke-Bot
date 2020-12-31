@@ -13,7 +13,7 @@ const aliases = ['rk'];
  * command is limited to the author and Kae, the reciever of the reactions
  * @param {Message} message
  * @param {Array<string>} args
- * @returns {boolean}
+ * @returns {undefined}
  */
 async function main(message, args) {
     if (message.author.id == config.authorID || message.author.id == config.kaeID) {
@@ -24,11 +24,10 @@ async function main(message, args) {
         if (args[0] == "true") change = true;
 
         config.kaeReact = change;
-        return fs.writeFile('./config.json', JSON.stringify(config, null, 2), function writeJSON(err) {
+        fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
             if (err) log(`Could not write to config JSON: ${err}`, message.client, true, 'error');
             log(`Switched reactKae to ${change}`, message.client);
-            return message.delete()
-                .then(() => { return true });
+            message.delete();
         });
     }
 }
