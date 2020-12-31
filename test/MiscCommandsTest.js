@@ -121,8 +121,7 @@ describe('reactKae', function () {
         channel.send('reactKae', user)
             .then((msg) => {
                 reactKae.main(msg, [])
-                    .then((complete) => {
-                        assert(complete);
+                    .then(() => {
                         assert(config.kaeReact !== startVal);
                         done();
                     })
@@ -135,9 +134,8 @@ describe('reactKae', function () {
             .then((msg) => {
                 assert(channel.lastMessage.content, "reactKae");
                 reactKae.main(msg, [])
-                    .then((complete) => {
-                        assert(complete);
-                        assert.equal(channel.lastMessage, undefined);
+                    .then(() => {
+                        assert.equal(channel.lastMessage.content, 'reactKae');
                         done();
                     })
                     .catch(err => done(err));
