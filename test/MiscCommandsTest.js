@@ -90,3 +90,59 @@ describe('help', function () {
     });
 });
 
+describe('reactKae', function () {
+    const reactKae = require('../commands/reactKae.js');
+    let client;
+    let guild;
+    let channel;
+    let user;
+
+    beforeEach(() => {
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        channel = new testUtil.testChannel(guild);
+        user = testUtil.createUser(client, "Test User", "1234", false, { id: config.authorID });
+    });
+
+    before(() => {
+        util.testing.silenceLogging(false);
+    });
+
+    after(() => {
+        util.testing.silenceLogging(false);
+    });
+
+    afterEach(() => {
+        client.destroy();
+    });
+
+    it('switches state', function (done) {
+        const startVal = config.kaeReact;
+        channel.send('reactKae', user)
+            .then((msg) => {
+                reactKae.main(msg, [])
+                    .then((complete) => {
+                        assert(complete);
+                        assert(config.kaeReact !== startVal);
+                        done();
+                    })
+                    .catch(err => done(err));
+            });
+    });
+
+    it('deletes message', function (done) {
+        channel.send('reactKae', user)
+            .then((msg) => {
+                assert(channel.lastMessage.content, "reactKae");
+                reactKae.main(msg, [])
+                    .then((complete) => {
+                        assert(complete);
+                        assert.equal(channel.lastMessage, undefined);
+                        done();
+                    })
+                    .catch(err => done(err));
+            });
+    });
+
+    
+});
