@@ -52,7 +52,7 @@ describe('module_handler', function () {
         let channel;
 
         before(() => {
-            silenceLogging(false);
+            silenceLogging(true);
         });
 
         beforeEach(() => {
