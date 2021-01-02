@@ -123,24 +123,10 @@ describe('reactKae', function () {
                 reactKae.main(msg, [])
                     .then(() => {
                         assert(config.kaeReact !== startVal);
-                        done();
-                    })
-                    .catch(err => done(err));
-            });
-    });
-
-    it('deletes message', function (done) {
-        channel.send('reactKae', user)
-            .then((msg) => {
-                assert(channel.lastMessage.content, "reactKae");
-                reactKae.main(msg, [])
-                    .then(() => {
                         assert.equal(channel.lastMessage.content, 'reactKae');
                         done();
                     })
                     .catch(err => done(err));
             });
     });
-
-    
 });
