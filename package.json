@@ -18,9 +18,10 @@
         "url": "https://github.com/HKing2802/Locke-Bot"
     },
     "dependencies": {
+        "@mysql/xdevapi": "8.0.22",
         "discord.js": "^12.5.1",
         "moment": "^2.29.1",
-        "mysql": "^2.18.1",
+        "sqlstring": "^2.3.2",
         "unidecode": "^0.1.8",
         "winston": "^3.3.3",
         "winston-daily-rotate-file": "^4.5.0"
