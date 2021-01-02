@@ -2,9 +2,9 @@ const processor = require('../commands/processor.js');
 const assert = require('assert');
 const Discord = require('discord.js');
 const ping = require('../commands/ping.js')
+const util = require('../src/util.js')
 
 describe('Get Functions', function () {
-    const util = require('../src/util.js')
     before(() => {
         util.testing.silenceLogging(true);
     })
@@ -42,6 +42,14 @@ describe('Get Functions', function () {
 })
 
 describe('processor', function () {
+    before(() => {
+        util.testing.silenceLogging(true);
+    });
+
+    after(() => {
+        util.testing.silenceLogging(false);
+    });
+
     it('runs command', function (done) {
         // setting up a message to pass to the processor.
         const client = new Discord.Client();
