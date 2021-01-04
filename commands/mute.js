@@ -22,6 +22,7 @@ function parseTime(args, target) {
     let arg;
     const name = `<@!${target.id}>`;
     const id = `${target.id}`;
+    if (args[0] === undefined) return;
     if (!args[1]) {
         if (args[0].length > name.length || args[0].length > id.length) {
             arg = args[0];
@@ -60,35 +61,57 @@ function parseTime(args, target) {
  */
 async function mute(message, args, target) {
     if (getPerm(target)) {
-        message.channel.send("Can't mute a staff member")
+        return message.channel.send("Can't mute a staff member")
             .then(() => { return false });
     }
 
-    const muteTime = parseTime(args);
+    const muteTime = parseTime(args, target);
     let member = false;
 
     let reason;
-    if (muteTime) reason = util.getReason(args, target, 1);
-    else reason = util.getReason(args, target);
+    if (muteTime) reason = getReason(args, target, 2);
+    else reason = getReason(args, target);
 
     if (reason == "") reason = "No reason given";
-    if (target.roles.has(config.memberRoleID)) member = true;
+    if (target.roles.cache.has(config.memberRoleID)) member = true;
 
     // adds role
-    await target.roles.add(message.guild.roles.cache.get(config.mutedRoleID));
+    const role = message.guild.roles.cache.get(config.mutedRoleID);
+    await target.roles.add(role);
 
     // removes role(s)
     await target.roles.remove(message.guild.roles.cache.get(config.humanRoleID));
     if (member) await target.roles.remove(message.guild.roles.cache.get(config.memberRoleID));
 
+    // constructs response message
+    let msg = `Muted ${target.user.tag}`;
+    if (muteTime) msg += ` for ${muteTime.timeUnban.toNow(true)}`;
+    if (reason == "No reason given") msg += ', No reason given';
+    else msg += ` for ${reason}`;
+
     // adds to db
-    // TODO: write insertion to db
+    if (!db.connected()) log(`Not Connected to database. Skipping database entry...`, undefined, false, 'warn');
+    else {
+        // sets timeUnban to formatted time if exists, or undefined otherwise
+        let timeUnban = 'NULL';
+        if (muteTime) timeUnban = `'${muteTime.timeUnban.format('YYYY-MM-DD HH:mm:ss')}'`;
+
+        if (member) member = 1;
+        else member = 0;
+
+        // Builds and executes query to Database
+        db.buildQuery(`INSERT INTO muted_users(user_id, name, member, time_unmute) VALUES (${target.id}, '${target.user.username}', ${member}, ${timeUnban})`)
+            .execute();
+        log('Logged muted user to Database');
+    }
 
     // logs info
-    log(`${message.author.tag} muted ${target.user.tag} for ${reason} Time: ${muteTime.timeUnban.format()}`);
+    let logmsg = `${message.author.tag} muted ${target.user.tag} for ${reason}`;
+    if (muteTime) logmsg += `Time: ${muteTime.timeUnban.format()}`;
+    log(logmsg);
 
     // constructs log embed
-    const logEmbed = Discord.MessageEmbed()
+    const logEmbed = new Discord.MessageEmbed()
         .setAuthor(message.author.tag)
         .setDescription(target.user.tag)
         .setTitle("Mute")
@@ -97,6 +120,14 @@ async function mute(message, args, target) {
 
     if (muteTime) logEmbed.addField("Duration", muteTime.timeUnban.toNow(true));
     log(logEmbed, message.client);
+
+    // sends response message
+    return message.channel.send(msg)
+        .then(() => { return true })
+        .catch((err) => {
+            log(`Could not send response message for mute, ${err}`);
+            return false;
+        });
 }
 
 /**
