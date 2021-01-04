@@ -704,7 +704,7 @@ describe('mute', function () {
                                 assert.equal(result[0], member.id);
                                 assert.equal(result[1], user.username);
                                 assert.equal(result[2], 0);
-                                assert.equal(moment(result[4]).format(), moment(result[3]).add('2', 'd').format());
+                                assert.equal(moment(result[4]).format('YYYY-MM-DD HH:mm'), moment(result[3]).add('2', 'd').format('YYYY-MM-DD HH:mm'));
                             })
                                 .then(() => {
                                     assert.equal(numEntries, 1);
@@ -847,6 +847,287 @@ describe('mute', function () {
                                     assert.equal(numEntries, 0);
                                     done();
                                 });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+    });
+});
+
+describe('unmute', function () {
+    const unmute = require('../commands/unmute.js');
+    let client;
+    let guild;
+    let user;
+    let member;
+    let channel;
+    let muteRole;
+    let humanRole;
+    let memberRole;
+    let authorUser;
+    let authorMember;
+    let adminRole;
+
+    beforeEach(() => {
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        user = testUtil.createUser(client, "test", "1234");
+        member = testUtil.createMember(client, guild, user);
+        channel = new testUtil.testChannel(guild);
+        mutedRole = testUtil.createRole(client, guild, { id: config.mutedRoleID }).role;
+        humanRole = testUtil.createRole(client, guild, { id: config.humanRoleID }).role;
+        memberRole = testUtil.createRole(client, guild, { id: config.memberRoleID }).role;
+        authorUser = testUtil.createUser(client, "test user", "4321");
+        authorMember = testUtil.createMember(client, guild, authorUser);
+        adminRole = testUtil.createRole(client, guild, { id: config.adminRoleID }).role;
+    });
+
+    afterEach(() => {
+        client.destroy();
+    });
+
+    before(() => {
+        util.testing.silenceLogging(true);
+    });
+
+    after(() => {
+        util.testing.silenceLogging(false);
+    });
+
+    describe('unmute', function () {
+        const db = require('../src/db.js');
+
+        before(async function () {
+            const auth = require('../auth.json');
+            const testConfig = {
+                host: auth.db_host,
+                user: auth.db_user,
+                password: auth.db_pass,
+                schema: 'lockebot_test_db',
+                port: 33060
+            }
+            await db.connect(testConfig);
+        });
+
+        after(async function () {
+            await db.disconnect();
+        });
+
+        beforeEach(() => {
+            member.roles.add(mutedRole);
+        });
+
+        it('unmutes', function (done) {
+            db.buildQuery(`INSERT INTO muted_users(user_id, name, member) VALUES (${member.id}, '${user.username}', 0)`).execute();
+
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.testing.unmute(msg, ['Reasoning'], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert(!(member.roles.cache.has(mutedRole.id)));
+                            assert(!(member.roles.cache.has(memberRole.id)));
+                            assert.equal(channel.lastMessage.content, `Unmuted ${user.tag} for Reasoning`);
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('Omits No reason given', function (done) {
+            db.buildQuery(`INSERT INTO muted_users(user_id, name, member) VALUES (${member.id}, '${user.username}', 0)`).execute();
+
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.testing.unmute(msg, [], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert(!(member.roles.cache.has(mutedRole.id)));
+                            assert.equal(channel.lastMessage.content, `Unmuted ${user.tag}`);
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('gives back member role', function (done) {
+            db.buildQuery(`INSERT INTO muted_users(user_id, name, member) VALUES (${member.id}, '${user.username}', 1)`).execute();
+
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.testing.unmute(msg, [], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert(member.roles.cache.has(memberRole.id));
+                            assert(!(member.roles.cache.has(mutedRole.id)));
+                            assert.equal(channel.lastMessage.content, `Unmuted ${user.tag}`);
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('checks target permission', function (done) {
+            member.roles.add(adminRole);
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.testing.unmute(msg, [], member)
+                        .then((complete) => {
+                            assert(!complete);
+                            assert(member.roles.cache.has(mutedRole.id));
+                            assert(!(member.roles.cache.has(humanRole.id)));
+                            assert(!(member.roles.cache.has(memberRole.id)));
+                            assert.equal(channel.lastMessage.content, "Can't unmute a staff member");
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('checks if target is muted', function (done) {
+            member.roles.remove(mutedRole);
+            member.roles.add(humanRole);
+
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.testing.unmute(msg, [], member)
+                        .then((complete) => {
+                            assert(!complete);
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert(!(member.roles.cache.has(mutedRole.id)));
+                            assert.equal(channel.lastMessage.content, "Member is not muted");
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('removes db entry', function (done) {
+            db.buildQuery(`INSERT INTO muted_users(user_id, name, member) VALUES (${member.id}, '${user.username}', 0)`).execute();
+
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.testing.unmute(msg, ['Reasoning'], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert(!(member.roles.cache.has(mutedRole.id)));
+                            assert(!(member.roles.cache.has(memberRole.id)));
+                            assert.equal(channel.lastMessage.content, `Unmuted ${user.tag} for Reasoning`);
+
+                            // checks db for entry;
+                            db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`)
+                                .execute(result => {
+                                    assert(false);
+                                })
+                                .then(() => {
+                                    done();
+                                });
+                        })
+                        .catch(err => done(err));
+                });
+        })
+    });
+
+    describe('main', function () {
+        const db = require('../src/db.js');
+
+        before(async function () {
+            const auth = require('../auth.json');
+            const testConfig = {
+                host: auth.db_host,
+                user: auth.db_user,
+                password: auth.db_pass,
+                schema: 'lockebot_test_db',
+                port: 33060
+            }
+            await db.connect(testConfig);
+        });
+
+        after(async function () {
+            await db.disconnect();
+        });
+
+        beforeEach(() => {
+            member.roles.add(mutedRole);
+            guild.members.cache.set(member.id, member);
+            authorMember.roles.add(adminRole);
+        });
+
+        it('checks author perm', function (done) {
+            authorMember.roles.remove(adminRole);
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.main(msg, [])
+                        .then((complete) => {
+                            assert.equal(complete, undefined);
+                            assert.equal(channel.lastMessage.content, 'unmute');
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('checks for everyone ping', function (done) {
+            channel.send('unmute', authorUser, authorMember, [], {}, true)
+                .then((msg) => {
+                    unmute.main(msg, [])
+                        .then((complete) => {
+                            assert.equal(complete, false);
+                            assert.equal(channel.lastMessage.content, "I can't unmute everyone");
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('responds on no member or ID', function (done) {
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.main(msg, [])
+                        .then((complete) => {
+                            assert.equal(complete, false);
+                            assert.equal(channel.lastMessage.content, "No member or ID specified");
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('unmutes on mention', function (done) {
+            db.buildQuery(`INSERT INTO muted_users(user_id, name, member) VALUES (${member.id}, '${user.username}', 0)`).execute();
+
+            channel.send('unmute', authorUser, authorMember, [member])
+                .then((msg) => {
+                    unmute.main(msg, ['Reasoning'])
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert(!(member.roles.cache.has(mutedRole.id)));
+                            assert(!(member.roles.cache.has(memberRole.id)));
+                            assert.equal(channel.lastMessage.content, `Unmuted ${user.tag} for Reasoning`);
+                            done();
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('unmutes on ID', function (done) {
+            db.buildQuery(`INSERT INTO muted_users(user_id, name, member) VALUES (${member.id}, '${user.username}', 1)`).execute();
+
+            channel.send('unmute', authorUser, authorMember)
+                .then((msg) => {
+                    unmute.main(msg, [`${member.id}`, "Test", "Reasoning"])
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert(member.roles.cache.has(memberRole.id));
+                            assert(!(member.roles.cache.has(mutedRole.id)));
+                            assert.equal(channel.lastMessage.content, `Unmuted ${user.tag} for Test Reasoning`);
+                            done();
                         })
                         .catch(err => done(err));
                 });
