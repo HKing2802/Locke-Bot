@@ -499,12 +499,26 @@ describe('mute', function () {
     let guild;
     let user;
     let member;
+    let channel;
+    let muteRole;
+    let humanRole;
+    let memberRole;
+    let authorUser;
+    let authorMember;
+    let adminRole;
 
     beforeEach(() => {
         client = new Discord.Client();
         guild = testUtil.createGuild(client);
         user = testUtil.createUser(client, "test", "1234");
         member = testUtil.createMember(client, guild, user);
+        channel = new testUtil.testChannel(guild);
+        muteRole = testUtil.createRole(client, guild, { id: config.mutedRoleID }).role;
+        humanRole = testUtil.createRole(client, guild, { id: config.humanRoleID }).role;
+        memberRole = testUtil.createRole(client, guild, { id: config.memberRoleID }).role;
+        authorUser = testUtil.createUser(client, "test user", "4321");
+        authorMember = testUtil.createMember(client, guild, authorUser);
+        adminRole = testUtil.createRole(client, guild, { id: config.adminRoleID }).role;
     });
 
     afterEach(() => {
@@ -549,5 +563,293 @@ describe('mute', function () {
             assert.equal(time.time, 30);
             assert.equal(time.unit, 'm');
         });
-    })
-})
+
+        it('returns if args is empty', function () {
+            const time = mute.testing.parseTime([], member);
+
+            assert.equal(time, undefined);
+        });
+    });
+
+    describe('mute', function () {
+        const db = require('../src/db.js');
+
+        before(async function () {
+            const auth = require('../auth.json');
+            const testConfig = {
+                host: auth.db_host,
+                user: auth.db_user,
+                password: auth.db_pass,
+                schema: 'lockebot_test_db',
+                port: 33060
+            }
+            await db.connect(testConfig);
+        });
+
+        afterEach(function () {
+            db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${member.user.id} && name = '${user.username}' LIMIT 1`).execute();
+        });
+
+        after(async function () {
+            await db.disconnect();
+        });
+
+        beforeEach(() => {
+            member.roles.add(humanRole);
+        });
+
+        it('mutes', function (done) {
+            channel.send('mute', authorUser, authorMember)
+                .then((msg) => {
+                    mute.testing.mute(msg, ['Reasoning'], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(muteRole.id));
+                            assert(!(member.roles.cache.has(humanRole.id)));
+                            assert(!(member.roles.cache.has(memberRole.id)));
+                            assert.equal(channel.lastMessage.content, `Muted ${user.tag} for Reasoning`);
+
+                            // checks db for entry
+                            let numEntries = 0;
+                            const query = db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`);
+                            query.execute(result => {
+                                numEntries += 1;
+                                assert.equal(result[0], member.id);
+                                assert.equal(result[1], member.user.username);
+                                assert.equal(result[2], 0)
+                                assert.equal(result[4], undefined);
+                            })
+                                .then(() => {
+                                    assert.equal(numEntries, 1);
+                                    done();
+                                });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('checks target permission', function (done) {
+            const adminRole = testUtil.createRole(client, guild, { id: config.adminRoleID }).role;
+            member.roles.add(adminRole);
+            channel.send('mute', authorUser, authorMember)
+                .then((msg) => {
+                    mute.testing.mute(msg, [], member)
+                        .then((complete) => {
+                            assert(!complete);
+                            assert(!(member.roles.cache.has(muteRole.id)));
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert.equal(channel.lastMessage.content, `Can't mute a staff member`);
+
+                            // checks db to not have entry
+                            let numEntries = 0;
+                            const query = db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`);
+                            query.execute(result => {
+                                numEntries += 1;
+                            })
+                                .then(() => {
+                                    assert.equal(numEntries, 0);
+                                    done();
+                                });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('handles member role', function (done) {
+            member.roles.add(memberRole);
+            channel.send('mute', authorUser, authorMember)
+                .then((msg) => {
+                    mute.testing.mute(msg, [], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(muteRole.id));
+                            assert(!(member.roles.cache.has(humanRole.id)));
+                            assert(!(member.roles.cache.has(memberRole.id)));
+                            assert.equal(channel.lastMessage.content, `Muted ${user.tag}, No reason given`);
+
+                            // checks db
+                            let numEntries = 0;
+                            const query = db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`);
+                            query.execute(result => {
+                                numEntries += 1;
+                                assert.equal(result[0], member.id);
+                                assert.equal(result[1], user.username);
+                                assert.equal(result[2], 1);
+                                assert.equal(result[4], undefined);
+                            })
+                                .then(() => {
+                                    assert.equal(numEntries, 1);
+                                    done();
+                                });
+                        });
+                });
+        });
+
+        it('gets time correctly', function (done) {
+            const moment = require('moment');
+            channel.send('mute', authorUser, authorMember)
+                .then((msg) => {
+                    mute.testing.mute(msg, ["@person", "2d", "Reasoning"], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(muteRole.id));
+                            assert(!(member.roles.cache.has(humanRole.id)));
+                            assert.equal(channel.lastMessage.content, `Muted ${user.tag} for 2 days for Reasoning`);
+
+                            // checks db
+                            let numEntries = 0;
+                            const query = db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`);
+                            query.execute(result => {
+                                numEntries += 1;
+                                assert.equal(result[0], member.id);
+                                assert.equal(result[1], user.username);
+                                assert.equal(result[2], 0);
+                                assert.equal(moment(result[4]).format(), moment(result[3]).add('2', 'd').format());
+                            })
+                                .then(() => {
+                                    assert.equal(numEntries, 1);
+                                    done();
+                                });
+                        });
+                });
+        });
+    });
+
+    describe('main', function () {
+        const db = require('../src/db.js');
+
+        before(async function () {
+            const auth = require('../auth.json');
+            const testConfig = {
+                host: auth.db_host,
+                user: auth.db_user,
+                password: auth.db_pass,
+                schema: 'lockebot_test_db',
+                port: 33060
+            }
+            await db.connect(testConfig);
+        });
+
+        afterEach(function () {
+            db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${member.user.id} && name = '${user.username}' LIMIT 1`).execute();
+        });
+
+        after(async function () {
+            await db.disconnect();
+        });
+
+        beforeEach(() => {
+            member.roles.add(humanRole);
+        });
+
+        it('mutes on mention', function (done) {
+            authorMember.roles.add(adminRole);
+            channel.send('mute', authorUser, authorMember, [member])
+                .then((msg) => {
+                    mute.main(msg, ['Reasoning'])
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(muteRole.id));
+                            assert(!(member.roles.cache.has(humanRole.id)));
+                            assert(!(member.roles.cache.has(memberRole.id)));
+                            assert.equal(channel.lastMessage.content, `Muted ${user.tag} for Reasoning`);
+
+                            // checks db for entry
+                            let numEntries = 0;
+                            const query = db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`);
+                            query.execute(result => {
+                                numEntries += 1;
+                                assert.equal(result[0], member.id);
+                                assert.equal(result[1], member.user.username);
+                                assert.equal(result[2], 0)
+                                assert.equal(result[4], undefined);
+                            })
+                                .then(() => {
+                                    assert.equal(numEntries, 1);
+                                    done();
+                                });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('mutes on ID', function (done) {
+            authorMember.roles.add(adminRole);
+            channel.send('mute', authorUser, authorMember)
+                .then((msg) => {
+                    mute.main(msg, [`${member.id}`, 'Reasoning'])
+                        .then((complete) => {
+                            assert(complete);
+                            assert.equal(channel.lastMessage.content, `Muted ${user.tag} for Reasoning`);
+
+                            // checks db for entry
+                            let numEntries = 0;
+                            const query = db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`);
+                            query.execute(result => {
+                                numEntries += 1;
+                                assert.equal(result[0], member.id);
+                                assert.equal(result[1], member.user.username);
+                                assert.equal(result[2], 0)
+                                assert.equal(result[4], undefined);
+                            })
+                                .then(() => {
+                                    assert.equal(numEntries, 1);
+                                    done();
+                                });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('checks auther perm', function (done) {
+            channel.send('mute', authorUser, authorMember, [member])
+                .then((msg) => {
+                    mute.main(msg, ['Reasoning'])
+                        .then((complete) => {
+                            assert.equal(complete, undefined);
+                            assert(!(member.roles.cache.has(muteRole.id)));
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert.equal(channel.lastMessage.content, `mute`);
+
+                            // checks db to not have entry
+                            let numEntries = 0;
+                            const query = db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`);
+                            query.execute(result => {
+                                numEntries += 1;
+                            })
+                                .then(() => {
+                                    assert.equal(numEntries, 0);
+                                    done();
+                                });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+
+        it('responds on no mention or ID', function (done) {
+            authorMember.roles.add(adminRole);
+            channel.send('mute', authorUser, authorMember)
+                .then((msg) => {
+                    mute.main(msg, [])
+                        .then((complete) => {
+                            assert.equal(complete, false);
+                            assert.equal(channel.lastMessage.content, "No member or ID specified");
+                            assert(member.roles.cache.has(humanRole.id));
+                            assert(!(member.roles.cache.has(muteRole.id)));
+
+                            // checks db to not have entry
+                            let numEntries = 0;
+                            const query = db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`);
+                            query.execute(result => {
+                                numEntries += 1;
+                            })
+                                .then(() => {
+                                    assert.equal(numEntries, 0);
+                                    done();
+                                });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+    });
+});
