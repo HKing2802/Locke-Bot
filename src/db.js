@@ -54,6 +54,7 @@ function getConnected() {
  * Disconnects from the database
  */
 async function db_disconnect() {
+    if (!CONNECTED) return;
     try {
         await session.close();
         log('Disconnected from Database');
