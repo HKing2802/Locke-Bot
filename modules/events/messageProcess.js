@@ -18,13 +18,11 @@ async function messageProcess(message) {
             process(message);
         } else
             return;
-
-    // checks if message author is Kae and reaction is active
-
     }
 }
 
 function main(client) {
+    // sets up event listener
     client.on('message', (message) => {
         messageProcess(message);
     });
