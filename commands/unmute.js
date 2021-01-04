@@ -16,13 +16,13 @@ const type = "Moderation";
 async function unmute(message, args, target) {
     // checks target perm
     if (getPerm(target)) {
-        message.channel.send("Can't mute a staff member")
+        return message.channel.send("Can't unmute a staff member")
             .then(() => { return false });
     }
 
     // checks if member is muted
     if (!target.roles.cache.has(config.mutedRoleID)) {
-        message.channel.send("Member is not muted")
+        return message.channel.send("Member is not muted")
             .then(() => { return false });
     }
 
@@ -31,9 +31,17 @@ async function unmute(message, args, target) {
     if (reason == "") reason = "No reason given";
 
     // checks db if member
-    // TODO: add check db
-    // TEMP
-    const boolMember = false;
+    let boolMember;
+    if (!db.connected()) log(`Not Connected to database. Skipping database check...`, undefined, false, 'warn');
+    else {
+        // checks if member
+        await db.buildQuery(`SELECT member FROM muted_users WHERE user_id = ${target.id}`)
+            .execute(result => {
+                boolMember = !!result[0];
+            });
+        // removes entry
+        await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${target.id} LIMIT 1`).execute();
+    }
 
     // performs unmute
     target.roles.remove(message.guild.roles.cache.get(config.mutedRoleID));
@@ -47,10 +55,20 @@ async function unmute(message, args, target) {
     const logEmbed = new Discord.MessageEmbed()
         .setAuthor(message.author.tag)
         .setTitle('Unmute')
-        .setField('Reason', reason)
+        .addField('Reason', reason)
         .setFooter(moment().format("dddd, MMMM Do YYYY, HH:mm:ss"));
 
     log(logEmbed, message.client);
+
+    // constructs and sends response message
+    let msg = `Unmuted ${target.user.tag}`;
+    if (reason !== "No reason given") msg += ` for ${reason}`;
+    return message.channel.send(msg)
+        .then(() => { return true })
+        .catch((err) => {
+            log(`Could not send response message for unmute, ${err}`);
+            return false;
+        });
 }
 
 /**
@@ -65,14 +83,14 @@ async function main(message, args) {
 
         // checks for @everyone ping
         if (message.mentions.everyone) {
-            message.channel.send("I can't mute everyone")
+            return message.channel.send("I can't unmute everyone")
                 .then(() => { return false });
         } else {
             // resolves target by mention or ID and calls function
             const target = message.guild.members.resolve(message.mentions.members.first())
-            if (target) return await mute(message, args, target);
+            if (target) return await unmute(message, args, target);
             const IDtarget = message.guild.members.resolve(args[0]);
-            if (IDtarget) return await mute(message, args, IDtarget);
+            if (IDtarget) return await unmute(message, args, IDtarget);
             else {
                 return message.channel.send("No member or ID specified")
                     .then(() => { return false });
