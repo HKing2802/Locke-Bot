@@ -1,3 +1,4 @@
+const { equal } = require('assert');
 const assert = require('assert');
 const { silenceLogging } = require('../src/util.js').testing;
 const Discord = require('discord.js');
@@ -86,3 +87,121 @@ describe('module_handler', function () {
         });
     });
 })
+
+describe('messageProcess', function () {
+    const messageProcess = require('../modules/events/messageProcess.js');
+    let client;
+    let guild;
+    let channel;
+    let user;
+
+    beforeEach(() => {
+        client = new Discord.Client;
+        guild = testUtil.createGuild(client);
+        channel = new testUtil.testChannel(guild);
+        user = testUtil.createUser(client, "test", "1234");
+    });
+
+    before(() => {
+        silenceLogging(true);
+    });
+
+    after(() => {
+        silenceLogging(false);
+    });
+
+    afterEach(() => {
+        client.destroy();
+    });
+
+    it('processes message', function (done) {
+        channel.send('.ping', user)
+            .then((msg) => {
+                messageProcess.testing.messageProcess(msg)
+                    .then((complete) => {
+                        assert(complete);
+                        assert.equal(channel.lastMessage.content, 'Pong!');
+                        done();
+                    })
+                    .catch(err => done(err));
+            });
+    });
+
+    it('checks prefix', function (done) {
+        channel.send('ping', user)
+            .then((msg) => {
+                messageProcess.testing.messageProcess(msg)
+                    .then((complete) => {
+                        assert.equal(complete, undefined);
+                        assert.equal(channel.lastMessage.content, 'ping');
+                        done();
+                    })
+                    .catch(err => done(err));
+            });
+    });
+
+    it("Doesn't respond on inactive", function (done) {
+        const fs = require('fs');
+        const config = require('../config.json');
+
+        config.active = false;
+        fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+            if (err) done(err);
+            channel.send('.ping', user)
+                .then((msg) => {
+                    messageProcess.testing.messageProcess(msg)
+                        .then((complete) => {
+                            assert.equal(complete, undefined);
+                            assert.equal(channel.lastMessage.content, '.ping');
+
+                            config.active = true;
+                            fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+                                if (err) done(err);
+                                done();
+                            });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+    });
+
+    it('always responds to author', function (done) {
+        const fs = require('fs');
+        const config = require('../config.json');
+        const author = testUtil.createUser(client, 'hking', '9193', false, { id: config.authorID });
+
+        config.active = false;
+        fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+            if (err) done(err);
+            channel.send('.ping', author)
+                .then((msg) => {
+                    messageProcess.testing.messageProcess(msg)
+                        .then((complete) => {
+                            assert(complete);
+                            assert.equal(channel.lastMessage.content, 'Pong!');
+
+                            config.active = true;
+                            fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+                                if (err) done(err);
+                                done();
+                            });
+                        })
+                        .catch(err => done(err));
+                });
+        });
+    });
+
+    it('filters attachment', function (done) {
+        channel.send('.ping', user, undefined, [], { attachments: [{ id: '12', url: '../config.json', filename: 'file.exe' }] })
+            .then((msg) => {
+                messageProcess.testing.messageProcess(msg)
+                    .then((complete) => {
+                        assert.equal(complete, undefined);
+                        assert.equal(channel.messages.fetch(msg.id), undefined);
+                        assert.equal(channel.lastMessage.content, `Sorry ${user.tag}, I deleted that file because it's file-type is blacklisted in our spam filter`);
+                        done();
+                    })
+                    .catch(err => done(err));
+            });
+    });
+});
