@@ -19,10 +19,11 @@ const type = "Other"
  * The main function of the command, where all code that needs to be run is placed/referenced here 
  * @param {Message} message The discord message object passed to all commands. Client, guild, channel, etc. can be derived from this.
  * @param {Array<string>} args The arguments provided to the command. This is the rest of the message after the commmand seperated by spaces
- * @returns {boolean|undefined}
+ * @returns {boolean}
  */
 function main(message, args) {
     message.channel.send("Pong!");
+    return true;
 }
 
 exports.name = name;
