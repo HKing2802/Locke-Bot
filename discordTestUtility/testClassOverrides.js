@@ -83,6 +83,8 @@ class TestMessage extends Discord.Message {
         } else {
             this.mentions = new TestMessageMentions(this, data.mentions, data.mention_roles, data.mention_everyone, data.mention_channels);
         }
+
+        if ('edits' in data) this._edits = data.edits;
     }
 }
 
