@@ -9,3 +9,4 @@ auth.json
 /bin/**
 /logs/*
 /test/logs
+/sql
