@@ -583,6 +583,18 @@ describe('Test Message', function () {
         assert.equal(msg.mentions.members.first().user.username, member.user.username)
     });
 
+    it('has edits', function () {
+        const id = Discord.SnowflakeUtil.generate();
+        const edit1 = new classOverrides.TestMessage(client, { content: 'test', id: id }, channel);
+        const edit2 = new classOverrides.TestMessage(client, { content: 'test1', id: id, edits: [edit1] }, channel);
+        const msg = new classOverrides.TestMessage(client, { content: "test2", id: id, edits: [edit2, edit1] }, channel);
+
+        assert(Array.isArray(msg.edits));
+        assert.equal(msg.edits.length, 3);
+        assert.equal(msg.edits[0].content, 'test2');
+        assert.equal(msg.edits[1].content, 'test1');
+        assert.equal(msg.edits[2].content, 'test');
+    });
 });
 
 describe('TestMemberRoleManager', function () {
