@@ -60,7 +60,7 @@ async function db_disconnect() {
         log('Disconnected from Database');
         CONNECTED = false;
     } catch (error) {
-        log('Could not disconnect from Database: ${error}', undefined, false, 'error');
+        log(`Could not disconnect from Database: ${error}`, undefined, false, 'error');
     }
 }
 
