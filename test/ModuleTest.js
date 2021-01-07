@@ -3,6 +3,8 @@ const assert = require('assert');
 const { silenceLogging } = require('../src/util.js').testing;
 const Discord = require('discord.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
+const moment = require('moment');
+const db = require('../src/db.js');
 
 describe('module_handler', function () {
     const handler = require('../src/module_handler.js');
@@ -103,7 +105,7 @@ describe('messageProcess', function () {
     });
 
     before(() => {
-        silenceLogging(true);
+        silenceLogging(false);
     });
 
     after(() => {
@@ -203,5 +205,141 @@ describe('messageProcess', function () {
                     })
                     .catch(err => done(err));
             });
+    });
+});
+
+describe('messageDelete', function () {
+    const handler = require('../modules/events/messageDelete.js');
+    let client = new Discord.Client();
+    let guild = testUtil.createGuild(client);
+    let channel = new testUtil.testChannel(guild);
+    let user = testUtil.createUser(client, 'test', '1234');
+
+    beforeEach(() => {
+        client.destroy();
+        client = new Discord.Client;
+        guild = testUtil.createGuild(client);
+        channel = new testUtil.testChannel(guild);
+        user = testUtil.createUser(client, "test", "1234");
+    });
+
+    before(async function () {
+        silenceLogging(true);
+
+        const auth = require('../auth.json');
+        const testConfig = {
+            host: auth.db_host,
+            user: auth.db_user,
+            password: auth.db_pass,
+            schema: 'lockebot_test_db',
+            port: 33060
+        }
+        await db.connect(testConfig);
+    });
+
+    afterEach(() => {
+        db.buildQuery(`DELETE FROM messages WHERE content = 'test message' LIMIT 1`).execute();
+        db.buildQuery(`DELETE FROM edits WHERE content = 'test edit' LIMIT 1`).execute();
+        db.buildQuery(`DELETE FROM edits WHERE content = 'test edit 2' LIMIT 1`).execute();
+    })
+
+    after(async function () {
+        silenceLogging(false);
+        await db.disconnect();
+        client.destroy();
+    });
+
+    it('logs a deleted message', function (done) {
+        channel.send('test message', user)
+            .then((msg) => {
+                handler.testing.recordDeleted(msg)
+                    .then((complete) => {
+                        assert(complete);
+
+                        // check db
+                        let numEntries = 0;
+                        db.buildQuery(`SELECT * FROM messages WHERE user_id = ${user.id}`)
+                            .execute(result => {
+                                numEntries += 1;
+                                assert.equal(result[0], msg.id);
+                                assert.equal(result[1], user.id);
+                                assert.equal(moment(result[2]).add('5','h').format(), moment(msg.createdAt).format());
+                                assert.equal(result[4], msg.content);
+                            })
+                            .then(() => {
+                                assert.equal(numEntries, 1);
+                                done();
+                            })
+                            .catch(err => done(err));
+                    });
+            });
+    });
+
+    it('logs edits', function (done) {
+        const edit1 = testUtil.createMessage(channel, "test edit", user);
+        const edit2 = testUtil.createMessage(channel, "test edit 2", user);
+        const edits = [edit2, edit1];
+        const msg = testUtil.createMessage(channel, "test message", user, { edits: edits });
+
+        handler.testing.recordDeleted(msg)
+            .then((complete) => {
+                assert(complete);
+
+                // check messages table
+                let numEntries = 0;
+                db.buildQuery(`SELECT * FROM messages WHERE user_id = ${user.id}`)
+                    .execute(result => {
+                        numEntries += 1;
+                        assert.equal(result[0], msg.id);
+                        assert.equal(result[1], user.id);
+                        assert.equal(moment(result[2]).add('5', 'h').format(), moment(msg.createdAt).format());
+                        assert.equal(result[4], msg.content);
+                    })
+                    .then(() => {
+                        assert.equal(numEntries, 1);
+
+                        // check edits table
+                        let numEdits = 0;
+                        db.buildQuery(`SELECT * FROM edits WHERE msg_id = ${msg.id}`)
+                            .execute(result => {
+                                assert.equal(result[0], `${msg.id}${numEdits + 1}`);
+                                assert.equal(result[1], msg.id);
+                                assert.equal(result[2], numEdits + 1);
+                                assert.equal(moment(result[3]).add('5', 'h').format(), moment(edits[numEdits].createdAt).format());
+                                assert.equal(result[4], edits[numEdits].content);
+                                numEdits += 1
+                            })
+                            .then(() => {
+                                assert.equal(numEdits, 2);
+                                done();
+                            })
+                            .catch(err => done(err));
+                    })
+                    .catch(err => done(err));
+            })
+            .catch(err => done(err));
+    });
+
+    it('skips on bot author', function (done) {
+        const user = testUtil.createUser(client, "test user", "2345", true);
+        const msg = testUtil.createMessage(channel, "test", user);
+
+        handler.testing.recordDeleted(msg)
+            .then((complete) => {
+                assert.equal(complete, false);
+
+                // checks db
+                let numEdits = 0;
+                db.buildQuery(`SELECT * FROM messages WHERE user_id = ${user.id}`)
+                    .execute(result => {
+                        numEdits += 1;
+                    })
+                    .then(() => {
+                        assert.equal(numEdits, 0);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+            .catch(err => done(err));
     });
 });
