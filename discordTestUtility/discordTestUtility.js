@@ -31,9 +31,9 @@ function createUser(client, username, discriminator, bot = false, extraData = {}
  * @param {Array<string>} roles an array of role ids to be added to the member
  * @param {string} nickname the nickname of the member
  * @param {Object} extraData extra data to be provided to the object
- * @returns {Discord.GuildMember}
+ * @returns {classOverrides.TestMember}
  */
-function createMember(client, guild, user, roles = [], nickname = undefined, extraData = {}) {
+function createMember(client, guild, user, roles = [], nickname = null, extraData = {}) {
     const member = new classOverrides.TestMember(client, {user: user, roles: roles, nick: nickname, id: user.id, ...extraData}, guild);
     guild.members.add({ user: user, roles: roles, nick: nickname, id: user.id, ...extraData });
     return member;
