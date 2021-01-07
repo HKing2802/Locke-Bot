@@ -101,7 +101,8 @@ async function mute(message, args, target) {
 
         // Builds and executes query to Database
         db.buildQuery(`INSERT INTO muted_users(user_id, name, member, time_unmute) VALUES (${target.id}, '${target.user.username}', ${member}, ${timeUnban})`)
-            .execute();
+            .execute()
+            .catch(err => { log(`Error in querying database in edit: ${err}`, undefined, false, 'error'); });
         log('Logged muted user to Database');
     }
 
