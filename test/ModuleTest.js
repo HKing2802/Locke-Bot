@@ -1,10 +1,10 @@
-const { equal } = require('assert');
 const assert = require('assert');
 const { silenceLogging } = require('../src/util.js').testing;
 const Discord = require('discord.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
 const moment = require('moment');
 const db = require('../src/db.js');
+const config = require('../config.json');
 
 describe('module_handler', function () {
     const handler = require('../src/module_handler.js');
@@ -105,7 +105,7 @@ describe('messageProcess', function () {
     });
 
     before(() => {
-        silenceLogging(false);
+        silenceLogging(true);
     });
 
     after(() => {
@@ -244,9 +244,9 @@ describe('messageDelete', function () {
     })
 
     after(async function () {
-        silenceLogging(false);
         await db.disconnect();
         client.destroy();
+        silenceLogging(false);
     });
 
     it('logs a deleted message', function (done) {
@@ -352,7 +352,7 @@ describe('memberUpdate', function () {
     let oldMember = testUtil.createMember(client, guild, user);
 
     before(() => {
-        silenceLogging(false);
+        silenceLogging(true);
     });
 
     after(() => {
@@ -407,6 +407,18 @@ describe('memberUpdate', function () {
             .then((complete) => {
                 assert.equal(complete, undefined);
                 assert.equal(newMember.nickname, "good nickname");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('uses default nickname when empty', function (done) {
+        const newMember = testUtil.createMember(client, guild, user, [], 'ÈÈÈ');
+
+        handler.testing.compareNick(oldMember, newMember, client)
+            .then((complete) => {
+                assert.equal(complete, true);
+                assert.equal(newMember.nickname, config.defaultNickname);
                 done();
             })
             .catch(err => done(err));
