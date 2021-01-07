@@ -248,6 +248,17 @@ class TestMember extends Discord.GuildMember {
     get roles() {
         return new TestMemberRoleManager(this);
     }
+
+    /**
+     * Sets the nickname for this member
+     * @param {string} nick The nickname for the guild member
+     * @param {string} [reason] Reason for setting the nickname
+     * @returns {TestMember}
+     */
+    setNickname(nick, reason) {
+        this._patch({ nick });
+        return this
+    }
 }
 
 /**
