@@ -550,6 +550,19 @@ describe('Test Member', function () {
                 }
             });
     });
+
+    it('sets nickname', function (done) {
+        const client = new Discord.Client();
+        const guild = testUtil.createGuild(client);
+        const user = testUtil.createUser(client, "test", "1234");
+        const member = testUtil.createMember(client, guild, user);
+
+        assert.equal(member.nickname, undefined);
+        member.setNickname("test nickname")
+        client.destroy();
+        assert.equal(member.nickname, "test nickname");
+        done();
+    });
 });
 
 describe('Test Message', function () {
