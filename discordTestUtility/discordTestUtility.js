@@ -87,71 +87,39 @@ function createGuild(client, id, extraData = {}) {
     return guild;
 }
 
+/**
+ * Creates a message object for testing
+ * @param {Discord.TextChannel} channel The channel the message is sent to
+ * @param {string} [content] The content of the message
+ * @param {Discord.GuildMember|Discord.User} [author] The user or guildmember that sent the message
+ * @param {Object} [extraData] Extra data to be passed to the message object
+ * @param {Discord.Snowflake} [extraData.id] The id of the message, will be generated if undefined
+ * @param {Array<Discord.GuildMember|Discord.User>} [extraData.mentions] Array of mentions in the message
+ * @param {boolean} [extraData.mention_everyone] Boolean if everyone is mentioned
+ * @returns {TestMessage}
+ */
+function createMessage(channel, content, author, extraData = {}) {
+    let data = {content: content, ...extraData};
+    if (!('id' in data)) {
+        const id = Discord.SnowflakeUtil.generate();
+        data = { id: id, ...data };
+    }
+    if (!('mentions' in data)) data = { mentions: [], ...data };
+    if (!('mention_everyone' in data)) data = { mention_everyone: false, ...data };
+
+    if (author instanceof Discord.GuildMember || author instanceof classOverrides.TestMember) {
+        const memberData = { nick: author.nickname, joined_at: author.joinedTimestamp, premium_since: author.premiumSinceTimestamp, user: author.user, roles: author._roles };
+        data = { author: author.user, member: memberData, ...data };
+    } else if (author instanceof Discord.User) {
+        data = { author: author, ...data };
+    }
+
+    return new classOverrides.TestMessage(channel.client, data, channel);
+}
+
 exports.createUser = createUser;
 exports.createMember = createMember;
 exports.createRole = createRole;
 exports.createGuild = createGuild;
 exports.testChannel = classOverrides.TestChannel;
-
-/* all require message
- * 
- * channel = TextChannel
- * guild = Guild
- * member = GuildMember
- * author = User
- * client = Client
- * 
- * ping
- *  channel
- *  guild
- *  
- * endprocess
- *  client
- *  
- * shutdown
- *  none
- *  
- * startup
- *  none
- *  
- * mute
- *  member
- *  author
- *  channel
- *  guild
- *  
- * unmute
- *  member
- *  author
- *  channel
- *  guild
- *  
- * help
- *  channel
- *  
- * snipe
- *  author
- *  member
- *  channel
- *  
- * verify
- *  author
- *  member
- *  guild
- *  
- * kick
- *  author
- *  member
- *  guild
- *  channel
- *  
- * ban
- *  author
- *  member
- *  guild
- *  channel
- *  
- * reactKae
- *  author
- *  
-*/
+exports.createMessage = createMessage;
