@@ -364,7 +364,7 @@ describe('memberUpdate', function () {
         const newMember = testUtil.createMember(client, guild, user, [], "test nick");
         oldMember.setNickname("test nick");
 
-        handler.testing.checkNick(oldMember, newMember, client)
+        handler.testing.compareNick(oldMember, newMember, client)
             .then((complete) => {
                 assert.equal(complete, false);
                 assert.equal(newMember.nickname, "test nick");
@@ -378,7 +378,7 @@ describe('memberUpdate', function () {
         const newMember = testUtil.createMember(client, guild, user);
         oldMember.setNickname('g?');
 
-        handler.testing.checkNick(oldMember, newMember, client)
+        handler.testing.compareNick(oldMember, newMember, client)
             .then((complete) => {
                 assert.equal(complete, false);
                 assert.equal(oldMember.nickname, 'g?');
@@ -391,7 +391,7 @@ describe('memberUpdate', function () {
     it('changes nickname', function (done) {
         const newMember = testUtil.createMember(client, guild, user, [], 'gaÈ');
 
-        handler.testing.checkNick(oldMember, newMember, client)
+        handler.testing.compareNick(oldMember, newMember, client)
             .then((complete) => {
                 assert.equal(complete, true);
                 assert.equal(newMember.nickname, "ga");
@@ -403,7 +403,7 @@ describe('memberUpdate', function () {
     it('only changes when necessary', function (done) {
         const newMember = testUtil.createMember(client, guild, user, [], "good nickname");
 
-        handler.testing.checkNick(oldMember, newMember, client)
+        handler.testing.compareNick(oldMember, newMember, client)
             .then((complete) => {
                 assert.equal(complete, undefined);
                 assert.equal(newMember.nickname, "good nickname");
