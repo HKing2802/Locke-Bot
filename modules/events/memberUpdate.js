@@ -5,8 +5,9 @@ const { log } = require('../../src/util.js');
 
 function checkNick(member, client) {
     const re = /[^\x00-\x7F]/g;
-    const newNick = member.nickname.replace(re, '');
+    let newNick = member.nickname.replace(re, '');
     if (newNick != member.nickname) {
+        if (newNick == '') newNick = config.defaultNickname;
         member.setNickname(newNick);
         log(`Force changed a member's nickname to ${newNick}`, client);
         return true;
