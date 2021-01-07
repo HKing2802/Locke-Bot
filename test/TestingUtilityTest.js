@@ -682,5 +682,72 @@ describe('TestMemberRoleManager', function () {
                 })
                 .catch(err => done(err));
         });
-    })
-})
+    });
+});
+
+describe('createMessage', function () {
+    let client = new Discord.Client();
+    let guild = testUtil.createGuild(client);
+    let channel = new testUtil.testChannel(guild);
+
+    beforeEach(() => {
+        client.destroy();
+        client = new Discord.Client;
+        guild = testUtil.createGuild(client);
+        channel = new testUtil.testChannel(guild);
+    });
+
+    after(() => {
+        client.destroy();
+    });
+
+    it('creates a message', function () {
+        const msg = testUtil.createMessage(channel);
+        assert('content' in msg);
+        assert('id' in msg);
+        assert('mentions' in msg);
+        assert('author' in msg);
+        assert('member' in msg);
+        assert('channel' in msg);
+    });
+
+    it('has content', function () {
+        const msg = testUtil.createMessage(channel, "test content");
+        assert.equal(msg.content, "test content");
+    });
+
+    it('generates ID', function () {
+        const msg = testUtil.createMessage(channel);
+        assert(msg.id !== undefined);
+    });
+
+    it('sets an ID', function () {
+        const msg = testUtil.createMessage(channel, "test", undefined, { id: "1234" });
+        assert.equal(msg.id, "1234");
+    });
+
+    it('sets everyone mention', function () {
+        const msg = testUtil.createMessage(channel, "test", undefined, { mention_everyone: true });
+        assert.equal(msg.mentions.everyone, true);
+    });
+
+    it('sets user author', function () {
+        const user = testUtil.createUser(client, "test", "1234");
+        const msg = testUtil.createMessage(channel, "test", user);
+
+        assert(msg.author !== null);
+        assert.equal(msg.author.username, "test");
+        assert.equal(msg.author.discriminator, "1234");
+    });
+
+    it('sets member author', function () {
+        const user = testUtil.createUser(client, "test member", "4321");
+        const member = testUtil.createMember(client, guild, user);
+        const msg = testUtil.createMessage(channel, "test", member);
+
+        assert(msg.member !== null);
+        assert(msg.author !== null);
+        assert.equal(msg.member.user.username, "test member");
+        assert.equal(msg.member.user.discriminator, "4321");
+    });
+});
