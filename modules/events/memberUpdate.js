@@ -2,9 +2,9 @@
  */
 const config = require('../../config.json');
 const { log } = require('../../src/util.js');
-const re = /[^\x00-\x7F]/g;
 
 function checkNick(member, client) {
+    const re = /[^\x00-\x7F]/g;
     const newNick = member.nickname.replace(re, '');
     if (newNick != member.nickname) {
         member.setNickname(newNick);
