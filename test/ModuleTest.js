@@ -343,3 +343,72 @@ describe('messageDelete', function () {
             .catch(err => done(err));
     });
 });
+
+describe('memberUpdate', function () {
+    const handler = require('../modules/events/memberUpdate.js');
+    let client = new Discord.Client();
+    let guild = testUtil.createGuild(client);
+    let user = testUtil.createUser(client, "test old user", "1234");
+    let oldMember = testUtil.createMember(client, guild, user);
+
+    before(() => {
+        silenceLogging(false);
+    });
+
+    after(() => {
+        client.destroy();
+        silenceLogging(false);
+    });
+
+    it('returns on no change', function (done) {
+        const newMember = testUtil.createMember(client, guild, user, [], "test nick");
+        oldMember.setNickname("test nick");
+
+        handler.testing.checkNick(oldMember, newMember, client)
+            .then((complete) => {
+                assert.equal(complete, false);
+                assert.equal(newMember.nickname, "test nick");
+                assert.equal(oldMember.nickname, "test nick");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('returns on change to no nickname', function (done) {
+        const newMember = testUtil.createMember(client, guild, user);
+        oldMember.setNickname('g?');
+
+        handler.testing.checkNick(oldMember, newMember, client)
+            .then((complete) => {
+                assert.equal(complete, false);
+                assert.equal(oldMember.nickname, 'g?');
+                assert.equal(newMember.nickname, null);
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('changes nickname', function (done) {
+        const newMember = testUtil.createMember(client, guild, user, [], 'gaÈ');
+
+        handler.testing.checkNick(oldMember, newMember, client)
+            .then((complete) => {
+                assert.equal(complete, true);
+                assert.equal(newMember.nickname, "ga");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('only changes when necessary', function (done) {
+        const newMember = testUtil.createMember(client, guild, user, [], "good nickname");
+
+        handler.testing.checkNick(oldMember, newMember, client)
+            .then((complete) => {
+                assert.equal(complete, undefined);
+                assert.equal(newMember.nickname, "good nickname");
+                done();
+            })
+            .catch(err => done(err));
+    });
+});
