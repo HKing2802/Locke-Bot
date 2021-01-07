@@ -9,7 +9,7 @@
   "humanRoleID": "608319663780265989",
   "modsgayEmojiID": "760065066832887818",
   "kaeID": "259573995710447616",
-  "kaeReact": true,
+  "kaeReact": false,
   "logChannel": [
     [
       "608027300683841766",
@@ -24,7 +24,7 @@
     "623848021255520295",
     "285475344817848320"
   ],
-  "active": "true",
+  "active": true,
   "prefix": ".",
   "commands": [
     "ping",
