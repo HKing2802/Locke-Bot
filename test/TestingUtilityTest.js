@@ -530,27 +530,6 @@ describe('Test Member', function () {
             });
     });
 
-    it('ban throws error on wrong test guild setup', function (done) {
-        const client = new Discord.Client();
-        const guild = new Discord.Guild(client);
-        const user = testUtil.createUser(client, "test", "1234");
-        const member = testUtil.createMember(client, guild, user);
-
-        member.ban()
-            .then((m) => {
-                client.destroy();
-                done(`ban returned non-error value ${m}`);
-            })
-            .catch((err) => {
-                client.destroy();
-                if (err instanceof Error && err.message == "BAD_GUILD_SETUP") {
-                    done();
-                } else {
-                    done(err);
-                }
-            });
-    });
-
     it('sets nickname', function (done) {
         const client = new Discord.Client();
         const guild = testUtil.createGuild(client);
