@@ -424,3 +424,47 @@ describe('memberUpdate', function () {
             .catch(err => done(err));
     });
 });
+
+describe('garbage collection', function () {
+    const gb = require('../modules/timed/dbGarbageCollection.js');
+
+    before(async function () {
+        silenceLogging(true);
+        await db.connect();
+    });
+
+    after(async function () {
+        db.buildQuery(`DELETE FROM messages WHERE user_id = 456`).execute()
+            .catch(err => { throw err });
+        await db.disconnect();
+        silenceLogging(false);
+    });
+
+    it('cleans messages', function (done) {
+        // loads test data
+        const form = 'YYYY-MM-DD HH:mm:ss';
+        db.buildQuery(`insert into messages(id, user_id, send_time, content)
+            values
+	        (12, 456, '${moment().format(form)}', 'test message'),
+            (13, 456, '${moment().subtract(2, 'd').format(form)}', 'test message 2'),
+            (14, 456, '${moment().subtract(10, 'd').format(form)}', 'test message 3'),
+            (15, 456, '${moment().subtract(21, 'd').format(form)}', 'test message 4')`).execute()
+            .catch(err => done(err));
+
+        gb.testing.messages()
+            .then(() => {
+                let numEntries = 0;
+                db.buildQuery(`SELECT id FROM messages WHERE user_id = 456`)
+                    .execute(result => {
+                        if (result[0] == 14 || result[0] == 15) assert(false, 'Entry not deleted');
+                        if (result[0] == 12 || result[0] == 13) numEntries += 1;
+                    })
+                    .then(() => {
+                        assert.equal(numEntries, 2);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+            .catch(err => done(err));
+    });
+})
