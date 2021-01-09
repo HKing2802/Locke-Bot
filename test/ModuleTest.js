@@ -446,6 +446,7 @@ describe('garbage collection', function () {
 
     it('cleans messages', function (done) {
         // loads test data
+        // test data is identified by user_id being 456
         const form = 'YYYY-MM-DD HH:mm:ss';
         db.buildQuery(`insert into messages(id, user_id, send_time, content)
             values
@@ -456,7 +457,10 @@ describe('garbage collection', function () {
             .catch(err => done(err));
 
         gb.testing.messages()
-            .then(() => {
+            .then((num) => {
+                assert.equal(num, 2);
+
+                // checks db
                 let numEntries = 0;
                 db.buildQuery(`SELECT id FROM messages WHERE user_id = 456`)
                     .execute(result => {
@@ -474,6 +478,7 @@ describe('garbage collection', function () {
 
     it('cleans edits', function (done) {
         // loads test data
+        // test data is identified by id being 456
         db.buildQuery(`insert into messages(id, user_id, send_time, content)
             values (16, 456, '2021-1-09 2:00:00', 'test edit message')`).execute()
             .catch(err => done(err));
@@ -484,7 +489,10 @@ describe('garbage collection', function () {
             .catch(err => done(err));
 
         gb.testing.edits()
-            .then(() => {
+            .then((num) => {
+                assert.equal(num, 1);
+
+                // checks db
                 let numEntries = 0;
                 db.buildQuery(`select msg_id from edits where id = 456`)
                     .execute(result => {
@@ -510,18 +518,23 @@ describe('garbage collection', function () {
         const member2 = testUtil.createMember(client, guild, user2, [mutedRole.id]);
 
         // load test data
+        // test data is identified by member being 3
         db.buildQuery(`insert into muted_users (user_id, name, member) values 
             (${member.id}, '${user.username}', 3),
-            (${member2.id}, '${user2.username}', 3);`).execute()
+            (${member2.id}, '${user2.username}', 3),
+            (123, 'nonexistent user', 3);`).execute()
             .catch(err => done(err));
 
         gb.testing.muted(client)
-            .then(async () => {
+            .then(async (num) => {
                 client.destroy();
+                assert.equal(num, 2);
+
+                // checks db
                 let numEntries = 0;
                 await db.buildQuery(`SELECT user_id FROM muted_users WHERE member = 3`)
                     .execute(result => {
-                        if (result[0] == member.id) assert(false, "Entry not deleted");
+                        if (result[0] == member.id || result[0] == 123) assert(false, "Entry not deleted");
                         numEntries += 1;
                     })
                     .catch(err => done(err));
