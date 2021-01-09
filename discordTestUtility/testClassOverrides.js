@@ -328,13 +328,6 @@ class TestGuildMemberManager extends Discord.GuildMemberManager {
         return this.client.users.resolve(id)
     }
 
-    fetchBan(user) {
-        let id = this.client.users.resolveID(user);
-        if (!id) id = user.id;
-        if (!id) throw new Error('FETCH_BAN_RESOLVE_ID');
-        return this.bans.get(id);
-    }
-
     _fetchSingle({ user, cache }) {
         return this.cache.get(user);
     }
@@ -354,6 +347,13 @@ class TestGuild extends Discord.Guild {
         super(client, data);
 
         this.testMembers = new TestGuildMemberManager(this);
+    }
+
+    fetchBan(user) {
+        let id = this.client.users.resolveID(user);
+        if (!id) id = user.id;
+        if (!id) throw new Error('FETCH_BAN_RESOLVE_ID');
+        return this.members.bans.get(id);
     }
 
     /**

@@ -290,7 +290,7 @@ describe('Test Guild', function () {
         const user = testUtil.createUser(client, "test", "1234");
         guild.members.bans.set(user.id, { reason: "Test Reason", days: 2 });
 
-        const data = guild.members.fetchBan(user);
+        const data = guild.fetchBan(user);
         client.destroy();
 
         assert(data != undefined);
@@ -304,7 +304,7 @@ describe('Test Guild', function () {
         const user = testUtil.createUser(client, "test", "1234");
         guild.members.bans.set(user.id, { reason: "Test Reason 2", days: 5 });
 
-        const data = guild.members.fetchBan(user.id);
+        const data = guild.fetchBan(user.id);
         client.destroy();
 
         assert(data != undefined);
@@ -317,7 +317,7 @@ describe('Test Guild', function () {
         const guild = new classOverrides.TestGuild(client);
         const user = testUtil.createUser(client, "test", "1234");
 
-        const data = guild.members.fetchBan(user.id);
+        const data = guild.fetchBan(user.id);
         client.destroy();
 
         assert.equal(data, undefined);
