@@ -90,7 +90,7 @@ async function mute(message, args, target) {
     else msg += ` for ${reason}`;
 
     // adds to db
-    if (!db.connected()) log(`Not Connected to database. Skipping database entry...`, undefined, false, 'warn');
+    if (!db.connected()) log(`Not Connected to database. Skipping database entry...`, message.client, false, 'warn');
     else {
         // sets timeUnban to formatted time if exists, or undefined otherwise
         let timeUnban = 'NULL';
@@ -102,7 +102,7 @@ async function mute(message, args, target) {
         // Builds and executes query to Database
         db.buildQuery(`INSERT INTO muted_users(user_id, name, member, time_unmute) VALUES (${target.id}, '${target.user.username}', ${member}, ${timeUnban})`)
             .execute()
-            .catch(err => { log(`Error in querying database in edit: ${err}`, undefined, false, 'error'); });
+            .catch(err => { log(`Error in querying database in mute: ${err}`, message.client, false, 'error'); });
         log('Logged muted user to Database');
     }
 

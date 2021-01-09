@@ -32,15 +32,17 @@ async function unmute(message, args, target) {
 
     // checks db if member
     let boolMember;
-    if (!db.connected()) log(`Not Connected to database. Skipping database check...`, undefined, false, 'warn');
+    if (!db.connected()) log(`Not Connected to database. Skipping database check...`, message.client, false, 'warn');
     else {
         // checks if member
         await db.buildQuery(`SELECT member FROM muted_users WHERE user_id = ${target.id}`)
             .execute(result => {
                 boolMember = !!result[0];
-            });
+            })
+            .catch(err => { log(`Error in querying database in unmute: ${err}`, message.client, false, 'error') })
         // removes entry
-        await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${target.id} LIMIT 1`).execute();
+        await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${target.id} LIMIT 1`).execute()
+            .catch(err => { log(`Error in querying databse in unmute delete: ${err}`, message.client, false, 'error') });
     }
 
     // performs unmute
@@ -66,7 +68,7 @@ async function unmute(message, args, target) {
     return message.channel.send(msg)
         .then(() => { return true })
         .catch((err) => {
-            log(`Could not send response message for unmute, ${err}`);
+            log(`Could not send response message for unmute, ${err}`, message.client, false);
             return false;
         });
 }

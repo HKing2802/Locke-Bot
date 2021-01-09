@@ -25,8 +25,8 @@ async function main(message, args) {
 
         config.kaeReact = change;
         fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
-            if (err) log(`Could not write to config JSON: ${err}`, message.client, true, 'error');
-            log(`Switched reactKae to ${change}`, message.client);
+            if (err) log(`Could not write to config JSON: ${err}`, message.client, false, 'error');
+            log(`Switched reactKae to ${change}`, message.client, false);
             message.delete();
         });
     }
