@@ -296,4 +296,18 @@ describe('log', function () {
             })
             .catch(err => done(err));
     });
+
+    it('logs to allLogsChannels', function (done) {
+        const chan2 = new testUtil.testChannel(guild, { id: config.allLogsChannels[0] });
+        const channels = [[guild.id, channel1.id], [guild.id, chan2.id]];
+        util.log("test", client, false, "info", channels, logger)
+            .then((msg) => {
+                assert(transport.spy.calledOnce);
+                assert.equal(msg[0], undefined);
+                assert.equal(msg[1].content, "test");
+                assert.equal(chan2.lastMessage.content, "test");
+                done();
+            })
+            .catch(err => done(err));
+    });
 });
