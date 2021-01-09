@@ -124,26 +124,26 @@ function checkLogChannels(idList) {
  * Logs a message to the console, logging channels and file logs.
  * @param {string} content The content of the log message
  * @param {Discord.Client} [client] The instantiating client, can be omitted if not logging to channels
- * @param {boolean} [channel] Boolean if the message is also logged to logging channels
+ * @param {boolean} [allChannels] Boolean if the message is logged to All logging channels, or only extra info ones
  * @param {string} [level] The level of the log, can be info, warn or error. Defaults to info
  * @param {Array<Array<string>>} [logChannelOverride] A nested array that contains [[GuildID, ChannelID], ...] to override the default logging channels defined in the cofig
  * @param {Winston.logger} [logger] The logger and transports for the function to log to
  * @returns {Promise<Discord.Message>|Promise<undefined>}
  */
-async function log(content, client, channel = true, level = 'info', logChannelOverride, logger = defaultLogger) {
+async function log(content, client, allChannels = true, level = 'info', logChannelOverride, logger = defaultLogger) {
     // Checks if logging channel ids are loaded and loads if not present or if there is an override provided
     let logChannels;
     if (logChannelOverride) logChannels = logChannelOverride;
     if (!logChannels) {
         logChannels = checkLogChannels(config.logChannel);
         if (!(Array.isArray(logChannels))) {
-            channel = false;
+            client = false;
             logger.warn(`Could not load logging channel ids: ${logChannels}. Skipping channel log...`);
         }
     } else if (logChannelOverride && logChannels) {
         logChannels = checkLogChannels(logChannels);
         if (!(Array.isArray(logChannels))) {
-            channel = false;
+            client = false;
             logger.warn(`Could not load logging channel override ids: ${logChannels}. Skipping channel log...`);
         }
     }
@@ -152,7 +152,7 @@ async function log(content, client, channel = true, level = 'info', logChannelOv
     if (!(content instanceof Discord.MessageEmbed)) logger.log(level, content);
 
     // logs to channel
-    if (channel && client) {
+    if (client) {
         return await Promise.all(logChannels.map(async (arr) => {
             const guild = client.guilds.cache.get(arr[0]);
             if (!guild) {
@@ -162,8 +162,10 @@ async function log(content, client, channel = true, level = 'info', logChannelOv
                 if (!channel) {
                     logger.warn(`Could not load channel for ID ${arr[1]} in guild ${guild.name}`);
                 } else {
-                    return channel.send(content)
-                        .then((m) => { return m });
+                    if (allChannels || config.allLogsChannels.includes(channel.id)) {
+                        return channel.send(content)
+                            .then((m) => { return m });
+                    }
                 }
             }
         }));
