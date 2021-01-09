@@ -19,7 +19,7 @@ const aliases = ['ub'];
  * @returns {Promise<boolean>}
  */
 async function unban(message, args, target) {
-    const banned = message.guild.members.fetchBan(target);
+    const banned = message.guild.fetchBan(target);
     if (!banned) {
         message.channel.send("This user is not banned");
         return false;
