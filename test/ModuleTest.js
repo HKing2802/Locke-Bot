@@ -434,7 +434,11 @@ describe('garbage collection', function () {
     });
 
     after(async function () {
-        db.buildQuery(`DELETE FROM messages WHERE user_id = 456`).execute()
+        await db.buildQuery(`DELETE FROM messages WHERE user_id = 456`).execute()
+            .catch(err => { throw err });
+        await db.buildQuery(`DELETE FROM edits WHERE id = 456`).execute()
+            .catch(err => { throw err });
+        await db.buildQuery(`DELETE FROM muted_users WHERE member = 3`).execute()
             .catch(err => { throw err });
         await db.disconnect();
         silenceLogging(false);
@@ -467,4 +471,63 @@ describe('garbage collection', function () {
             })
             .catch(err => done(err));
     });
-})
+
+    it('cleans edits', function (done) {
+        // loads test data
+        db.buildQuery(`insert into messages(id, user_id, send_time, content)
+            values (16, 456, '2021-1-09 2:00:00', 'test edit message')`).execute()
+            .catch(err => done(err));
+        db.buildQuery(`insert into edits(id, msg_id, num, edit_time, content)
+            values
+            (456, 16, 1, '2021-1-09 2:00:00', 'test edit 1'),
+            (457, 17, 1, '2021-1-09 2:00:00', 'test edit 2')`).execute()
+            .catch(err => done(err));
+
+        gb.testing.edits()
+            .then(() => {
+                let numEntries = 0;
+                db.buildQuery(`select msg_id from edits where id = 456`)
+                    .execute(result => {
+                        if (result[0] == 17) assert(false, 'Entry not deleted');
+                        numEntries += 1;
+                    })
+                    .then(() => {
+                        assert.equal(numEntries, 1);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+            .catch(err => done(err));
+    });
+
+    it('cleans muted users', function (done) {
+        const client = new Discord.Client();
+        const guild = testUtil.createGuild(client, config.guildID);
+        const user = testUtil.createUser(client, "test user", "1234");
+        const user2 = testUtil.createUser(client, "test user 2", "4321");
+        const mutedRole = testUtil.createRole(client, guild, { id: config.mutedRoleID }).role;
+        const member = testUtil.createMember(client, guild, user);
+        const member2 = testUtil.createMember(client, guild, user2, [mutedRole.id]);
+
+        // load test data
+        db.buildQuery(`insert into muted_users (user_id, name, member) values 
+            (${member.id}, '${user.username}', 3),
+            (${member2.id}, '${user2.username}', 3);`).execute()
+            .catch(err => done(err));
+
+        gb.testing.muted(client)
+            .then(async () => {
+                client.destroy();
+                let numEntries = 0;
+                await db.buildQuery(`SELECT user_id FROM muted_users WHERE member = 3`)
+                    .execute(result => {
+                        if (result[0] == member.id) assert(false, "Entry not deleted");
+                        numEntries += 1;
+                    })
+                    .catch(err => done(err));
+                assert.equal(numEntries, 1);
+                done();
+            })
+            .catch(err => done(err));
+    });
+});
