@@ -41,14 +41,28 @@ async function checkMessages(client) {
 }
 
 /**
- * Checks the edits table for edits with a deleted message
+ * Checks the edits table for edits with a deleted message. Should be run after Message garbage collection
  * Returns the number of edits deleted
  * @param {Client} client The client for logging. Logs to console only if undefined
- * @returns {boolean}
+ * @returns {number}
  */
 async function checkEdits(client) {
-    // get all edits
-    // delete any where message no longer exists
+
+    // gets and counts all edits without a matching message
+    let numDel = 0;
+    await db.buildQuery(`SELECT edits.* FROM edits LEFT JOIN messages ON edits.msg_id = messages.id WHERE messages.id IS NULL`)
+        .execute(result => {
+            numDel += 1;
+        })
+        .catch(err => { log(`Error in edits query: ${err}`, client, false, 'error') });
+
+    // Deletes all edits without a matching message
+    await db.buildQuery(`DELETE edits FROM edits LEFT JOIN messages ON edits.msg_id = messages.id WHERE messages.id IS NULL`).execute()
+        .catch(err => { log(`Error in edits delete query: ${err}`, client, false, 'error') });
+
+    // logs and returns number of deleted edits
+    log(`Deleted ${numDel} Edits without a parent message`, client, false);
+    return numDel;
 }
 
 /**
@@ -60,6 +74,33 @@ async function checkEdits(client) {
 async function checkMuted(client) {
     // get all muted users
     // check all users for if they're still muted and removes otherwise
+
+    const guild = client.guilds.cache.get(config.guildID);
+    if (!guild) {
+        log(`Error in getting guild: No such ID ${config.guildID}`, client, false, 'error');
+        return;
+    }
+
+    let delIDs = [];
+    await db.buildQuery(`SELECT * FROM muted_users`)
+        .execute(result => {
+            let member = guild.members.cache.get(result[0]);
+            //console.log(member.roles.cache);
+            if (!member) {
+                delIDs.push(result[0]);
+            } else {
+                if (!(member.roles.cache.has(config.mutedRoleID))) delIDs.push(result[0]);
+            }
+        })
+        .catch(err => { log(`Error in muted_users query: ${err}`, client, false, 'error') });
+
+    for (let id of delIDs) {
+        await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${id}`).execute()
+            .catch(err => { log(`Error in muted_users delete query: ${err}`, client, false, 'error') });
+    }
+
+    log(`Deleted ${delIDs.length} Members from muted table`, client, false);
+    return delIDs.length;
 }
 
 /**
