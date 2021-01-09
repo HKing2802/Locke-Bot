@@ -34,8 +34,10 @@ function createUser(client, username, discriminator, bot = false, extraData = {}
  * @returns {classOverrides.TestMember}
  */
 function createMember(client, guild, user, roles = [], nickname = null, extraData = {}) {
-    const member = new classOverrides.TestMember(client, {user: user, roles: roles, nick: nickname, id: user.id, ...extraData}, guild);
-    guild.members.add({ user: user, roles: roles, nick: nickname, id: user.id, ...extraData });
+    data = { user: user, roles: roles, nick: nickname, id: user.id, ...extraData };
+    const member = new classOverrides.TestMember(client, data, guild);
+    guild.members.add(data);
+    client.guilds.cache.get(guild.id).members.add(data);
     return member;
 }
 
@@ -46,27 +48,25 @@ function createMember(client, guild, user, roles = [], nickname = null, extraDat
  * @param {Object} extraData extra data to be provided to the object
  */
 function createRole(client, guild, extraData = {}) {
+    let id;
+    let data;
     if (extraData.id && extraData.position) {
-        const id = extraData.id;
-        const role = new Discord.Role(client, { ...extraData }, guild);
-        guild.roles.add(role);
-        return { id, role };
+        id = extraData.id;
+        data = extraData;
     } else if (extraData.id) {
-        const id = extraData.id;
-        const role = new Discord.Role(client, { position: -1, ...extraData }, guild);
-        guild.roles.add(role);
-        return { id, role };
+        id = extraData.id;
+        data = { position: -1, ...extraData };
     } else if (extraData.position) {
-        const id = Discord.SnowflakeUtil.generate();
-        const role = new Discord.Role(client, { id: id, ...extraData }, guild);
-        guild.roles.add(role);
-        return { id, role };
+        id = Discord.SnowflakeUtil.generate();
+        data = { id: id, ...extraData };
     } else {
-        const id = Discord.SnowflakeUtil.generate();
-        const role = new Discord.Role(client, { id: id, position: -1, ...extraData }, guild);
-        guild.roles.add(role);
-        return { id,  role };
+        id = Discord.SnowflakeUtil.generate();
+        data = { id: id, position: -1, ...extraData }; 
     }
+    const role = new Discord.Role(client, data, guild);
+    guild.roles.add(data);
+    client.guilds.cache.get(guild.id).roles.add(data);
+    return { id, role };
 }
 
 /**
