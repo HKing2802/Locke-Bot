@@ -51,8 +51,28 @@
   ],
   "modules": [
     {
-      "name": "message",
-      "path": "events/message.js"
+      "name": "Message",
+      "path": "events/messageProcess.js"
+    },
+    {
+      "name": "User Join",
+      "path": "events/memberAdd.js"
+    },
+    {
+      "name": "Member Update",
+      "path": "events/memberUpdate.js"
+    },
+    {
+      "name": "Message Delete",
+      "path": "events/messageDelete.js"
+    },
+    {
+      "name": "Kae Auto-React",
+      "path": "events/reactKae.js"
+    },
+    {
+      "name": "Garbage Collection",
+      "path": "timed/dbGarbageCollection.js"
     }
   ]
 }
