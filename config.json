@@ -1,5 +1,9 @@
 {
   "defaultNickname": "Please Use ASCII Characters",
+  "messageThreshold": {
+    "num": 10,
+    "unit": "days"
+  },
   "helperRoleID": "560853327894806568",
   "modRoleID": "560853468953313299",
   "adminRoleID": "560853657608781841",
@@ -20,6 +24,9 @@
       "560847285874065408",
       "560848944868098090"
     ]
+  ],
+  "allLogsChannels": [
+    "608027300688035904"
   ],
   "nicknamePass": [
     "623848021255520295",
