@@ -440,6 +440,8 @@ describe('garbage collection', function () {
             .catch(err => { throw err });
         await db.buildQuery(`DELETE FROM muted_users WHERE member = 3`).execute()
             .catch(err => { throw err });
+        await db.buildQuery(`DELETE FROM temp_ban WHERE CHAR_LENGTH(user_id) = 3 LIMIT 2`).execute()
+            .catch(err => { throw err });
         await db.disconnect();
         silenceLogging(false);
     });
@@ -540,6 +542,40 @@ describe('garbage collection', function () {
                     .catch(err => done(err));
                 assert.equal(numEntries, 1);
                 done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('cleans banned users', function (done) {
+        const client = new Discord.Client();
+        const guild = testUtil.createGuild(client, config.guildID);
+        const user = testUtil.createUser(client, "test user", "1234", false, { id: "456" });
+        const member = testUtil.createMember(client, guild, user);
+
+        // load data
+        // test data is indentified by user_id being length 3
+        db.buildQuery(`insert into temp_ban (user_id) values (${member.id}), (457);`).execute()
+            .catch(err => done(err));
+
+        member.ban()
+            .then(() => {
+                gb.testing.banned(client, guild)
+                    .then(async (num) => {
+                        client.destroy();
+                        assert.equal(num, 1);
+
+                        //checks db
+                        let numEntries = 0;
+                        await db.buildQuery(`SELECT user_id FROM temp_ban WHERE CHAR_LENGTH(user_id) = 3`)
+                            .execute(result => {
+                                if (result[0] == 457) assert(false);
+                                numEntries += 1;
+                            })
+                            .catch(err => done(err));
+                        assert.equal(numEntries, 1);
+                        done();
+                    })
+                    .catch(err => done(err));
             })
             .catch(err => done(err));
     });
