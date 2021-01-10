@@ -53,6 +53,12 @@
   ]
 
 
+    # Other
+    
+    # interval between garbage collection sweeps in hours
+    gcSweepInterval: 12
+
+
     # Commands
     # A list of all commands with an associated command file
     # See ReadMe for more information on adding commands
