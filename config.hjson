@@ -1,0 +1,107 @@
+{
+    # General
+  prefix: .
+  messageThreshold:
+  {
+    num: 10
+    unit: days
+  }
+    
+    # IDs
+  guildID: "560847285874065408"
+  helperRoleID: "560853327894806568"
+  modRoleID: "560853468953313299"
+  adminRoleID: "560853657608781841"
+  dadminRoleID: "625898632830517249"
+  authorID: "324302699460034561"
+  memberRoleID: "561708861182967828"
+  mutedRoleID: "562452717445054474"
+  humanRoleID: "608319663780265989"
+  modsgayEmojiID: "760065066832887818"
+  kaeID: "259573995710447616"
+
+
+    # Nickname Enforcement
+    # The nickname if a memer's nickname or username is all non-ascii characters
+  defaultNickname: "Please Use ASCII Characters"
+
+    # IDs of members with nickname passes
+    # These members don't get checked for their nickname
+  nicknamePass:
+  [
+    "285475344817848320"
+  ]
+  
+    
+    # Logging
+  logChannel:
+  [
+    [
+      "608027300683841766"
+      "608027300688035904"
+    ]
+    [
+      "560847285874065408"
+      "560848944868098090"
+    ]
+  ]
+
+    # These channels receive more detailed logging information
+  allLogsChannels:
+  [
+    "608027300688035904"
+  ]
+
+
+    # Commands
+    # A list of all commands with an associated command file
+    # See ReadMe for more information on adding commands
+  commands:
+  [
+    ping
+    endprocess
+    shutdown
+    activate
+    mute
+    unmute
+    help
+    snipe
+    verify
+    kick
+    ban
+    repository
+    restart
+  ]
+
+
+    # Modules
+    # A list of all modules that run with the bot
+    # See ReadMe for more information on adding modules
+  modules:
+  [
+    {
+      name: Message
+      path: events/messageProcess.js
+    }
+    {
+      name: User Join
+      path: events/memberAdd.js
+    }
+    {
+      name: Member Update
+      path: events/memberUpdate.js
+    }
+    {
+      name: Message Delete
+      path: events/messageDelete.js
+    }
+    {
+      name: Kae Auto-React
+      path: events/reactKae.js
+    }
+    {
+      name: Garbage Collection
+      path: timed/dbGarbageCollection.js
+    }
+  ]
+}
