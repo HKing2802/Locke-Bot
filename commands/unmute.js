@@ -1,6 +1,7 @@
 /* Command to unmute a member
  */
-const config = require('../config.json');
+require('hjson/lib/require-config');
+const config = require('../config.hjson');
 const { getPerm, log, getReason } = require('../src/util.js');
 const Discord = require('discord.js');
 const db = require('../src/db.js');

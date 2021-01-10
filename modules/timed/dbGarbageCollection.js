@@ -1,6 +1,7 @@
 /* Module to sweep through database tables and remove unneccesary entries
  */
-const config = require('../../config.json');
+require('hjson/lib/require-config');
+const config = require('../../config.hjson');
 const db = require('../../src/db.js');
 const { log } = require('../../src/util.js');
 const moment = require('moment');

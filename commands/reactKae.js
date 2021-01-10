@@ -1,7 +1,9 @@
 /* Simple module to toggle the reactKae module
  */
 const fs = require('fs');
-const config = require('../config.json');
+require('hjson/lib/require-config');
+const config = require('../config.hjson');
+const persistent = require('../persistent.json');
 const { log } = require('../src/util.js');
 const { Message } = require('discord.js');
 
@@ -17,14 +19,14 @@ const aliases = ['rk'];
  */
 async function main(message, args) {
     if (message.author.id == config.authorID || message.author.id == config.kaeID) {
-        const current = Boolean(config.kaeReact);
+        const current = Boolean(persistent.kaeReact);
         let change = !current;
 
         if (args[0] == "false") change = false;
         if (args[0] == "true") change = true;
 
-        config.kaeReact = change;
-        fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+        persistent.kaeReact = change;
+        fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
             if (err) log(`Could not write to config JSON: ${err}`, message.client, false, 'error');
             log(`Switched reactKae to ${change}`, message.client, false);
             message.delete();

@@ -1,6 +1,8 @@
 /* Module to handle message event
  */
-const config = require('../../config.json');
+require('hjson/lib/require-config');
+const config = require('../../config.hjson');
+const persistent = require('../../persistent.json');
 const util = require('../../src/util.js');
 const { process, getFunctions } = require('../../commands/processor.js');
 const { Message, Client } = require('discord.js');
@@ -17,7 +19,7 @@ async function messageProcess(message) {
 
     if (message.content.substring(0, 1) == config.prefix) {
         // checks if bot response is active and is in a guild and not a DM
-        if (config.active && message.guild != null) {
+        if (persistent.active && message.guild != null) {
             if (!commands) commands = getFunctions(config.commands);
             return process(message, commands)
                 .then((status) => { return status })

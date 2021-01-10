@@ -1,7 +1,8 @@
 /* Command to display help message
  */
 
-const config = require('../config.json');
+require('hjson/lib/require-config');
+const config = require('../config.hjson');
 const { log } = require('../src/util.js');
 const fs = require('fs');
 const Discord = require('discord.js');

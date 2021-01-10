@@ -1,5 +1,6 @@
 // Set of utility functions for Lockebot
-const config = require('../config.json');
+require('hjson/lib/require-config');
+const config = require('../config.hjson');
 const Discord = require('discord.js');
 const winston = require('winston');
 const file_blacklist = require('../file_blacklist.json');

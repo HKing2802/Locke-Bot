@@ -1,6 +1,7 @@
 /* Command to mute a member
  */
-const config = require('../config.json');
+require('hjson/lib/require-config');
+const config = require('../config.hjson');
 const db = require('../src/db.js');
 const { getPerm, log, getReason } = require('../src/util.js');
 const moment = require('moment');

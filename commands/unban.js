@@ -2,7 +2,8 @@
 */
 const util = require('../src/util.js');
 const { Message, User } = require('discord.js');
-const { prefix } = require('../config.json');
+require('hjson/lib/require-config');
+const { prefix } = require('../config.hjson');
 
 const name = "unban";
 const description = "Unbans a user from the server";

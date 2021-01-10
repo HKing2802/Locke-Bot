@@ -3,7 +3,8 @@ const logger = require('winston');
 const mysql = require('mysql');
 const unidecode = require('unidecode');
 const auth = require('./auth.json');
-const config = require('../config.json');
+require('hjson/lib/require-config');
+const config = require('../config.hjson');
 
 // Function Imports
 const util = require('./util.js');

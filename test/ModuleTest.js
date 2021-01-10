@@ -4,7 +4,8 @@ const Discord = require('discord.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
 const moment = require('moment');
 const db = require('../src/db.js');
-const config = require('../config.json');
+require('hjson/lib/require-config');
+const config = require('../config.hjson');
 
 describe('module_handler', function () {
     const handler = require('../src/module_handler.js');
@@ -144,10 +145,10 @@ describe('messageProcess', function () {
 
     it("Doesn't respond on inactive", function (done) {
         const fs = require('fs');
-        const config = require('../config.json');
+        const persistent = require('../persistent.json');
 
-        config.active = false;
-        fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+        persistent.active = false;
+        fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
             if (err) done(err);
             channel.send('.ping', user)
                 .then((msg) => {
@@ -156,8 +157,8 @@ describe('messageProcess', function () {
                             assert.equal(complete, undefined);
                             assert.equal(channel.lastMessage.content, '.ping');
 
-                            config.active = true;
-                            fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+                            persistent.active = true;
+                            fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
                                 if (err) done(err);
                                 done();
                             });
@@ -169,11 +170,11 @@ describe('messageProcess', function () {
 
     it('always responds to author', function (done) {
         const fs = require('fs');
-        const config = require('../config.json');
+        const persistent = require('../persistent.json');
         const author = testUtil.createUser(client, 'hking', '9193', false, { id: config.authorID });
 
-        config.active = false;
-        fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+        persistent.active = false;
+        fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
             if (err) done(err);
             channel.send('.ping', author)
                 .then((msg) => {
@@ -182,8 +183,8 @@ describe('messageProcess', function () {
                             assert(complete);
                             assert.equal(channel.lastMessage.content, 'Pong!');
 
-                            config.active = true;
-                            fs.writeFile('./config.json', JSON.stringify(config, null, 2), (err) => {
+                            persistent.active = true;
+                            fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
                                 if (err) done(err);
                                 done();
                             });

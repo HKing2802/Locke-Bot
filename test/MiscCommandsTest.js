@@ -3,7 +3,8 @@ const testUtil = require('../discordTestUtility/discordTestUtility.js');
 const Discord = require('Discord.js');
 const processor = require('../commands/processor.js');
 const util = require('../src/util.js');
-const config = require('../config.json');
+require('hjson/lib/require-config');
+const config = require('../config.hjson');
 
 describe('ping', function () {
     it('returns message', function (done) {
@@ -117,7 +118,8 @@ describe('reactKae', function () {
     });
 
     it('switches state', function (done) {
-        const startVal = config.kaeReact;
+        const persistent = require('../persistent.json')
+        const startVal = persistent.kaeReact;
         channel.send('reactKae', user)
             .then((msg) => {
                 reactKae.main(msg, [])
