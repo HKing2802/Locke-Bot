@@ -68,37 +68,40 @@ async function checkEdits(client) {
 /**
  * Checks the muted_users table for users no longer muted or not in the server
  * Returns the number of entries deleted
- * @param {Client} [client] The client for logging. Logs to console only if undefined
+ * @param {Client} client The client for logging and getting muted status
  * @returns {number}
  */
 async function checkMuted(client) {
-    // get all muted users
-    // check all users for if they're still muted and removes otherwise
-
+    // gets guild to check if muted
     const guild = client.guilds.cache.get(config.guildID);
     if (!guild) {
         log(`Error in getting guild: No such ID ${config.guildID}`, client, false, 'error');
         return;
     }
 
+    // checks all members if still muted
     let delIDs = [];
     await db.buildQuery(`SELECT * FROM muted_users`)
         .execute(result => {
+            // gets member object from guild
             let member = guild.members.cache.get(result[0]);
-            //console.log(member.roles.cache);
             if (!member) {
+                // member no longer in guild
                 delIDs.push(result[0]);
             } else {
+                // if member has been unmuted
                 if (!(member.roles.cache.has(config.mutedRoleID))) delIDs.push(result[0]);
             }
         })
         .catch(err => { log(`Error in muted_users query: ${err}`, client, false, 'error') });
 
+    // deletes entries from table
     for (let id of delIDs) {
         await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${id}`).execute()
             .catch(err => { log(`Error in muted_users delete query: ${err}`, client, false, 'error') });
     }
 
+    // logs and returns number of deleted entries
     log(`Deleted ${delIDs.length} Members from muted table`, client, false);
     return delIDs.length;
 }
@@ -106,12 +109,35 @@ async function checkMuted(client) {
 /**
  * Checks the temp_ban table for users no longer banned
  * Returns the number of entries deleted
- * @param {Client} [client] The client for logging. Logs to console only if undefined
+ * @param {Client} client The client for logging and getting banned status
  * @returns {number}
  */
-async function checkBanned(client) {
-    // get all temp banned users
-    // check if still banned and remove otherwise
+async function checkBanned(client, guild) {
+    // gets guild to check if banned
+    if (!guild) guild = client.guilds.cache.get(config.guildID);
+    if (!guild) {
+        log(`Error in getting guild: No such ID ${config.guildID}`, client, false, 'error');
+        return;
+    }
+    
+    // gets entries and check if banned
+    let delIDs = [];
+    await db.buildQuery(`SELECT user_id FROM temp_ban`)
+        .execute(async result => {
+            let banned = guild.fetchBan(result[0].toString());
+            if (banned === undefined) delIDs.push(result[0]);
+        })
+        .catch(err => { log(`Error in temp_ban query: ${err}`, client, false, 'error') });
+
+    // deletes entries from table
+    for (let id of delIDs) {
+        await db.buildQuery(`DELETE FROM temp_ban WHERE user_id = ${id}`).execute()
+            .catch(err => { log(`Error in temp_ban delete query: ${err}`, client, false, 'error') });
+    }
+
+    // logs and returns number of deleted entries
+    log(`Deleted ${delIDs.length} Users from temp ban table`, client, false);
+    return delIDs.length;
 }
 
 /**
