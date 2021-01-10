@@ -1,4 +1,5 @@
-const config = require('../../config.json');
+require('hjson/lib/require-config');
+const config = require('../../config.hjson');
 
 function react(message) {
     if (message.author.id == config.kaeID && config.kaeReact == 'true') {
