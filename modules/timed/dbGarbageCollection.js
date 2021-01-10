@@ -165,7 +165,9 @@ async function sweep(client) {
  * Starts the timed portion of this module
  */
 function startModule() {
-    // starts timeout for sweep
+    // starts timed interval for sweep
+    const msTime = config.gcSweepInterval * 60 * 60 * 1000;
+    setInterval(sweep, msTime);
 }
 
 exports.main = startModule;
