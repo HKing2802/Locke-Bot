@@ -264,8 +264,8 @@ describe('messageDelete', function () {
                                 numEntries += 1;
                                 assert.equal(result[0], msg.id);
                                 assert.equal(result[1], user.id);
-                                assert.equal(moment(result[2]).add('5','h').format(), moment(msg.createdAt).format());
-                                assert.equal(result[4], msg.content);
+                                assert.equal(moment(result[3]).add('5','h').format(), moment(msg.createdAt).format());
+                                assert.equal(result[5], msg.content);
                             })
                             .then(() => {
                                 assert.equal(numEntries, 1);
@@ -293,8 +293,8 @@ describe('messageDelete', function () {
                         numEntries += 1;
                         assert.equal(result[0], msg.id);
                         assert.equal(result[1], user.id);
-                        assert.equal(moment(result[2]).add('5', 'h').format(), moment(msg.createdAt).format());
-                        assert.equal(result[4], msg.content);
+                        assert.equal(moment(result[3]).add('5', 'h').format(), moment(msg.createdAt).format());
+                        assert.equal(result[5], msg.content);
                     })
                     .then(() => {
                         assert.equal(numEntries, 1);
@@ -451,12 +451,12 @@ describe('garbage collection', function () {
         // loads test data
         // test data is identified by user_id being 456
         const form = 'YYYY-MM-DD HH:mm:ss';
-        db.buildQuery(`insert into messages(id, user_id, send_time, content)
+        db.buildQuery(`insert into messages(id, user_id, channel_id, send_time, content)
             values
-	        (12, 456, '${moment().format(form)}', 'test message'),
-            (13, 456, '${moment().subtract(2, 'd').format(form)}', 'test message 2'),
-            (14, 456, '${moment().subtract(10, 'd').format(form)}', 'test message 3'),
-            (15, 456, '${moment().subtract(21, 'd').format(form)}', 'test message 4')`).execute()
+	        (12, 456, 333, '${moment().format(form)}', 'test message'),
+            (13, 456, 333, '${moment().subtract(2, 'd').format(form)}', 'test message 2'),
+            (14, 456, 333, '${moment().subtract(10, 'd').format(form)}', 'test message 3'),
+            (15, 456, 333, '${moment().subtract(21, 'd').format(form)}', 'test message 4')`).execute()
             .catch(err => done(err));
 
         gb.testing.messages()

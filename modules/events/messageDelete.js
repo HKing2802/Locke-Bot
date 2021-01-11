@@ -13,7 +13,7 @@ async function recordDeleted(message) {
             return false;
         }
         const sendTime = moment(message.createdTimestamp).format('YYYY-MM-DD HH:mm:ss');
-        db.buildQuery(`INSERT INTO messages(id, user_id, send_time, content) VALUES (${message.id}, ${message.author.id}, '${sendTime}', '${message.content}')`).execute()
+        db.buildQuery(`INSERT INTO messages(id, user_id, channel_id, send_time, content) VALUES (${message.id}, ${message.author.id}, ${message.channel.id},'${sendTime}', '${message.content}')`).execute()
             .catch(err => { throw err });
          
         // checks for edits

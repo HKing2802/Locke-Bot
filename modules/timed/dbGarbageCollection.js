@@ -19,10 +19,10 @@ async function checkMessages(client) {
 
     // gets the data
     let delIDs = [];
-    return db.buildQuery(`SELECT * FROM messages`)
+    return db.buildQuery(`SELECT id, send_time FROM messages`)
         .execute(result => {
             // checks time against threshold
-            if (+moment(result[2]) < +threshold) {
+            if (+moment(result[1]) < +threshold) {
                 // saves to array for logging purposes
                 delIDs.push(result[0]);
             }
