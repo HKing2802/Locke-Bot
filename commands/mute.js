@@ -51,7 +51,7 @@ function parseTime(args, target) {
 
     const timeUnban = moment();
     timeUnban.add(time[0], unit[0]);
-    return { time: time, unit: unit, timeUnban: timeUnban };
+    return { time: time[0], unit: unit[0], timeUnban: timeUnban };
 }
 
 /**
