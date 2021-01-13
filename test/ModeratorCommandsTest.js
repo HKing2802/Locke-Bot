@@ -1305,7 +1305,7 @@ describe('snipe', function () {
             snipe.testing.getDeleted(msg, [], member)
                 .then((complete) => {
                     assert(complete);
-                    assert.equal(channel.lastMessage.content, "01/11 5:21:00 - Test content\n01/11 5:22:00 - Test content 2");
+                    assert.equal(channel.lastMessage.content, "[1] 01/11 5:21:00 - Test content\n[2] 01/11 5:22:00 - Test content 2");
                     done();
                 })
                 .catch(err => done(err));
@@ -1344,7 +1344,7 @@ describe('snipe', function () {
                 .then((complete) => {
                     assert(complete);
                     assert.equal(channel.lastMessage.content.substr(-2), '10');
-                    assert.equal(channel.lastMessage.content.length, 300);
+                    assert.equal(channel.lastMessage.content.length, 341);
                     done();
                 })
                 .catch(err => done(err));
@@ -1372,7 +1372,7 @@ describe('snipe', function () {
                 .then((complete) => {
                     assert(complete);
                     assert.equal(channel.lastMessage.content.substr(-2), '11');
-                    assert.equal(channel.lastMessage.content.length, 331);
+                    assert.equal(channel.lastMessage.content.length, 377);
                     done();
                 })
                 .catch(err => done(err));
