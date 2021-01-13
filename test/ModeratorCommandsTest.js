@@ -1285,6 +1285,15 @@ describe('snipe', function () {
     describe('getDeleted', function () {
 
         after(async () => {
+            // sets persistent snipeData to default values
+            const persistent = require('../persistent.json');
+            const { writeFile } = require('fs');
+            persistent.snipeData.time = 0;
+            persistent.snipeData.msgs = [];
+            await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                if (err) throw err;
+            })
+
             await db.buildQuery(`DELETE FROM messages WHERE channel_id = 333`).execute()
                 .catch(err => done(err));
         });

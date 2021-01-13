@@ -109,7 +109,15 @@ describe('reactKae', function () {
         util.testing.silenceLogging(false);
     });
 
-    after(() => {
+    after(async () => {
+        // setting kaeReact to default value
+        const { writeFile } = require('fs');
+        const persistent = require('../persistent.json');
+        persistent.kaeReact = false;
+        await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+            if (err) throw err;
+        });
+
         util.testing.silenceLogging(false);
     });
 
