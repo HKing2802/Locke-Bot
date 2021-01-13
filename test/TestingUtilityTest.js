@@ -1,4 +1,4 @@
-const assert = require('assert');
+const assert = require('assert').strict;
 const Discord = require('discord.js');
 const classOverrides = require('../discordTestUtility/testclassOverrides.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
@@ -149,7 +149,7 @@ describe('create user', function () {
         assert.equal(user.username, "test");
         assert.equal(user.discriminator, "4321");
         assert.equal(user.bot, false);
-        assert.equal(user.id, "1234");
+        assert.equal(user.id, 1234);
         client.destroy();
     });
 });
@@ -172,8 +172,8 @@ describe('create Role', function () {
 
         const { id, role } = testUtil.createRole(client, guild, { id: 1234 });
 
-        assert.equal(id, "1234");
-        assert.equal(role.id, "1234");
+        assert.equal(id, 1234);
+        assert.equal(role.id, 1234);
         assert.equal(role.guild, guild);
         client.destroy();
     });
@@ -198,7 +198,7 @@ describe('create Member', function () {
         const member = testUtil.createMember(client, guild, user);
         assert.equal(member.user.username, user.username);
         assert.equal(member.user.discriminator, user.discriminator);
-        assert.equal(member.nickname, undefined);
+        assert.equal(member.nickname, null);
         assert.equal(member.guild, guild);
         client.destroy();
     });
@@ -536,7 +536,7 @@ describe('Test Member', function () {
         const user = testUtil.createUser(client, "test", "1234");
         const member = testUtil.createMember(client, guild, user);
 
-        assert.equal(member.nickname, undefined);
+        assert.equal(member.nickname, null);
         member.setNickname("test nickname")
         client.destroy();
         assert.equal(member.nickname, "test nickname");

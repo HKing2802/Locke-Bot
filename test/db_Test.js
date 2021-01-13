@@ -1,4 +1,4 @@
-const assert = require('assert');
+const assert = require('assert').strict;
 const auth = require('../auth.json');
 const db = require('../src/db.js');
 const { silenceLogging } = require('../src/util.js').testing;

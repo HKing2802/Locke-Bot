@@ -1,4 +1,4 @@
-const assert = require('assert');
+const assert = require('assert').strict;
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
 const util = require('../src/util.js');
 const Discord = require('discord.js');

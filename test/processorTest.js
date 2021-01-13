@@ -1,5 +1,5 @@
 const processor = require('../commands/processor.js');
-const assert = require('assert');
+const assert = require('assert').strict;
 const Discord = require('discord.js');
 const ping = require('../commands/ping.js')
 const util = require('../src/util.js')

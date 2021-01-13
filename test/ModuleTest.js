@@ -1,4 +1,4 @@
-const assert = require('assert');
+const assert = require('assert').strict;
 const { silenceLogging } = require('../src/util.js').testing;
 const Discord = require('discord.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
@@ -80,13 +80,13 @@ describe('module_handler', function () {
             modules.set('test', 'test');
             const started = handler.startModules(modules, channel);
             assert.equal(started, 0);
-            assert.equal(channel.lastMessage, undefined);
+            assert.equal(channel.lastMessage, null);
         });
 
         it('checks modules param is type map', function () {
             const started = handler.startModules("test", channel);
             assert.equal(started, -1);
-            assert.equal(channel.lastMessage, undefined);
+            assert.equal(channel.lastMessage, null);
         });
     });
 })
