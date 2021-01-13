@@ -3,9 +3,11 @@
 const db = require('../src/db.js');
 require('hjson/lib/require-config');
 const config = require('../config.hjson');
+const persistent = require('../persistent.json');
 const { log } = require('../src/util.js');
 const { Message, GuildMember, TextChannel } = require('discord.js');
 const moment = require('moment');
+const fs = require('fs');
 
 // Command Information
 const name = 'snipe';
@@ -137,10 +139,18 @@ async function getDeleted(message, args, target) {
 
     // constructs outgoing contents with timestamp and escaped content
     msgContents = [];
+    persistent.snipeData.msgs = [];
     for (let id of msgBuffer.keys()) {
+        persistent.snipeData.msgs.push(id);
         delContent = msgBuffer.get(id);
         msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('MM/DD H:mm:ss')} - ${escapeMessage(delContent[1])}`)
     }
+
+    // saves data to persistent
+    persistent.snipeData.time = moment().valueOf();
+    await fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+        if (err) log(`Error in writing persistent data for snipe`, message.client, false, 'error');
+    });
 
     // sends deleted messages
     return sendLargeMessage(msgContents, message.channel)
@@ -155,7 +165,7 @@ async function getDeleted(message, args, target) {
 }
 
 async function getEdits(message, args, editNum) {
-
+    
 }
 
 async function main(message, args) {
