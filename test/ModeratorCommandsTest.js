@@ -5,8 +5,7 @@ const util = require('../src/util.js');
 require('hjson/lib/require-config');
 const config = require('../config.hjson');
 const db = require('../src/db.js');
-const { equal } = require('assert');
-
+const moment = require('moment');
 
 describe('ban', function () {
     const ban = require('../commands/ban.js');
@@ -539,7 +538,6 @@ describe('mute', function () {
 
     describe('parseTime', function () {
         it('gets time', function () {
-            const moment = require('moment');
             const time = mute.testing.parseTime(["", "60m"], member);
 
             assert.equal(time.time, '60');
@@ -689,7 +687,6 @@ describe('mute', function () {
         });
 
         it('gets time correctly', function (done) {
-            const moment = require('moment');
             channel.send('mute', authorUser, authorMember)
                 .then((msg) => {
                     mute.testing.mute(msg, ["@person", "2d", "Reasoning"], member)
@@ -707,7 +704,7 @@ describe('mute', function () {
                                 assert.equal(result[0], member.id);
                                 assert.equal(result[1], user.username);
                                 assert.equal(result[2], 0);
-                                assert.equal(moment(result[4]).format('YYYY-MM-DD HH:mm'), moment(result[3]).add('2', 'd').format('YYYY-MM-DD HH:mm'));
+                                assert(moment(result[4]).diff(moment(result[3]).add('2', 'd')) < 2000)
                             })
                                 .then(() => {
                                     assert.equal(numEntries, 1);
@@ -1373,6 +1370,28 @@ describe('snipe', function () {
                     assert(complete);
                     assert.equal(channel.lastMessage.content.substr(-2), '11');
                     assert.equal(channel.lastMessage.content.length, 377);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('saves persistent data', function (done) {
+            // loads test data
+            db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (46, ${member.id}, 333, '2021-01-13 5:18:00', 'test content'),
+                (47, ${member.id}, 333, '2021-01-13 5:19:00', 'test content 2')`).execute()
+                .catch(err => done(err));
+
+            const msg = testUtil.createMessage(channel);
+            snipe.testing.getDeleted(msg, [], member)
+                .then((complete) => {
+                    const persistent = require('../persistent.json');
+                    assert(complete);
+                    assert(moment(persistent.snipeData.time).diff(moment()) < 1000);
+                    assert.equal(persistent.snipeData.msgs[0], 46);
+                    assert.equal(persistent.snipeData.msgs[1], 47);
+                    assert.equal(persistent.snipeData.msgs.length, 2);
                     done();
                 })
                 .catch(err => done(err));
