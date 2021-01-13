@@ -1,11 +1,17 @@
 {
     # General
   prefix: .
+
+    # How long deleted messages are stored for
   messageThreshold:
   {
     num: 10
     unit: days
   }
+
+    # Number of messages snipe displays by default
+    # Should be between 1 and 50
+  snipeMessages: 10
     
     # IDs
   guildID: "560847285874065408"
