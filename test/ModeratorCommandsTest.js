@@ -1,9 +1,12 @@
-const assert = require('assert');
+const assert = require('assert').strict;
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
 const Discord = require('Discord.js');
 const util = require('../src/util.js');
 require('hjson/lib/require-config');
 const config = require('../config.hjson');
+const db = require('../src/db.js');
+const { equal } = require('assert');
+
 
 describe('ban', function () {
     const ban = require('../commands/ban.js');
@@ -539,7 +542,7 @@ describe('mute', function () {
             const moment = require('moment');
             const time = mute.testing.parseTime(["", "60m"], member);
 
-            assert.equal(time.time, 60);
+            assert.equal(time.time, '60');
             assert.equal(time.unit, 'm')
             assert(time.timeUnban instanceof moment);
         });
@@ -547,21 +550,21 @@ describe('mute', function () {
         it('checks first arg', function () {
             const time2 = mute.testing.parseTime([`<@!${member.id}>2d`], member);
 
-            assert.equal(time2.time, 2);
+            assert.equal(time2.time, '2');
             assert.equal(time2.unit, "d");
         });
 
         it('parses time with no space', function () {
             const time = mute.testing.parseTime([`${member.id}20h`], member);
 
-            assert.equal(time.time, 20);
+            assert.equal(time.time, '20');
             assert.equal(time.unit, 'h');
         });
 
         it('has a default unit', function () {
             const time = mute.testing.parseTime(["", "30"], member);
 
-            assert.equal(time.time, 30);
+            assert.equal(time.time, '30');
             assert.equal(time.unit, 'm');
         });
 
@@ -573,7 +576,6 @@ describe('mute', function () {
     });
 
     describe('mute', function () {
-        const db = require('../src/db.js');
 
         before(async function () {
             const auth = require('../auth.json');
@@ -618,7 +620,7 @@ describe('mute', function () {
                                 assert.equal(result[0], member.id);
                                 assert.equal(result[1], member.user.username);
                                 assert.equal(result[2], 0)
-                                assert.equal(result[4], undefined);
+                                assert.equal(result[4], null);
                             })
                                 .then(() => {
                                     assert.equal(numEntries, 1);
@@ -676,7 +678,7 @@ describe('mute', function () {
                                 assert.equal(result[0], member.id);
                                 assert.equal(result[1], user.username);
                                 assert.equal(result[2], 1);
-                                assert.equal(result[4], undefined);
+                                assert.equal(result[4], null);
                             })
                                 .then(() => {
                                     assert.equal(numEntries, 1);
@@ -717,7 +719,6 @@ describe('mute', function () {
     });
 
     describe('main', function () {
-        const db = require('../src/db.js');
 
         before(async function () {
             const auth = require('../auth.json');
@@ -763,7 +764,7 @@ describe('mute', function () {
                                 assert.equal(result[0], member.id);
                                 assert.equal(result[1], member.user.username);
                                 assert.equal(result[2], 0)
-                                assert.equal(result[4], undefined);
+                                assert.equal(result[4], null);
                             })
                                 .then(() => {
                                     assert.equal(numEntries, 1);
@@ -791,7 +792,7 @@ describe('mute', function () {
                                 assert.equal(result[0], member.id);
                                 assert.equal(result[1], member.user.username);
                                 assert.equal(result[2], 0)
-                                assert.equal(result[4], undefined);
+                                assert.equal(result[4], null);
                             })
                                 .then(() => {
                                     assert.equal(numEntries, 1);
@@ -896,7 +897,6 @@ describe('unmute', function () {
     });
 
     describe('unmute', function () {
-        const db = require('../src/db.js');
 
         before(async function () {
             const auth = require('../auth.json');
@@ -1034,7 +1034,6 @@ describe('unmute', function () {
     });
 
     describe('main', function () {
-        const db = require('../src/db.js');
 
         before(async function () {
             const auth = require('../auth.json');
@@ -1132,6 +1131,251 @@ describe('unmute', function () {
                         })
                         .catch(err => done(err));
                 });
+        });
+    });
+});
+
+describe('snipe', function () {
+    const snipe = require('../commands/snipe.js');
+    let client = new Discord.Client();
+    let guild = testUtil.createGuild(client);
+    let channel = new testUtil.testChannel(guild, { name: "test channel" });
+    let user = testUtil.createUser(client, "test user", "1234");
+    let member = testUtil.createMember(client, guild, user);
+
+    before(async () => {
+        util.testing.silenceLogging(true);
+        await db.connect();
+    });
+
+    beforeEach(() => {
+        client.destroy();
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        channel = new testUtil.testChannel(guild, { name: "test channel" });
+        user = testUtil.createUser(client, "test user", "1234");
+        member = testUtil.createMember(client, guild, user);
+    });
+
+    after(async () => {
+        client.destroy();
+        await db.disconnect();
+        util.testing.silenceLogging(false);
+    });
+
+    describe('Escape Message', function () {
+
+        it('returns on no pings', function () {
+            const msg = snipe.testing.escapeMessage("test message");
+
+            assert.equal(msg, "test message");
+        })
+
+        it('escapes single ping', function () {
+            const msg = snipe.testing.escapeMessage(`test <@!${member.id}> ping`, guild);
+
+            assert.equal(msg, "test @test user#1234 ping");
+        });
+
+        it('defaults to id', function (done) {
+            member.kick()
+                .then((m) => {
+                    const msg = snipe.testing.escapeMessage(`test <@!${m.id}> id ping`, guild);
+
+                    assert.equal(msg, `test @${m.id} id ping`);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('defaults to id on no guild', function () {
+            const msg = snipe.testing.escapeMessage(`test <@!${member.id}> id ping 2`);
+
+            assert.equal(msg, `test @${member.id} id ping 2`);
+        });
+
+        it('escapes 2 pings', function () {
+            const user2 = testUtil.createUser(client, "user2", "4312");
+            const member2 = testUtil.createMember(client, guild, user2);
+            const msg = snipe.testing.escapeMessage(`test <@!${member.id}> dual <@!${member2.id}> ping`, guild);
+
+            assert.equal(msg, "test @test user#1234 dual @user2#4312 ping");
+        });
+
+        it('escapes role pings', function () {
+            role = testUtil.createRole(client, guild, { name: "test role" }).role;
+            const msg = snipe.testing.escapeMessage(`test <@&${role.id}> role`, guild);
+
+            assert.equal(msg, "test @test role role");
+        });
+
+        it('escapes @everyone', function () {
+            const msg = snipe.testing.escapeMessage(`test @everyone big ping`, guild);
+
+            assert.equal(msg, 'test @?everyone big ping');
+        });
+
+        it('escapes @here', function () {
+            const msg = snipe.testing.escapeMessage(`test @here big ping`, guild);
+
+            assert.equal(msg, 'test @?here big ping');
+        });
+
+        it('escapes mixed', function () {
+            role = testUtil.createRole(client, guild, { name: "test role" }).role;
+            const msg = snipe.testing.escapeMessage(`test @here message <@!${member.id}> and <@&${role.id}> so @everyone`, guild);
+
+            assert.equal(msg, `test @?here message @test user#1234 and @test role so @?everyone`);
+        });
+    });
+
+    describe('Send Large Message', function () {
+        it('sends a message', function (done) {
+            snipe.testing.sendLargeMessage(["test message"], channel)
+                .then((msgs) => {
+                    assert.equal(msgs.length, 1);
+                    assert.equal(channel.lastMessage.content, "test message");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('combines multiple contents', function (done) {
+            snipe.testing.sendLargeMessage(["test message", "test message 2"], channel)
+                .then((msgs) => {
+                    assert.equal(msgs.length, 1);
+                    assert.equal(channel.lastMessage.content, "test message\ntest message 2");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('sends multiple messages', function (done) {
+            // 2000 characters
+            const longmsg = 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, quis gravida magna mi a libero. Fusce vulputate eleifend sapien. Vestibulum purus quam, scelerisque ut, mollis sed, nonummy id, metus. Nullam accumsan lorem in dui. Cras ultricies mi eu turpis hendrerit fringilla. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; In ac dui quis mi consectetuer lacinia. Nam pretium turpis et arcu. Duis arcu tortor, suscipit eget, imperdiet nec, imperdiet iaculis, ipsum. Sed aliquam ultrices mauris. Integer ante arcu, accumsan a, consectetuer eget, posuere ut, mauris. Praesent adipiscing. Phasellus ullamcorper ipsum rutrum nunc. Nunc nonummy metus. Vestib';
+
+            snipe.testing.sendLargeMessage([longmsg, "test message", "a greater test message"], channel)
+                .then((msgs) => {
+                    assert.equal(msgs.length, 2);
+                    assert.equal(msgs[0].content.length, longmsg.length);
+                    assert.equal(msgs[1].content, "test message\na greater test message");
+                    assert.equal(channel.lastMessage.content, "test message\na greater test message");
+                    assert.equal(channel.messages.cache.get(msgs[0].id).content, longmsg);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('checks combined length', function (done) {
+            // 1950 characters
+            const longmsg = 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean massa. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Donec quam felis, ultricies nec, pellentesque eu, pretium quis, sem. Nulla consequat massa quis enim. Donec pede justo, fringilla vel, aliquet nec, vulputate eget, arcu. In enim justo, rhoncus ut, imperdiet a, venenatis vitae, justo. Nullam dictum felis eu pede mollis pretium. Integer tincidunt. Cras dapibus. Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui. Etiam rhoncus. Maecenas tempus, tellus eget condimentum rhoncus, sem quam semper libero, sit amet adipiscing sem neque sed ipsum. Nam quam nunc, blandit vel, luctus pulvinar, hendrerit id, lorem. Maecenas nec odio et ante tincidunt tempus. Donec vitae sapien ut libero venenatis faucibus. Nullam quis ante. Etiam sit amet orci eget eros faucibus tincidunt. Duis leo. Sed fringilla mauris sit amet nibh. Donec sodales sagittis magna. Sed consequat, leo eget bibendum sodales, augue velit cursus nunc, quis gravida magna mi a libero. Fusce vulputate eleifend sapien. Vestibulum purus quam, scelerisque ut, mollis sed, nonummy id, metus. Nullam accumsan lorem in dui. Cras ultricies mi eu turpis hendrerit fringilla. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia Curae; In ac dui quis mi consectetuer lacinia. Nam pretium turpis et arcu. Duis arcu tortor, suscipit eget, imperdiet nec, imperdiet iaculis, ipsum. Sed aliquam ultrices mauris. Integer ante arcu, accumsan a, consectetuer eget, posuere ut, mauris. Praesent adipiscing. Phasellus ullamco';
+            // 100 characters
+            const shortermsg = 'Lorem ipsum dolor sit amet, consectetuer adipiscing elit. Aenean commodo ligula eget dolor. Aenean m';
+
+            snipe.testing.sendLargeMessage([longmsg, shortermsg], channel)
+                .then((msgs) => {
+                    assert.equal(msgs.length, 2);
+                    assert.equal(msgs[0].content, longmsg);
+                    assert.equal(msgs[1].content, shortermsg);
+                    assert.equal(channel.lastMessage.content, shortermsg);
+                    assert.equal(channel.messages.cache.get(msgs[0].id).content, longmsg);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+    });
+
+    describe('getDeleted', function () {
+
+        after(async () => {
+            await db.buildQuery(`DELETE FROM messages WHERE channel_id = 333`).execute()
+                .catch(err => done(err));
+        });
+
+        it('gets deleted messages', function (done) {
+            // loads test data
+            db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content) 
+                VALUES
+                (21, ${member.id}, 333, '2021-01-11 5:21:00', 'Test content'),
+                (22, ${member.id}, 333, '2021-01-11 5:22:00', 'Test content 2'),
+                (23, 456, 333, '2021-01-11 6:08:00', 'Test content 3')`).execute()
+                .catch(err => done(err));
+
+            const msg = testUtil.createMessage(channel, ".snipe");
+            snipe.testing.getDeleted(msg, [], member)
+                .then((complete) => {
+                    assert(complete);
+                    assert.equal(channel.lastMessage.content, "01/11 5:21:00 - Test content\n01/11 5:22:00 - Test content 2");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('sends no messages found', function (done) {
+            const msg = testUtil.createMessage(channel);
+            snipe.testing.getDeleted(msg, [], member)
+                .then((complete) => {
+                    assert(complete);
+                    assert.equal(channel.lastMessage.content, "No messages found");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('caps messages', function (done) {
+            // loads test data
+            db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (24, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content1'),
+                (25, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content2'),
+                (26, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content3'),
+                (27, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content4'),
+                (28, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content5'),
+                (29, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content6'),
+                (30, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content7'),
+                (31, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content8'),
+                (32, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content9'),
+                (33, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content10'),
+                (34, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content11')`).execute()
+                .catch(err => done(err));
+
+            const msg = testUtil.createMessage(channel);
+            snipe.testing.getDeleted(msg, [], member)
+                .then((complete) => {
+                    assert(complete);
+                    assert.equal(channel.lastMessage.content.substr(-2), '10');
+                    assert.equal(channel.lastMessage.content.length, 300);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('removes cap with argument', function (done) {
+            // load test data
+            db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (35, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content1'),
+                (36, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content2'),
+                (37, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content3'),
+                (38, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content4'),
+                (39, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content5'),
+                (40, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content6'),
+                (41, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content7'),
+                (42, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content8'),
+                (43, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content9'),
+                (44, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content10'),
+                (45, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content11')`).execute()
+                .catch(err => done(err));
+
+            const msg = testUtil.createMessage(channel);
+            snipe.testing.getDeleted(msg, ['', 'all'], member)
+                .then((complete) => {
+                    assert(complete);
+                    assert.equal(channel.lastMessage.content.substr(-2), '11');
+                    assert.equal(channel.lastMessage.content.length, 331);
+                    done();
+                })
+                .catch(err => done(err));
         });
     });
 });
