@@ -139,7 +139,7 @@ async function getDeleted(message, args, target) {
     msgContents = [];
     for (let id of msgBuffer.keys()) {
         delContent = msgBuffer.get(id);
-        msgContents.push(`${moment(delContent[0]).add(5, 'h').format('MM/DD H:mm:ss')} - ${escapeMessage(delContent[1])}`)
+        msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('MM/DD H:mm:ss')} - ${escapeMessage(delContent[1])}`)
     }
 
     // sends deleted messages
