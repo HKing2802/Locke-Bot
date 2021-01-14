@@ -11,10 +11,11 @@ const fs = require('fs');
 
 // Command Information
 const name = 'snipe';
-const description = `Gets the user's deleted messages. Displays the last ${config.snipeMessages} messages by default`;
+const description = `Gets the user's deleted messages. Displays the last ${config.snipeMessages} messages by default. Can also show the previous edits of a deleted message.`;
 const usage = `${config.prefix}snipe <member mention> [options]` +
     '\n' + `${config.prefix}snipe <member ID> [options]` +
-    '\n' + `Options: \`all\` - displays all deleted messags`;
+    '\n' + `Options: \`all\` - displays all deleted messags` + 
+    '\n' + `    \`edits <number>\` - displays the edits of a deleted message. Number is the number to the left of each deleted message`;
 const type = "Moderation";
 
 /**
@@ -262,31 +263,13 @@ async function main(message, args) {
 
 }
 
-/*
- * Two modes - general or edit
- * 
- * function to iterate through message and escape all pings
- * 
- * general
- *      takes a mention/id as argument
- *      gets and displays the last <config> messages
- *      optional argument 'all' for all messages
- *      formats them: MM/DD HH:mm:ss - <message>
- *      orders deleted messages with first printed being newest
- *      checks message length and has an array of message contents
- *      sends all messages in order
- * 
- * edit
- *      Stores last general mode response message ID in persistent
- *      takes a message number as argument
- *      gets and displays all edits
- *      shows full timestamp
- *      shows where it was deleted? - would need to add to table
- *      orders edits current at top, just below information
- *      sends message like general
- */
-
 exports.main = main;
+exports.name = name;
+exports.data = {
+    description: description,
+    usage: usage,
+    type: type
+}
 exports.testing = {
     escapeMessage: escapeMessage,
     sendLargeMessage: sendLargeMessage,
