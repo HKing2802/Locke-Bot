@@ -704,7 +704,7 @@ describe('mute', function () {
                                 assert.equal(result[0], member.id);
                                 assert.equal(result[1], user.username);
                                 assert.equal(result[2], 0);
-                                assert(moment(result[4]).diff(moment(result[3]).add('2', 'd')) < 2000)
+                                assert(moment(result[4]).diff(moment(result[3]).add('2', 'd')) < 5000 && moment(result[4]).diff(moment(result[3]).add('2', 'd')) >= 0);
                             })
                                 .then(() => {
                                     assert.equal(numEntries, 1);
@@ -1300,6 +1300,7 @@ describe('snipe', function () {
 
         it('gets deleted messages', function (done) {
             // loads test data
+            // test data identified by channel_id is 333
             db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content) 
                 VALUES
                 (21, ${member.id}, 333, '2021-01-11 5:21:00', 'Test content'),
@@ -1330,6 +1331,7 @@ describe('snipe', function () {
 
         it('caps messages', function (done) {
             // loads test data
+            // test data identified by channel_id is 333
             db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
                 VALUES
                 (24, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content1'),
@@ -1358,6 +1360,7 @@ describe('snipe', function () {
 
         it('removes cap with argument', function (done) {
             // load test data
+            // test data identified by channel_id is 333
             db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
                 VALUES
                 (35, ${member.id}, 333, '2021-01-11 06:16:55', 'Test Content1'),
@@ -1386,6 +1389,7 @@ describe('snipe', function () {
 
         it('saves persistent data', function (done) {
             // loads test data
+            // test data identified by channel_id is 333
             db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
                 VALUES
                 (46, ${member.id}, 333, '2021-01-13 5:18:00', 'test content'),
@@ -1403,6 +1407,324 @@ describe('snipe', function () {
                     assert.equal(persistent.snipeData.msgs.length, 2);
                     done();
                 })
+                .catch(err => done(err));
+        });
+    });
+
+    describe('getEdits', function () {
+        const persistent = require('../persistent.json');
+        const { writeFile } = require('fs');
+        //let testChannel = new testUtil.testChannel(guild, { id: 333, name: "test" });
+
+        before(() => {
+            //testChannel = new testUtil.testChannel(guild, { id: 333, name: "test" });
+        })
+
+        after(async () => {
+            // sets persistent snipeData to default values
+            persistent.snipeData.time = 0;
+            persistent.snipeData.msgs = [];
+            await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                if (err) throw err;
+            })
+
+            await db.buildQuery(`DELETE FROM messages WHERE channel_id = 333`).execute()
+                .catch(err => { throw err });
+            await db.buildQuery(`DELETE FROM edits WHERE length(id) = 2`).execute()
+                .catch(err => { throw err })
+        });
+
+        it('gets edits', function (done) {
+            async function loadData() {
+                // loads test data
+                // test data identified by messages.channel_id being 333
+                await db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (100, ${member.id}, 333, '2021-01-13 7:20:00', 'Test Message')`).execute()
+                    .catch(err => done(err));
+
+                // test data identified by length of id < 2
+                await db.buildQuery(`INSERT INTO edits (id, msg_id, num, edit_time, content)
+                VALUES
+                (11, 100, 1, '2021-01-13 7:25:00', 'Test Edit'),
+                (12, 100, 2, '2021-01-13 7:25:00', 'Test Edit 2')`).execute()
+                    .catch(err => done(err));
+
+                persistent.snipeData.time = moment().valueOf();
+                persistent.snipeData.msgs = [100];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+
+                new testUtil.testChannel(guild, { name: "test", id: 333 });
+
+            }
+
+            const msg = testUtil.createMessage(channel);
+            loadData().then(() => {
+                snipe.testing.getEdits(msg, [], 1)
+                    .then((complete) => {
+                        assert(complete);
+                        const msgContent = channel.lastMessage.content.split('\n');
+                        assert.equal(msgContent[0], `Sent At:\t\t 2021-01-13 07:20:00\t\tAuthor:\t @${member.user.tag}`);
+                        assert.equal(msgContent[1].substr(-16), "Channel:   #test");
+                        assert.equal(msgContent[2], "Oldest")
+                        assert.equal(msgContent[3], `[1] 2021-01-13 7:25:00 - Test Edit`);
+                        assert.equal(msgContent[4], `[2] 2021-01-13 7:25:00 - Test Edit 2`);
+                        assert.equal(msgContent[5], `2021-01-13 07:20:00 - Test Message`);
+                        assert.equal(msgContent[6], "Current");
+
+                        const msgTimestamp = moment(msgContent[1].substr(14, 19));
+                        assert(moment().diff(msgTimestamp) < 5000 && moment().diff(msgTimestamp) >= 0);
+                        done();
+                    })
+                    .catch(err => done(err))
+            })
+                .catch(err => done(err));
+        });
+
+        it('sends no edits found', function (done) {
+            async function loadData() {
+                // loads test data
+                // test data identified by messages.channel_id being 333
+                await db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (101, ${member.id}, 333, '2021-01-14 00:02:00', 'Test Message')`).execute()
+                    .catch(err => done(err));
+
+                persistent.snipeData.time = moment().valueOf();
+                persistent.snipeData.msgs = [100, 101];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+
+                new testUtil.testChannel(guild, { name: "test", id: 333 });
+            }
+
+            const msg = testUtil.createMessage(channel);
+            loadData().then(() => {
+                snipe.testing.getEdits(msg, [], 2)
+                    .then((complete) => {
+                        assert(complete);
+                        const msgContent = channel.lastMessage.content.split('\n');
+                        assert.equal(msgContent[0], `Sent At:\t\t 2021-01-14 00:02:00\t\tAuthor:\t @${member.user.tag}`);
+                        assert.equal(msgContent[1].substr(-16), "Channel:   #test");
+                        assert.equal(msgContent[2], "No edits found");
+                        assert.equal(msgContent[3], "2021-01-14 00:02:00 - Test Message");
+
+                        const msgTimestamp = moment(msgContent[1].substr(14, 19));
+                        assert(moment().diff(msgTimestamp) < 5000 && moment().diff(msgTimestamp) >= 0);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+                .catch(err => done(err));
+        });
+
+        it('handles nonexistent channel and member', function (done) {
+            async function loadData() {
+                // loads test data
+                // test data identified by messages.channel_id being 333
+                await db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (102, 11, 333, '2021-01-14 00:10:00', 'Test Message 2')`).execute()
+                    .catch(err => done(err));
+
+                persistent.snipeData.time = moment().valueOf();
+                persistent.snipeData.msgs = [102];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+
+            }
+
+            const msg = testUtil.createMessage(channel);
+            loadData().then(() => {
+                snipe.testing.getEdits(msg, [], 1)
+                    .then((complete) => {
+                        assert(complete);
+                        const msgContent = channel.lastMessage.content.split('\n');
+                        assert.equal(msgContent[0], `Sent At:\t\t 2021-01-14 00:10:00\t\tAuthor:\t ???`);
+                        assert.equal(msgContent[1].substr(-14), "Channel:   ???");
+                        assert.equal(msgContent[2], "No edits found");
+                        assert.equal(msgContent[3], "2021-01-14 00:10:00 - Test Message 2");
+
+                        const msgTimestamp = moment(msgContent[1].substr(14, 19));
+                        assert(moment().diff(msgTimestamp) < 5000 && moment().diff(msgTimestamp) >= 0);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+                .catch(err => done(err));
+        });
+
+        it('returns on no message data', function (done) {
+            async function loadData() {
+                // loads test data
+                persistent.snipeData.time = moment().valueOf();
+                persistent.snipeData.msgs = [103];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+            }
+
+            const msg = testUtil.createMessage(channel);
+            loadData().then(() => {
+                snipe.testing.getEdits(msg, [], 1)
+                    .then((complete) => {
+                        assert.equal(complete, false);
+                        assert.equal(channel.lastMessage, null);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+                .catch(err => done(err));
+        });
+
+        it('returns on bad edit number', function (done) {
+            async function loadData() {
+                // loads test data
+                persistent.snipeData.time = moment().subtract('29', 'm').subtract('50', 's').valueOf();
+                persistent.snipeData.msgs = [1, 2, 3];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+            }
+
+            const msg = testUtil.createMessage(channel);
+            loadData().then(() => {
+                snipe.testing.getEdits(msg, [], 5)
+                    .then((complete) => {
+                        assert.equal(complete, false);
+                        assert.equal(channel.lastMessage.content, "Incorrect message number: must be within 1-3");
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+                .catch(err => done(err));
+        });
+
+        it('returns on bad time', function (done) {
+            async function loadData() {
+                // loads test data
+                persistent.snipeData.time = moment().subtract('30', 'm').subtract('1', 's').valueOf();
+                persistent.snipeData.msgs = [102];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+            }
+
+            const msg = testUtil.createMessage(channel);
+            loadData().then(() => {
+                snipe.testing.getEdits(msg, [], 1)
+                    .then((complete) => {
+                        assert.equal(complete, false);
+                        assert.equal(channel.lastMessage.content, "Snipe has not been used to get deleted messages in the past half-hour");
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+                .catch(err => done(err));
+        });
+
+        it('limits number of edits', function (done) {
+            async function loadData() {
+                // loads test data
+                // test data identified by messages.channel_id being 333
+                await db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (104, ${member.id}, 333, '2021-01-14 01:05:00', 'Test Message')`).execute()
+                    .catch(err => done(err));
+
+                // test data identified by length of id < 2
+                await db.buildQuery(`INSERT INTO edits (id, msg_id, num, edit_time, content)
+                VALUES
+                (13, 104, 1, '2021-01-14 00:49:00', 'Test Edit'),
+                (14, 104, 2, '2021-01-14 00:49:00', 'Test Edit 2'),
+                (15, 104, 3, '2021-01-14 00:49:00', 'Test Edit 3'),
+                (16, 104, 4, '2021-01-14 00:49:00', 'Test Edit 4'),
+                (17, 104, 5, '2021-01-14 00:49:00', 'Test Edit 5'),
+                (18, 104, 6, '2021-01-14 00:49:00', 'Test Edit 6'),
+                (19, 104, 7, '2021-01-14 00:49:00', 'Test Edit 7'),
+                (20, 104, 8, '2021-01-14 00:49:00', 'Test Edit 8'),
+                (21, 104, 9, '2021-01-14 00:49:00', 'Test Edit 9'),
+                (22, 104, 10, '2021-01-14 00:49:00', 'Test Edit 10'),
+                (23, 104, 11, '2021-01-14 00:49:00', 'Test Edit 11')`).execute()
+                    .catch(err => done(err));
+
+                persistent.snipeData.time = moment().valueOf();
+                persistent.snipeData.msgs = [104];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+
+                new testUtil.testChannel(guild, { name: "test", id: 333 });
+            }
+
+            const msg = testUtil.createMessage(channel);
+            loadData().then(() => {
+                snipe.testing.getEdits(msg, [], 1)
+                    .then((complete) => {
+                        assert(complete);
+                        const msgContents = channel.lastMessage.content.split('\n');
+                        assert.equal(msgContents[12], `[10] 2021-01-14 0:49:00 - Test Edit 10`);
+                        assert.equal(msgContents[13], `--- 1 More Edit not Shown ---`);
+                        assert.equal(msgContents[14], `2021-01-14 01:05:00 - Test Message`);
+                        assert.equal(msgContents[15], `Current`);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+                .catch(err => done(err));
+        });
+
+        it('removes limit on option', function (done) {
+            async function loadData() {
+                // loads test data
+                // test data identified by messages.channel_id being 333
+                await db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (105, ${member.id}, 333, '2021-01-14 01:05:00', 'Test Message')`).execute()
+                    .catch(err => done(err));
+
+                // test data identified by length of id < 2
+                await db.buildQuery(`INSERT INTO edits (id, msg_id, num, edit_time, content)
+                VALUES
+                (24, 105, 1, '2021-01-14 00:49:00', 'Test Edit'),
+                (25, 105, 2, '2021-01-14 00:49:00', 'Test Edit 2'),
+                (26, 105, 3, '2021-01-14 00:49:00', 'Test Edit 3'),
+                (27, 105, 4, '2021-01-14 00:49:00', 'Test Edit 4'),
+                (28, 105, 5, '2021-01-14 00:49:00', 'Test Edit 5'),
+                (29, 105, 6, '2021-01-14 00:49:00', 'Test Edit 6'),
+                (30, 105, 7, '2021-01-14 00:49:00', 'Test Edit 7'),
+                (31, 105, 8, '2021-01-14 00:49:00', 'Test Edit 8'),
+                (32, 105, 9, '2021-01-14 00:49:00', 'Test Edit 9'),
+                (33, 105, 10, '2021-01-14 00:49:00', 'Test Edit 10'),
+                (34, 105, 11, '2021-01-14 00:49:00', 'Test Edit 11')`).execute()
+                    .catch(err => done(err));
+
+                persistent.snipeData.time = moment().valueOf();
+                persistent.snipeData.msgs = [105];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+
+                new testUtil.testChannel(guild, { name: "test", id: 333 });
+            }
+
+            const msg = testUtil.createMessage(channel);
+            loadData().then(() => {
+                snipe.testing.getEdits(msg, ['', '', 'all'], 1)
+                    .then((complete) => {
+                        assert(complete);
+                        const msgContents = channel.lastMessage.content.split('\n');
+                        assert.equal(msgContents[13], '[11] 2021-01-14 0:49:00 - Test Edit 11');
+                        assert.equal(msgContents[14], '2021-01-14 01:05:00 - Test Message');
+                        assert.equal(msgContents[15], 'Current');
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
                 .catch(err => done(err));
         });
     });
