@@ -120,7 +120,7 @@ async function getDeleted(message, args, target) {
     }
 
     // Gets all deleted messages and stores them in msgBuffer
-    // msgBuffer is Map<number, string>
+    // msgBuffer is Map<number, Array<number, string>>
     const msgBuffer = new Map();
     await db.buildQuery(`SELECT id, send_time, content FROM messages WHERE user_id = ${target.id} LIMIT ${msgLimit}`)
         .execute(result => {
@@ -138,12 +138,12 @@ async function getDeleted(message, args, target) {
     }
 
     // constructs outgoing contents with timestamp and escaped content
-    msgContents = [];
+    let msgContents = [];
     persistent.snipeData.msgs = [];
     for (let id of msgBuffer.keys()) {
         persistent.snipeData.msgs.push(id);
-        delContent = msgBuffer.get(id);
-        msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('MM/DD H:mm:ss')} - ${escapeMessage(delContent[1])}`)
+        let delContent = msgBuffer.get(id);
+        msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('MM/DD H:mm:ss')} - ${escapeMessage(delContent[1], message.guild)}`)
     }
 
     // saves data to persistent
@@ -165,7 +165,97 @@ async function getDeleted(message, args, target) {
 }
 
 async function getEdits(message, args, editNum) {
-    
+    const persistent = require('../persistent.json'); // ensures data is the most up to date
+
+    // checks if snipe has been used to get deleted messages in the past 30 minutes
+    const delMsgTime = moment(persistent.snipeData.time);
+    if (moment().diff(delMsgTime, 'm', true) > 30) {
+        message.channel.send(`Snipe has not been used to get deleted messages in the past half-hour`);
+        return false;
+    }
+
+    // gets and checks the message ID
+    const msgID = persistent.snipeData.msgs[editNum - 1];
+    if (msgID === undefined) {
+        message.channel.send(`Incorrect message number: must be within 1-${persistent.snipeData.msgs.length}`);
+        return false;
+    }
+
+    // gets max number of edits to display
+    let editLimit = config.snipeMessages;
+    if (args[2] == 'all') editLimit = 50;
+
+    // gets all edits and stores them in editBuffer
+    // editBuffer is Map<number, Array<number, string>>
+    let extraEdits = 0;
+    const editBuffer = new Map();
+    await db.buildQuery(`SELECT num, edit_time, content FROM edits WHERE msg_id = ${msgID}`)
+        .execute(result => {
+            if (editBuffer.size >= editLimit) extraEdits += 1;
+            else editBuffer.set(result[0], [result[1], result[2]]);
+        })
+        .catch(err => {
+            log(`Error in Snipe Edits query: ${err}`, message.client, false, 'error');
+            return false;
+        });
+
+    // gets message data
+    let messageData;
+    await db.buildQuery(`SELECT user_id, channel_id, send_time, delete_time, content FROM messages WHERE id = ${msgID} LIMIT 1`)
+        .execute(result => {
+            messageData = result;
+        })
+        .catch(err => {
+            log(`Error in getting Edit message data: ${err}`, message.client, false, 'error');
+            return false;
+        });
+
+    // checks message data
+    if (!messageData) {
+        log(`Could not get edit message data`, message.client, false, 'error');
+        return false;
+    }
+
+    // configures data for display
+    let channel = message.guild.channels.cache.get(messageData[1]);
+    let member = message.guild.members.cache.get(messageData[0]);
+    channel ? channel = `#${channel.name}` : channel = "???";
+    member ? member = `@${member.user.tag}` : member = "???";
+    const delTimestamp = moment(messageData[3]).add('5', 'h').format('YYYY-MM-DD HH:mm:ss');
+    const sendTimestamp = moment(messageData[2]).add('5', 'h').format('YYYY-MM-DD HH:mm:ss');
+
+    // constructs outgoing contents
+    let editContents = [];
+    editContents.push(`Sent At:\t\t ${sendTimestamp}\t\tAuthor:\t ${member}\nDeleted At:   ${delTimestamp}\t\tChannel:   ${channel}`);
+    if (editBuffer.size > 0) {
+        editContents.push(`Oldest`)
+        for (let num of editBuffer.keys()) {
+            let editContent = editBuffer.get(num);
+            let editTimestamp = moment(editContent[0]).add('5', 'h').format('YYYY-MM-DD H:mm:ss');
+            editContents.push(`[${num}] ${editTimestamp} - ${escapeMessage(editContent[1], message.guild)}`);
+        }
+        if (extraEdits > 0) {
+            let g = 'Edit';
+            if (extraEdits > 1) g = 'Edits'
+            editContents.push(`--- ${extraEdits} More ${g} not Shown ---`);
+        }
+        editContents.push(`${sendTimestamp} - ${escapeMessage(messageData[4], message.guild)}`)
+        editContents.push(`Current`)
+    } else {
+        editContents.push(`No edits found`);
+        editContents.push(`${sendTimestamp} - ${escapeMessage(messageData[4], message.guild)}`)
+    }
+
+    // sends edits
+    return sendLargeMessage(editContents, message.channel)
+        .then((msgs) => {
+            log(`Info & Edits sent in ${msgs.length} messages`);
+            return true
+        })
+        .catch(err => {
+            log(`Error in sending edits message: ${err}`, message.client, false, 'error');
+            return false;
+        });
 }
 
 async function main(message, args) {
