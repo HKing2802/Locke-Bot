@@ -4,18 +4,17 @@ const db = require('../src/db.js');
 require('hjson/lib/require-config');
 const config = require('../config.hjson');
 const persistent = require('../persistent.json');
-const { log } = require('../src/util.js');
+const { log, getPerm } = require('../src/util.js');
 const { Message, GuildMember, TextChannel } = require('discord.js');
 const moment = require('moment');
 const fs = require('fs');
 
 // Command Information
 const name = 'snipe';
-const description = `Gets the user's deleted messages. Displays the last ${config.snipeMessages} messages by default. Can also show the previous edits of a deleted message.`;
-const usage = `${config.prefix}snipe <member mention> [options]` +
-    '\n' + `${config.prefix}snipe <member ID> [options]` +
-    '\n' + `Options: \`all\` - displays all deleted messags` + 
-    '\n' + `    \`edits <number>\` - displays the edits of a deleted message. Number is the number to the left of each deleted message`;
+const description = `Gets the user's deleted messages. Displays the last ${config.snipeMessages} messages by default.\nCan also show the previous edits of a deleted message, where number is the number to the left of each deleted message`;
+const usage = `${config.prefix}snipe <member mention|member ID> [options] - Gets Deleted messages` +
+    '\n' + `${config.prefix}snipe edits <number> [options] - Gets edits of a deleted message` +
+    '\n' + `Options: \`all\` - displays all deleted messags`;
 const type = "Moderation";
 
 /**
@@ -144,7 +143,7 @@ async function getDeleted(message, args, target) {
     for (let id of msgBuffer.keys()) {
         persistent.snipeData.msgs.push(id);
         let delContent = msgBuffer.get(id);
-        msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('MM/DD H:mm:ss')} - ${escapeMessage(delContent[1], message.guild)}`)
+        msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('M/DD H:mm:ss')} - ${escapeMessage(delContent[1], message.guild)}`)
     }
 
     // saves data to persistent
@@ -260,7 +259,33 @@ async function getEdits(message, args, editNum) {
 }
 
 async function main(message, args) {
-
+    console.log(message.member);
+    console.log(message.member.roles.cache);
+    if (getPerm(message.member)) {
+        if (message.mentions.everyone) {
+            return message.channel.send("I can't snipe everyone")
+                .then(() => { return false });
+        } else {
+            if (args[0] = 'edits') {
+                const num = parseInt(args[1]);
+                if (num === "NaN") {
+                    return message.channel.send('Argument provided is not a number')
+                        .then(() => { return false });
+                } else {
+                    return await getEdits(message, args, num);
+                }
+            } else {
+                const target = message.guild.members.resolve(message.mentions.members.first());
+                if (target) return await getDeleted(message, args, target);
+                const IDtarget = message.guild.members.resolve(args[0]);
+                if (IDtarget) return await getDeleted(message, args, IDtarget);
+                else {
+                    return message.channel.send("No member or ID specified")
+                        .then(() => { return false });
+                }
+            }
+        }
+    }
 }
 
 exports.main = main;
