@@ -1139,6 +1139,9 @@ describe('snipe', function () {
     let channel = new testUtil.testChannel(guild, { name: "test channel" });
     let user = testUtil.createUser(client, "test user", "1234");
     let member = testUtil.createMember(client, guild, user);
+    let userAuthor = testUtil.createUser(client, "test author", "1234");
+    let adminRole = testUtil.createRole(client, guild, { id: config.adminRoleID }).role;
+    let memberAuthor = testUtil.createMember(client, guild, userAuthor, [adminRole.id]);
 
     before(async () => {
         util.testing.silenceLogging(true);
@@ -1152,6 +1155,9 @@ describe('snipe', function () {
         channel = new testUtil.testChannel(guild, { name: "test channel" });
         user = testUtil.createUser(client, "test user", "1234");
         member = testUtil.createMember(client, guild, user);
+        userAuthor = testUtil.createUser(client, "test author", "1234");
+        adminRole = testUtil.createRole(client, guild, { id: config.adminRoleID }).role;
+        memberAuthor = testUtil.createMember(client, guild, userAuthor, [adminRole.id]);
     });
 
     after(async () => {
@@ -1727,9 +1733,6 @@ describe('snipe', function () {
     describe('main', function () {
         const persistent = require('../persistent.json');
         const { writeFile } = require('fs');
-        const userAuthor = testUtil.createUser(client, "test author", "1234");
-        const adminRole = testUtil.createRole(client, guild, { id: config.adminRoleID }).role;
-        const memberAuthor = testUtil.createMember(client, guild, userAuthor, [adminRole.id]);
 
         after(async () => {
             // sets persistent snipeData to default values
@@ -1745,7 +1748,7 @@ describe('snipe', function () {
                 .catch(err => { throw err })
         });
 
-        it('gets deleted', function (done) {
+        it('gets deleted by mention', function (done) {
             async function loadData() {
                 // loads test data
                 // test data identified by messages.channel_id being 333
@@ -1758,13 +1761,126 @@ describe('snipe', function () {
             loadData().then(() => {
                 snipe.main(msg, [])
                     .then((complete) => {
-                        //console.log(channel.lastMessage.content);
                         assert.equal(complete, true);
                         assert.equal(channel.lastMessage.content, `[1] 1/15 1:10:00 - Test Message`);
                         done();
                     })
                     .catch(err => done(err));
             })
+                .catch(err => done(err));
+        });
+
+        it('gets deleted by ID', function (done) {
+            async function loadData() {
+                // loads test data
+                // test data identified by messages.channel_id being 333
+                await db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (201, ${member.id}, 333, '2021-01-16 11:56:00', 'Test Message')`).execute()
+                    .catch(err => done(err));
+            }
+
+            const msg = testUtil.createMessage(channel, '.snipe', memberAuthor);
+            loadData().then(() => {
+                snipe.main(msg, [member.id])
+                    .then((complete) => {
+                        assert.equal(complete, true);
+                        assert.equal(channel.lastMessage.content, `[1] 1/16 11:56:00 - Test Message`);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+                .catch(err => done(err));
+        });
+
+        it('gets edits', function (done) {
+            async function loadData() {
+                // loads test data
+                // test data identified by messages.channel_id being 333
+                await db.buildQuery(`INSERT INTO messages (id, user_id, channel_id, send_time, content)
+                VALUES
+                (202, ${member.id}, 333, '2021-01-16 11:44:00', 'Test Message')`).execute()
+                    .catch(err => done(err));
+
+                // test data identified by length of id = 3
+                await db.buildQuery(`INSERT INTO edits (id, msg_id, num, edit_time, content)
+                VALUES
+                (100, 202, 1, '2021-01-16 11:42:00', 'Test Edit'),
+                (101, 202, 2, '2021-01-16 11:43:00', 'Test Edit 2'),
+                (102, 202, 3, '2021-01-16 11:43:30', 'Test Ping <@!${memberAuthor.id}>')`).execute()
+                    .catch(err => done(err));
+
+                persistent.snipeData.time = moment().valueOf();
+                persistent.snipeData.msgs = [202];
+                await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+                    if (err) done(err);
+                });
+
+                new testUtil.testChannel(guild, { name: "test", id: 333 });
+            }
+
+            const msg = testUtil.createMessage(channel, '.snipe', memberAuthor);
+            loadData().then(() => {
+                snipe.main(msg, ['edits', '1'])
+                    .then((complete) => {
+                        assert(complete);
+                        const msgContent = channel.lastMessage.content.split('\n');
+                        assert.equal(msgContent[0], `Sent At:\t\t 2021-01-16 11:44:00\t\tAuthor:\t @${user.tag}`);
+                        assert.equal(msgContent[1].substr(-16), "Channel:   #test");
+                        assert.equal(msgContent[2], "Oldest");
+                        assert.equal(msgContent[3], "[1] 2021-01-16 11:42:00 - Test Edit");
+                        assert.equal(msgContent[4], "[2] 2021-01-16 11:43:00 - Test Edit 2");
+                        assert.equal(msgContent[5], "[3] 2021-01-16 11:43:30 - Test Ping @test author#1234");
+                        assert.equal(msgContent[6], "2021-01-16 11:44:00 - Test Message");
+                        assert.equal(msgContent[7], "Current");
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+                .catch(err => done(err));
+        });
+
+        it('returns on no member or ID', function (done) {
+            const msg = testUtil.createMessage(channel, '.snipe', memberAuthor);
+            snipe.main(msg, [])
+                .then((complete) => {
+                    assert.equal(complete, false);
+                    assert.equal(channel.lastMessage.content, "No member or ID specified");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('returns on not a number', function (done) {
+            const msg = testUtil.createMessage(channel, '.snipe', memberAuthor);
+            snipe.main(msg, ['edits', 'a'])
+                .then((complete) => {
+                    assert.equal(complete, false);
+                    assert.equal(channel.lastMessage.content, "Argument provided is not a number");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('checks everyone ping', function (done) {
+            const msg = testUtil.createMessage(channel, '', memberAuthor, { mention_everyone: true });
+            snipe.main(msg, ['edits'])
+                .then((complete) => {
+                    assert.equal(complete, false);
+                    assert.equal(channel.lastMessage.content, "I can't snipe everyone");
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('checks author perm', function (done) {
+            const msg = testUtil.createMessage(channel, '', member);
+            snipe.main(msg, [])
+                .then((complete) => {
+                    assert.equal(complete, undefined);
+                    assert.equal(channel.lastMessage, null);
+                    done();
+                })
                 .catch(err => done(err));
         });
     });
