@@ -259,16 +259,14 @@ async function getEdits(message, args, editNum) {
 }
 
 async function main(message, args) {
-    console.log(message.member);
-    console.log(message.member.roles.cache);
     if (getPerm(message.member)) {
         if (message.mentions.everyone) {
             return message.channel.send("I can't snipe everyone")
                 .then(() => { return false });
         } else {
-            if (args[0] = 'edits') {
+            if (args[0] == 'edits') {
                 const num = parseInt(args[1]);
-                if (num === "NaN") {
+                if (Number.isNaN(num)) {
                     return message.channel.send('Argument provided is not a number')
                         .then(() => { return false });
                 } else {
