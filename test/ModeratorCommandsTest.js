@@ -16,8 +16,9 @@ describe('ban', function () {
     let channel;
 
     // Quiets the logger for test displays
-    before(() => {
+    before(async () => {
         util.testing.silenceLogging(true);
+        await db.connect();
     })
 
     // Reconstructs the testing environment before every test to ensure there is no inter-test problems
@@ -28,10 +29,48 @@ describe('ban', function () {
         channel = new testUtil.testChannel(guild);
     })
 
-    after(() => {
+    after(async () => {
+        await db.disconnect();
         util.testing.silenceLogging(false)
         client.destroy();
     })
+
+    describe('parseTime', function () {
+        it('gets time', function () {
+            const time = ban.testing.parseTime(["", "60m"], member);
+
+            assert.equal(time.time, '60');
+            assert.equal(time.unit, 'm')
+            assert(time.timeUnban instanceof moment);
+        });
+
+        it('checks first arg', function () {
+            const time2 = ban.testing.parseTime([`<@!${member.id}>2d`], member);
+
+            assert.equal(time2.time, '2');
+            assert.equal(time2.unit, "d");
+        });
+
+        it('parses time with no space', function () {
+            const time = ban.testing.parseTime([`${member.id}20h`], member);
+
+            assert.equal(time.time, '20');
+            assert.equal(time.unit, 'h');
+        });
+
+        it('has a default unit', function () {
+            const time = ban.testing.parseTime(["", "30"], member);
+
+            assert.equal(time.time, '30');
+            assert.equal(time.unit, 'm');
+        });
+
+        it('returns if args is empty', function () {
+            const time = ban.testing.parseTime([], member);
+
+            assert.equal(time, undefined);
+        });
+    });
 
     describe('ban', function () {
         it('bans from the guild', function (done) {
@@ -88,6 +127,32 @@ describe('ban', function () {
                         })
                         .catch(err => done(err));
                 });
+        });
+
+        it('records temp bans to db', function (done) {
+            const msg = testUtil.createMessage(channel, '', user);
+            ban.testing.ban(msg, ['', '1d'], member)
+                .then((complete) => {
+                    assert(complete);
+                    assert.equal(channel.lastMessage.content, `Banned ${user.tag} for a day, No reason given.`);
+
+                    // checks db
+                    let numEntries = 0;
+                    db.buildQuery(`SELECT * FROM temp_ban WHERE user_id = ${member.id}`)
+                        .execute(result => {
+                            numEntries += 1;
+                            const timeDiff = moment(result[2]).diff(moment(result[1]).add('1', 'd'))
+                            assert(timeDiff < 5000 && timeDiff >= 0);
+                        })
+                        .then(async () => {
+                            assert.equal(numEntries, 1);
+                            await db.buildQuery(`DELETE FROM temp_ban WHERE user_id = ${member.id} LIMIT 1`).execute()
+                                .catch(err => { throw err });
+                            done();
+                        })
+                        .catch(err => done(err));
+                })
+                .catch(err => done(err));
         });
     });
 
@@ -542,7 +607,7 @@ describe('mute', function () {
 
             assert.equal(time.time, '60');
             assert.equal(time.unit, 'm')
-            assert(time.timeUnban instanceof moment);
+            assert(time.timeUnmute instanceof moment);
         });
 
         it('checks first arg', function () {
