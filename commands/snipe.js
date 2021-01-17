@@ -164,6 +164,13 @@ async function getDeleted(message, args, target) {
         });
 }
 
+/**
+ * Collects and sends the edits to a specific deleted message
+ * @param {Message} message The message recieved by the client
+ * @param {Array<string>} args The arguments provided to the command and parsed by the processor
+ * @param {number} editNum The number of the deleted message to get the edits of
+ * @returns {boolean}
+ */
 async function getEdits(message, args, editNum) {
     const persistent = require('../persistent.json'); // ensures data is the most up to date
 
@@ -258,6 +265,13 @@ async function getEdits(message, args, editNum) {
         });
 }
 
+/**
+ * Checks author permission, determins mode of snipe and target
+ * Entry point for command
+ * @param {Message} message The message recieved by the client
+ * @param {Array<string>} args The arguments provided to the command and parsed by the processor
+ * @returns {boolean|undefined}
+ */
 async function main(message, args) {
     if (getPerm(message.member)) {
         if (message.mentions.everyone) {
