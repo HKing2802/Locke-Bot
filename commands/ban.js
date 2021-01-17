@@ -4,6 +4,8 @@ const { getPerm, getReason, log } = require('../src/util.js');
 require('hjson/lib/require-config');
 const config = require('../config.hjson');
 const { GuildMember, Message } = require('discord.js');
+const moment = require('moment');
+const db = require('../src/db.js');
 
 // Command information
 const name = "ban";
@@ -11,6 +13,47 @@ const description = "Bans a member from the server";
 const usage = `${config.prefix}ban <member mention> [reason]` +
     '\n' + `${config.prefix}ban <member ID> [reason]`;
 const type = "Moderation";
+
+/**
+ * Parses the time argument to get a timestamp when the member is meant to be unbanned
+ * @param {Array<string>} args The arguments provided to the command and split by processor
+ * @param {Discord.GuildMember} target The target member of the ban
+ * @returns {Object<string, string, moment.Moment>}
+ */
+function parseTime(args, target) {
+    let arg;
+    const name = `<@!${target.id}>`;
+    const id = `${target.id}`;
+    if (args[0] === undefined) return;
+    if (!args[1]) {
+        if (args[0].length > name.length || args[0].length > id.length) {
+            arg = args[0];
+        } else {
+            return;
+        }
+    } else {
+        arg = args[1];
+    }
+
+    let re = /\d+[a-zA-Z]{0,1}$/g;
+    arg = arg.match(re);
+    if (!arg || !arg[0]) return;
+
+    if (arg[0].length > id.length) arg = arg[0].substr(id.length);
+    else if (arg[0].length == id.length && arg[1]) arg = arg[1];
+    else arg = arg[0];
+
+    const numRe = /\d+/g
+    const charRe = /[a-zA-Z]{1}\b/g;
+
+    const time = arg.match(numRe);
+    let unit = arg.match(charRe);
+    if (!unit) unit = ['m'];
+
+    const timeUnban = moment();
+    timeUnban.add(time[0], unit[0]);
+    return { time: time[0], unit: unit[0], timeUnban: timeUnban };
+}
 
 /**
  * Checks to ensure that the target can be banned, and performs the ban
@@ -25,13 +68,30 @@ async function ban(message, args, target) {
             .then(() => { return false });
     }
 
-    let reason = getReason(args, target);
+    const banTime = parseTime(args, target);
+
+    let reason;
+    if (banTime) reason = getReason(args, target, 2);
+    else reason = getReason(args, target);
 
     if (reason == "") reason = "No reason given";
 
+    // inserts into database if time provided
+    if (banTime) {
+        if (!db.connected()) log(`Not Connected to database. Skipping database entry...`, message.client, false, 'warn');
+        else {
+            const timeUnban = `'${banTime.timeUnban.format('YYYY-MM-DD HH:mm:ss')}'`;
+            const timeBan = `'${moment().format('YYYY-MM-DD HH:mm:ss')}'`;
+            await db.buildQuery(`INSERT INTO temp_ban(user_id, time_banned, time_unban) VALUES (${target.id}, ${timeBan}, ${timeUnban})`)
+                .execute()
+                .catch(err => { log(`Error in querying database in ban: ${err}`, message.client, false, 'error') });
+            log('Logged temporary banned user to database');
+        }
+    }
+
+    // executes ban
     return target.ban({ reason: `${reason} - Banned by ${message.author.tag}` })
         .then((m) => {
-            let msg;
             let tag;
             if (m.user == undefined) {
                 if (m.tag == undefined) {
@@ -43,10 +103,10 @@ async function ban(message, args, target) {
                 tag = m.user.tag;
             }
 
-            if (reason == "No reason given")
-                msg = `Banned ${tag}, No reason given.`;
-            else
-                msg = `Banned ${tag} for ${reason}`;
+            let msg = `Banned ${tag}`;
+            if (banTime) msg += ` for ${banTime.timeUnban.toNow(true)}`;
+            if (reason == "No reason given") msg += `, No reason given.`;
+            else msg += ` for ${reason}`;
 
             return message.channel.send(msg)
                 .then(() => {
@@ -95,5 +155,6 @@ exports.data = {
     type: type
 }
 exports.testing = {
-    ban: ban
+    ban: ban,
+    parseTime, parseTime
 }
