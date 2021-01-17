@@ -17,7 +17,7 @@ const type = "Moderation";
  * Parses the time argument to get a timestamp when the member is meant to be unmuted
  * @param {Array<string>} args The arguments provided to the command and split by processor
  * @param {Discord.GuildMember} target The target member of the mute
- * @returns {Date}
+ * @returns {Object<string, string, moment>}
  */
 function parseTime(args, target) {
     let arg;
@@ -34,7 +34,7 @@ function parseTime(args, target) {
         arg = args[1];
     }
 
-    let re = /\d+[a-zA-Z]{0,1}\b/g;
+    let re = /\d+[a-zA-Z]{0,1}$/g;
     arg = arg.match(re);
     if (!arg || !arg[0]) return;
 
@@ -49,9 +49,9 @@ function parseTime(args, target) {
     let unit = arg.match(charRe);
     if (!unit) unit = ['m'];
 
-    const timeUnban = moment();
-    timeUnban.add(time[0], unit[0]);
-    return { time: time[0], unit: unit[0], timeUnban: timeUnban };
+    const timeUnmute = moment();
+    timeUnmute.add(time[0], unit[0]);
+    return { time: time[0], unit: unit[0], timeUnmute: timeUnmute };
 }
 
 /**
@@ -86,22 +86,22 @@ async function mute(message, args, target) {
 
     // constructs response message
     let msg = `Muted ${target.user.tag}`;
-    if (muteTime) msg += ` for ${muteTime.timeUnban.toNow(true)}`;
+    if (muteTime) msg += ` for ${muteTime.timeUnmute.toNow(true)}`;
     if (reason == "No reason given") msg += ', No reason given';
     else msg += ` for ${reason}`;
 
     // adds to db
     if (!db.connected()) log(`Not Connected to database. Skipping database entry...`, message.client, false, 'warn');
     else {
-        // sets timeUnban to formatted time if exists, or undefined otherwise
-        let timeUnban = 'NULL';
-        if (muteTime) timeUnban = `'${muteTime.timeUnban.format('YYYY-MM-DD HH:mm:ss')}'`;
+        // sets timeUnmute to formatted time if exists, or undefined otherwise
+        let timeUnmute = 'NULL';
+        if (muteTime) timeUnmute = `'${muteTime.timeUnmute.format('YYYY-MM-DD HH:mm:ss')}'`;
 
         if (member) member = 1;
         else member = 0;
 
         // Builds and executes query to Database
-        db.buildQuery(`INSERT INTO muted_users(user_id, name, member, time_unmute) VALUES (${target.id}, '${target.user.username}', ${member}, ${timeUnban})`)
+        db.buildQuery(`INSERT INTO muted_users(user_id, name, member, time_unmute) VALUES (${target.id}, '${target.user.username}', ${member}, ${timeUnmute})`)
             .execute()
             .catch(err => { log(`Error in querying database in mute: ${err}`, message.client, false, 'error'); });
         log('Logged muted user to Database');
@@ -109,7 +109,7 @@ async function mute(message, args, target) {
 
     // logs info
     let logmsg = `${message.author.tag} muted ${target.user.tag} for ${reason}`;
-    if (muteTime) logmsg += `Time: ${muteTime.timeUnban.format()}`;
+    if (muteTime) logmsg += `Time: ${muteTime.timeUnmute.format()}`;
     log(logmsg);
 
     // constructs log embed
@@ -120,7 +120,7 @@ async function mute(message, args, target) {
         .addField("Reason", reason)
         .setFooter(moment().format("dddd, MMMM Do YYYY, HH:mm:ss"))
 
-    if (muteTime) logEmbed.addField("Duration", muteTime.timeUnban.toNow(true));
+    if (muteTime) logEmbed.addField("Duration", muteTime.timeUnmute.toNow(true));
     log(logEmbed, message.client);
 
     // sends response message
