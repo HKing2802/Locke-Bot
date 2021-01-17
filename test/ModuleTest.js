@@ -567,7 +567,7 @@ describe('garbage collection', function () {
 
                         //checks db
                         let numEntries = 0;
-                        await db.buildQuery(`SELECT user_id FROM temp_ban WHERE CHAR_LENGTH(user_id) = 3`)
+                        await db.buildQuery(`SELECT user_id FROM temp_ban WHERE LENGTH(user_id) = 3`)
                             .execute(result => {
                                 if (result[0] == 457) assert(false);
                                 numEntries += 1;
