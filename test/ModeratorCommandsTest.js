@@ -1950,3 +1950,126 @@ describe('snipe', function () {
         });
     });
 });
+
+describe('verify', function () {
+    const verify = require('../commands/verify.js');
+    let client = new Discord.Client();
+    let guild = testUtil.createGuild(client);
+    let channel = new testUtil.testChannel(guild);
+    let user = testUtil.createUser(client, "test user", '1234');
+    let member = testUtil.createMember(client, guild, user);
+    let userAuthor = testUtil.createUser(client, "author user", '4321');
+    let memberAuthor = testUtil.createMember(client, guild, user)
+    let humanRole = testUtil.createRole(client, guild, { id: config.humanRoleID }).role;
+
+    before(() => {
+        util.testing.silenceLogging(true);
+    });
+
+    beforeEach(async () => {
+        client.destroy();
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        channel = new testUtil.testChannel(guild);
+        user = testUtil.createUser(client, "test user", '1234');
+        member = testUtil.createMember(client, guild, user);
+        userAuthor = testUtil.createUser(client, "author user", '4321');
+        memberAuthor = testUtil.createMember(client, guild, user)
+        const role = testUtil.createRole(client, guild, { id: config.adminRoleID }).role;
+        await memberAuthor.roles.add(role);
+        humanRole = testUtil.createRole(client, guild, { id: config.humanRoleID }).role;
+    });
+
+    after(() => {
+        client.destroy();
+        util.testing.silenceLogging(false);
+    });
+
+    it('verifies', function (done) {
+        const msg = testUtil.createMessage(channel);
+        verify.testing.verify(msg, member)
+            .then((complete) => {
+                assert.equal(complete, true);
+                assert(member.roles.cache.has(config.humanRoleID));
+                assert.equal(channel.lastMessage.content, "Member verified");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('returns on already verified', function (done) {
+        member.roles.add(humanRole);
+        const msg = testUtil.createMessage(channel);
+        verify.testing.verify(msg, member)
+            .then((complete) => {
+                assert.equal(complete, false);
+                assert(member.roles.cache.has(config.humanRoleID));
+                assert.equal(channel.lastMessage.content, "Member already verified");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('verifies on mention', function (done) {
+        const msg = testUtil.createMessage(channel, '', memberAuthor, { mentions: [member] });
+        verify.main(msg, [])
+            .then((complete) => {
+                assert.equal(complete, true);
+                assert(member.roles.cache.has(config.humanRoleID));
+                assert.equal(channel.lastMessage.content, "Member verified");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('verifies on ID', function (done) {
+        const msg = testUtil.createMessage(channel, '', memberAuthor);
+        verify.main(msg, [`${member.id}`])
+            .then((complete) => {
+                assert.equal(complete, true);
+                assert.equal(channel.lastMessage.content, "Member verified");
+                assert(guild.members.cache.get(member.id).roles.cache.has(config.humanRoleID));
+                // above assert is different from the other verify tests because of the way resolve works, 
+                // and the instance created in testing and the instance stored in the guild object do not update each other
+                // in production, the role assignment is passed directly to the API, and instances are updated from the server on call
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('returns on no member or ID', function (done) {
+        const msg = testUtil.createMessage(channel, '', memberAuthor);
+        verify.main(msg, [])
+            .then((complete) => {
+                assert.equal(complete, false);
+                assert(!(member.roles.cache.has(config.humanRoleID)));
+                assert.equal(channel.lastMessage.content, "No member or ID specified");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('returns on everyone ping', function (done) {
+        const msg = testUtil.createMessage(channel, '', memberAuthor, { mention_everyone: true });
+        verify.main(msg, [])
+            .then((complete) => {
+                assert.equal(complete, false);
+                assert(!(member.roles.cache.has(config.humanRoleID)));
+                assert.equal(channel.lastMessage.content, "I can't verify everyone");
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('checks author perm', function (done) {
+        const msg = testUtil.createMessage(channel, '', member);
+        verify.main(msg, [])
+            .then((complete) => {
+                assert.equal(complete, undefined);
+                assert(!(member.roles.cache.has(config.humanRoleID)));
+                assert.equal(channel.lastMessage, null);
+                done();
+            })
+            .catch(err => done(err));
+    });
+});
