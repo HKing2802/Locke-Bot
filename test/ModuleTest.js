@@ -581,3 +581,127 @@ describe('garbage collection', function () {
             .catch(err => done(err));
     });
 });
+
+describe('auto-unmute', function (done) {
+    const au = require('../modules/timed/auto-unmute.js');
+    const sinon = require('sinon');
+    let client = new Discord.Client();
+    let guild = testUtil.createGuild(client);
+    let user = testUtil.createUser(client, "test user", "1234");
+    let humanRole = testUtil.createRole(client, guild, { name: "human", id: config.humanRoleID }).role;
+    let mutedRole = testUtil.createRole(client, guild, { name: "muted", id: config.mutedRoleID }).role;
+    let member = testUtil.createMember(client, guild, user, [mutedRole.id], '', {id: "33"});
+
+    before(async () => {
+        silenceLogging(false);
+        await db.connect();
+    });
+
+    beforeEach(() => {
+        client.destroy();
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client, config.guildID);
+        user = testUtil.createUser(client, "test user", "1234");
+        humanRole = testUtil.createRole(client, guild, { name: "human", id: config.humanRoleID }).role;
+        mutedRole = testUtil.createRole(client, guild, { name: "muted", id: config.mutedRoleID }).role;
+        const memberRole = testUtil.createRole(client, guild, { name: "member", id: config.memberRoleID });
+        member = testUtil.createMember(client, guild, user, [mutedRole.id], '', { id: "33" });
+    });
+
+    after(async () => {
+        await db.disconnect();
+        silenceLogging(false);
+        client.destroy();
+    });
+
+    describe('unmute', function () {
+        it('unmutes', function (done) {
+            au.testing.unmute(client, member.id, false)
+                .then((complete) => {
+                    const target = guild.members.cache.get(member.id);
+                    assert.equal(complete, true);
+                    assert(target.roles.cache.has(humanRole.id));
+                    assert(!(target.roles.cache.has(mutedRole.id)));
+                    assert(!(target.roles.cache.has(config.memberRoleID)));
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('gives member role', function (done) {
+            au.testing.unmute(client, member.id, true)
+                .then((complete) => {
+                    const target = guild.members.cache.get(member.id);
+                    assert.equal(complete, true);
+                    assert(target.roles.cache.has(humanRole.id));
+                    assert(target.roles.cache.has(config.memberRoleID));
+                    assert(!(target.roles.cache.has(mutedRole.id)));
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('returns on already unmuted', async function () {
+            await guild.members.cache.get(member.id).roles.remove(mutedRole.id);
+            await guild.members.cache.get(member.id).roles.add(humanRole.id);
+
+            const complete = await au.testing.unmute(client, member.id, false);
+            assert.equal(complete, false);
+            const target = guild.members.cache.get(member.id);
+            assert(target.roles.cache.has(humanRole.id));
+            assert(!(target.roles.cache.has(mutedRole.id)));
+        });
+
+        it('returns on no target', function (done) {
+            au.testing.unmute(client, '123', false)
+                .then((complete) => {
+                    assert.equal(complete, false);
+                    const target = guild.members.cache.get(member.id);
+                    assert(target.roles.cache.has(mutedRole.id));
+                    assert(!(target.roles.cache.has(humanRole.id)));
+                    assert(!(target.roles.cache.has(config.memberRoleID)));
+                    done();
+                })
+                .catch(err => done(err));
+        });
+    });
+
+    describe('setupUnmute', function () {
+        let clock;
+        const formatting = 'YYYY-MM-DD HH:mm:ss';
+        async function loadData(id, m, tu) {
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (${id}, ${m}, '${tu}')`).execute();
+        }
+
+        async function cleanData(id) {
+            await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${id}`).execute();
+        }
+
+        beforeEach(() => {
+            clock = sinon.useFakeTimers();
+        });
+
+        afterEach(async () => {
+            clock.restore();
+            await db.buildQuery(`DELETE FROM muted_users WHERE LENGTH(user_id) = 2`)
+        });
+
+        it('sets up timer', async function () {
+            const tu = moment().add(2, 's').format(formatting);
+            loadData(member.id, 0, tu).then(() => {
+                au.testing.setupUnmute(client, member.id)
+                    .then(async (to) => {
+                        assert(to instanceof NodeJS.Timeout);
+                        assert(guild.members.cache.get(member.id).roles.cache.get(mutedRole.id));
+                        assert(!(guild.member.cache.get(member.id).roles.cache.get(humanRole.id)));
+                        clock.tick(1999);
+                        assert(guild.members.cache.get(member.id).roles.cache.get(mutedRole.id));
+                        assert(!(guild.member.cache.get(member.id).roles.cache.get(humanRole.id)));
+                        clock.tick(2);
+                        assert(guild.members.cache.get(member.id).roles.cache.get(humanRole.id));
+                        assert((guild.member.cache.get(member.id).roles.cache.get(mutedRole.id)));
+                    })
+            })
+        });
+    });
+});
