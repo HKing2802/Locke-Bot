@@ -83,7 +83,8 @@ function createGuild(client, id, extraData = {}) {
     const guild = new classOverrides.TestGuild(client, { id: id, ...extraData });
     const role = new Discord.Role(client, { id: id, name: "everyone" }, guild);
     guild.roles.add(role);
-    client.guilds.add({ id: id, roles: [{ id: id, name: "everyone" }], ...extraData })
+    client.guilds.cache.set(id, guild)
+    //client.guilds.add({ id: id, roles: [{ id: id, name: "everyone" }], ...extraData })
     return guild;
 }
 
