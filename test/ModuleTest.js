@@ -1,5 +1,6 @@
 const assert = require('assert').strict;
 const { silenceLogging } = require('../src/util.js').testing;
+const util = require('../src/util.js');
 const Discord = require('discord.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
 const moment = require('moment');
@@ -585,6 +586,7 @@ describe('garbage collection', function () {
 describe('auto-unmute', function (done) {
     const au = require('../modules/timed/auto-unmute.js');
     const sinon = require('sinon');
+    const formatting = 'YYYY-MM-DD HH:mm:ss';
     let client = new Discord.Client();
     let guild = testUtil.createGuild(client);
     let user = testUtil.createUser(client, "test user", "1234");
@@ -605,7 +607,7 @@ describe('auto-unmute', function (done) {
         humanRole = testUtil.createRole(client, guild, { name: "human", id: config.humanRoleID }).role;
         mutedRole = testUtil.createRole(client, guild, { name: "muted", id: config.mutedRoleID }).role;
         const memberRole = testUtil.createRole(client, guild, { name: "member", id: config.memberRoleID });
-        member = testUtil.createMember(client, guild, user, [mutedRole.id], '', { id: "33" });
+        member = testUtil.createMember(client, guild, user, [mutedRole.id]);
     });
 
     after(async () => {
@@ -668,7 +670,6 @@ describe('auto-unmute', function (done) {
 
     describe('setupUnmute', function () {
         let clock;
-        const formatting = 'YYYY-MM-DD HH:mm:ss';
         async function loadData(id, m, tu) {
             await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (${id}, ${m}, '${tu}')`).execute();
         }
@@ -678,30 +679,162 @@ describe('auto-unmute', function (done) {
         }
 
         beforeEach(() => {
-            clock = sinon.useFakeTimers();
+            clock = sinon.useFakeTimers(Date.now());
         });
 
         afterEach(async () => {
             clock.restore();
-            await db.buildQuery(`DELETE FROM muted_users WHERE LENGTH(user_id) = 2`)
         });
 
         it('sets up timer', async function () {
-            const tu = moment().add(2, 's').format(formatting);
-            loadData(member.id, 0, tu).then(() => {
-                au.testing.setupUnmute(client, member.id)
-                    .then(async (to) => {
-                        assert(to instanceof NodeJS.Timeout);
-                        assert(guild.members.cache.get(member.id).roles.cache.get(mutedRole.id));
-                        assert(!(guild.member.cache.get(member.id).roles.cache.get(humanRole.id)));
-                        clock.tick(1999);
-                        assert(guild.members.cache.get(member.id).roles.cache.get(mutedRole.id));
-                        assert(!(guild.member.cache.get(member.id).roles.cache.get(humanRole.id)));
-                        clock.tick(2);
-                        assert(guild.members.cache.get(member.id).roles.cache.get(humanRole.id));
-                        assert((guild.member.cache.get(member.id).roles.cache.get(mutedRole.id)));
-                    })
-            })
+            const tu = moment().add(10, 's').format(formatting);
+            await loadData(member.id, 0, tu)
+
+            const to = await au.testing.setupUnmute(client, member.id)
+            cleanData(member.id);
+
+            assert(!(au.testing.getStatus()));
+            clock.tick(to.time - 1);
+            assert(!(au.testing.getStatus()));
+            clock.tick(1);
+
+            await db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`)
+                .execute(result => {
+                    assert(false, "Database entry not removed");
+                })
+                .then(() => {
+                    assert(au.testing.getStatus());
+                });
+        });
+
+        it('has the right time', async function () {
+            const tu = moment().add(10, 's').format(formatting);
+            await loadData(member.id, 0, tu);
+
+            const to = await au.testing.setupUnmute(client, member.id);
+            cleanData(member.id);
+
+            assert(to.time < 10000);
+            assert(to.time > 8500);
+            assert(!(au.testing.getStatus()));
+        });
+
+        it('unmutes and returns if negative time', async function () {
+            const tu = moment().subtract(1, 'm').format(formatting);
+            await loadData(member.id, 1, tu);
+
+            const to = await (au.testing.setupUnmute(client, member.id));
+            cleanData(member.id);
+
+            await db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`)
+                .execute(result => {
+                    assert(false, "Database entry not removed");
+                })
+                .then(() => {
+                    assert(guild.members.cache.get(member.id).roles.cache.has(humanRole.id));
+                    assert(guild.members.cache.get(member.id).roles.cache.has(config.memberRoleID));
+                    assert(!(guild.members.cache.get(member.id).roles.cache.has(mutedRole.id)));
+
+                    assert(au.testing.getStatus());
+                    assert.equal(to.obj, undefined);
+                });
+        });
+    });
+
+    describe('getNextUnmute', function () {
+
+        afterEach(async () => {
+            await db.buildQuery(`DELETE FROM muted_users WHERE LENGTH(user_id) = 1`).execute();
+        });
+
+        it('gets next in 1 user', async function () {
+            const m = moment().add(10, 'm').format(formatting);
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (1, 0, '${m}')`).execute();
+
+            const id = await au.testing.getNextUnmute();
+            assert.equal(id, 1);
+        });
+
+        it('gets next in 3 users', async function () {
+            let m = moment();
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (2, 0, '${m.add(3, 'm').format(formatting)}')`).execute();
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (3, 0, '${m.subtract(1, 'm').format(formatting)}')`).execute();
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (4, 1, '${m.add(6, 'm').format(formatting)}')`).execute();
+
+            const id = await au.testing.getNextUnmute();
+            assert.equal(id, 3)
+        });
+
+        it('returns on no users', async function () {
+            const id = await au.testing.getNextUnmute();
+            assert.equal(id, undefined);
+        });
+    });
+
+    describe('updateUnmute', function () {
+
+        afterEach(async () => {
+            await db.buildQuery(`DELETE FROM muted_users WHERE LENGTH(user_id) = 1`).execute()
+                .catch(err => { throw err });
+        });
+
+        it('updates', async function () {
+            const t1 = moment().add(5, 'm');
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (5, 0, '${t1.format(formatting)}')`).execute()
+                .catch(err => { throw err });
+
+            const to = setTimeout(() => { console.log("test") }, 20000);
+
+            await au.testing.updateUnmute(client, to)
+                .then((data) => {
+                    assert.equal(typeof data, 'object');
+                    assert(data.time < (5 * 60 * 1000));
+                    assert(data.time > (4.5 * 60 * 1000));
+                    clearTimeout(data.obj);
+                })
+                .catch(err => { throw err });
+        });
+
+        it('iterates', async function () {
+            const t = moment();
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (6, 0, '${t.subtract(5, 'm').format(formatting)}')`).execute()
+                .catch(err => { throw err });
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (7, 0, '${t.add(10, 'm').format(formatting)}')`).execute()
+                .catch(err => { throw err });
+
+            const to = setTimeout(() => { console.log("test") }, 20000);
+
+            await au.testing.updateUnmute(client, to)
+                .then((data) => {
+                    assert.equal(typeof data, 'object');
+                    assert(data.time < (5 * 60 * 1000));
+                    assert(data.time > (4.5 * 60 * 1000));
+                    clearTimeout(data.obj);
+                })
+                .catch(err => { throw err });
+        });
+
+        it('returns on no user id', function (done) {
+            const to = setTimeout(() => { console.log('test') }, 20000);
+
+            au.testing.updateUnmute(client, to)
+                .then((data) => {
+                    assert.equal(data, undefined);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+    })
+
+    describe('controller', function () {
+        it('initializes listeners', function () {
+            au.testing.controller(client);
+
+            const evs = au.events.eventNames();
+            assert.equal(evs.length, 2);
+            assert.equal(evs[0], 'mute');
+            assert.equal(evs[1], 'garbageCollection');
+            au.events.removeAllListeners();
         });
     });
 });
