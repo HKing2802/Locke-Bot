@@ -71,9 +71,6 @@
   commands:
   [
     ping
-    endprocess
-    shutdown
-    activate
     mute
     unmute
     help
@@ -82,7 +79,10 @@
     kick
     ban
     repository
-    restart
+    reactKae
+    repository
+    togglebot
+    unban
   ]
 
 
@@ -114,6 +114,18 @@
     {
       name: Garbage Collection
       path: timed/dbGarbageCollection.js
+    }
+    {
+      name: Auto-Unban
+      path: timed/auto-unban.js
+    }
+    {
+      name: Auto-Unmute
+      path: timed/auto-unmute.js
+    }
+    {
+      name: Startup Name Check
+      path: timed/nameCheck.js
     }
   ]
 }
