@@ -917,7 +917,7 @@ describe('auto-unban', function () {
     guild.members.bans.set(user.id, { reason: "test ban" });
 
     before(async () => {
-        silenceLogging(false);
+        silenceLogging(true);
         await db.connect();
     });
 
