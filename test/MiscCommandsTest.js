@@ -126,17 +126,36 @@ describe('reactKae', function () {
     });
 
     it('switches state', function (done) {
-        const persistent = require('../persistent.json')
+        let persistent = require('../persistent.json')
         const startVal = persistent.kaeReact;
         channel.send('reactKae', user)
             .then((msg) => {
                 reactKae.main(msg, [])
                     .then(() => {
-                        assert(config.kaeReact !== startVal);
-                        assert.equal(channel.lastMessage.content, 'reactKae');
+                        persistent = require('../persistent.json')
+                        assert(persistent.kaeReact !== startVal);
+                        assert.equal(channel.lastMessage, null);
+                        done();
+                    })
+                    .catch(err => done(err));
+            });
+    });
+
+    it('accepts input', function (done) {
+        let persistent = require('../persistent.json');
+        const startVal = persistent.kaeReact;
+        const userInp = persistent.kaeReact.toString();
+        channel.send('reactKae', user)
+            .then((msg) => {
+                reactKae.main(msg, [userInp])
+                    .then(() => {
+                        persistent = require('../persistent.json');
+                        assert(persistent.kaeReact == startVal);
+                        assert.equal(channel.lastMessage, null);
                         done();
                     })
                     .catch(err => done(err));
             });
     });
 });
+
