@@ -737,7 +737,7 @@ describe('auto-unmute', function (done) {
             const tu = moment().subtract(1, 'm').format(formatting);
             await loadData(member.id, 1, tu);
 
-            const to = await (au.testing.setupUnmute(client, member.id));
+            const to = await au.testing.setupUnmute(client, member.id);
             cleanData(member.id);
 
             await db.buildQuery(`SELECT * FROM muted_users WHERE user_id = ${member.id}`)
@@ -750,6 +750,7 @@ describe('auto-unmute', function (done) {
                     assert(!(guild.members.cache.get(member.id).roles.cache.has(mutedRole.id)));
 
                     assert(au.testing.getStatus());
+                    assert(!(au.testing.getPending()));
                     assert.equal(to.obj, undefined);
                 });
         });
@@ -890,7 +891,7 @@ describe('auto-unmute', function (done) {
             au.events.emit('stopModule');
         });
 
-        it('mutes within threshold', async function () {
+        it('unmutes within threshold', async function () {
             await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) 
                 VALUES
                 (${member.id}, 1, '${moment().add(1, 's').format(formatting)}'),
@@ -902,6 +903,293 @@ describe('auto-unmute', function (done) {
             assert(!(guild.members.cache.get(member.id).roles.cache.has(mutedRole.id)));
             assert(guild.members.cache.get(member.id).roles.cache.has(config.memberRoleID));
             au.events.emit('stopModule');
+        });
+    });
+});
+
+describe('auto-unban', function () {
+    const ab = require('../modules/timed/auto-unban.js');
+    const sinon = require('sinon');
+    const formatting = 'YYYY-MM-DD HH:mm:ss';
+    let client = new testUtil.testClient();
+    let guild = testUtil.createGuild(client);
+    let user = testUtil.createUser(client, "test user", "1234");
+    guild.members.bans.set(user.id, { reason: "test ban" });
+
+    before(async () => {
+        silenceLogging(false);
+        await db.connect();
+    });
+
+    beforeEach(() => {
+        client.destroy();
+        client = new testUtil.testClient();
+        guild = testUtil.createGuild(client, config.guildID);
+        user = testUtil.createUser(client, "test user", "1234");
+        guild.members.bans.set(user.id, { reason: "test ban" });
+    });
+
+    after(async () => {
+        await db.disconnect();
+        silenceLogging(false);
+        client.destroy();
+    });
+
+    describe('unban', function () {
+        it('unbans', function (done) {
+            ab.testing.unban(client, user.id)
+                .then((complete) => {
+                    assert.equal(complete, true);
+                    assert.equal(guild.members.bans.get(user.id), undefined);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('returns on bad IDs', function (done) {
+            ab.testing.unban(client, 123)
+                .then((complete) => {
+                    assert.equal(complete, false);
+                    assert(guild.members.bans.get(user.id) !== undefined);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('removes from database', function (done) {
+            db.buildQuery(`INSERT INTO temp_ban (user_id) VALUES (1)`).execute().then(() => {
+                ab.testing.unban(client, 1)
+                    .then((complete) => {
+                        assert(!complete);
+
+                        db.buildQuery(`SELECT * FROM temp_ban WHERE user_id = 1`)
+                            .execute(result => {
+                                assert(false, "Entry not deleted");
+                            })
+                            .then(() => {
+                                done();
+                            })
+                            .catch(err => done(err));
+                    })
+                    .catch(err => done(err));
+            });
+        });
+    });
+
+    describe('setupUnban', function () {
+        let clock;
+        async function loadData(id, tu) {
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (${id}, '${tu}')`).execute();
+        }
+
+        async function cleanData(id) {
+            await db.buildQuery(`DELETE FROM temp_ban WHERE user_id = ${id}`).execute();
+        }
+
+        beforeEach(() => {
+            clock = sinon.useFakeTimers(Date.now());
+        });
+
+        afterEach(async () => {
+            clock.restore();
+        });
+
+        it('sets up timer', async function () {
+            const tu = moment().add(10, 's').format(formatting);
+            await loadData(user.id, tu);
+
+            const to = await ab.testing.setupUnban(client, user.id);
+            cleanData(user.id);
+
+            assert(!(ab.testing.getStatus()));
+            clock.tick(to.time - 1);
+            assert(!(ab.testing.getStatus()));
+            clock.tick(1);
+
+            await db.buildQuery(`SELECT * FROM temp_ban WHERE user_id = ${user.id}`)
+                .execute(result => {
+                    assert(false, "Database entry not removed");
+                })
+                .then(() => {
+                    assert(ab.testing.getStatus());
+                });
+        });
+
+        it('has the right time', async function () {
+            const tu = moment().add(10, 's').format(formatting);
+            await loadData(user.id, tu);
+
+            const to = await ab.testing.setupUnban(client, user.id);
+            cleanData(user.id);
+
+            assert(to.time < 10000);
+            assert(to.time > 8500);
+            assert(!(ab.testing.getStatus()));
+        });
+
+        it('unbans and returns if negative time', async function () {
+            const tu = moment().subtract(1, 'm').format(formatting);
+            await loadData(user.id, tu);
+
+            const to = await ab.testing.setupUnban(client, user.id);
+            cleanData(user.id);
+
+            await db.buildQuery(`SELECT * FROM temp_ban WHERE user_id = ${user.id}`)
+                .execute(result => {
+                    assert(false, "Database entry not removed");
+                })
+                .then(() => {
+                    assert.equal(guild.members.bans.get(user.id), undefined);
+                    assert(ab.testing.getStatus());
+                    assert(!(ab.testing.getPending()));
+                    assert.equal(to.obj, undefined);
+                });
+        });
+    });
+
+    describe('getNextUnban', function () {
+        afterEach(async () => {
+            await db.buildQuery(`DELETE FROM temp_ban WHERE LENGTH(user_id) = 1`).execute();
+        });
+
+        it('gets next in 1 user', async function () {
+            const m = moment().add(10, 'm').format(formatting);
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (1, '${m}')`).execute();
+
+            const id = await ab.testing.getNextUnban();
+            assert.equal(id, 1);
+        });
+
+        it('gets next in 3 users', async function () {
+            let m = moment();
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (2, '${m.add(3, 'm').format(formatting)}')`).execute();
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (3, '${m.subtract(1, 'm').format(formatting)}')`).execute();
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (4, '${m.add(6, 'm').format(formatting)}')`).execute();
+
+            const id = await ab.testing.getNextUnban();
+            assert.equal(id, 3)
+        });
+
+        it('returns on no users', async function () {
+            const id = await ab.testing.getNextUnban();
+            assert.equal(id, undefined);
+        });
+    });
+
+    describe('updateUnban', function () {
+        afterEach(async () => {
+            await db.buildQuery(`DELETE FROM temp_ban WHERE LENGTH(user_id) = 1`).execute()
+                .catch(err => { throw err });
+        });
+
+        it('updates', async function () {
+            const t1 = moment().add(5, 'm');
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (5, '${t1.format(formatting)}')`).execute()
+                .catch(err => { throw err });
+
+            const to = setTimeout(() => { console.log("test") }, 20000);
+
+            await ab.testing.updateUnban(client, to)
+                .then((data) => {
+                    assert.equal(typeof data, 'object');
+                    assert(data.time < (5 * 60 * 1000));
+                    assert(data.time > (4.5 * 60 * 1000));
+                    clearTimeout(data.obj);
+                })
+                .catch(err => { throw err });
+        });
+
+        it('iterates', async function () {
+            const t = moment();
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (6, '${t.subtract(5, 'm').format(formatting)}')`).execute()
+                .catch(err => { throw err });
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (7, '${t.add(10, 'm').format(formatting)}')`).execute()
+                .catch(err => { throw err });
+
+            const to = setTimeout(() => { console.log("test") }, 20000);
+
+            await ab.testing.updateUnban(client, to)
+                .then((data) => {
+                    assert.equal(typeof data, 'object');
+                    assert(data.time < (5 * 60 * 1000));
+                    assert(data.time > (4.5 * 60 * 1000));
+                    clearTimeout(data.obj);
+                })
+                .catch(err => { throw err });
+        });
+
+        it('returns on no user id', function (done) {
+            const to = setTimeout(() => { console.log('test') }, 20000);
+
+            ab.testing.updateUnban(client, to)
+                .then((data) => {
+                    assert.equal(data, undefined);
+                    done();
+                })
+                .catch(err => done(err));
+        });
+    });
+
+    describe('controller', function () {
+        it('initializes listeners', function () {
+            ab.testing.controller(client);
+
+            const evs = ab.events.eventNames();
+            assert.equal(evs.length, 2);
+            assert.equal(evs[0], 'update');
+            assert.equal(evs[1], 'stopModule');
+            ab.events.removeAllListeners();
+        });
+
+        it('stops module', function () {
+            ab.testing.controller(client);
+
+            let evs = ab.events.eventNames();
+            assert.equal(evs.length, 2)
+
+            ab.events.emit('stopModule');
+            evs = ab.events.eventNames();
+            assert.equal(evs.length, 0);
+        });
+    });
+
+    describe('initialize', function () {
+        afterEach(async () => {
+            ab.events.removeAllListeners();
+            await db.buildQuery(`DELETE FROM temp_ban WHERE LENGTH(user_id) = 2`).execute()
+                .catch(err => { throw err });
+        });
+
+        it('starts controller', function (done) {
+            ab.main(client)
+                .then(() => {
+                    const evs = ab.events.eventNames();
+                    assert.equal(evs.length, 2);
+                    assert.equal(evs[0], 'update');
+                    assert.equal(evs[1], 'stopModule');
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('starts unban timer', async function () {
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) VALUES (10, '${moment().add(1, 'h').format(formatting)}')`).execute();
+
+            await ab.main(client)
+            assert(ab.testing.getPending());
+            ab.events.emit('stopModule');
+        });
+
+        it('unbans within threshold', async function () {
+            await db.buildQuery(`INSERT INTO temp_ban (user_id, time_unban) 
+                VALUES
+                (${user.id}, '${moment().add(1, 's').format(formatting)}'),
+                (11, '${moment().add(1, 'h').format(formatting)}')`).execute();
+
+            await ab.main(client);
+            assert(ab.testing.getPending());
+            assert.equal(guild.members.bans.get(user.id), undefined);
+            ab.events.emit('stopModule');
         });
     });
 });
