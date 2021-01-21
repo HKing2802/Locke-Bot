@@ -163,18 +163,20 @@ async function initialize(client) {
     let nextTime;
     await db.buildQuery(`SELECT user_id, member, time_unmute FROM muted_users`)
         .execute(result => {
-            const tu = moment(result[2]).add(5, 'h');
-            if (tu.diff(moment()) < 1000) {
-                // unmutes if below threshold
-                unmute(client, result[0], Boolean(result[1]));
-            } else {
-                // saves user id for next timer
-                if (nextTime === undefined) {
-                    nextTime = tu;
-                    nextUser = result[0];
-                } else if (result[2] < +nextTime) {
-                    nextTime = tu;
-                    nextUser = result[0];
+            if (result[2] != null) {
+                const tu = moment(result[2]).add(5, 'h');
+                if (tu.diff(moment()) < 1000) {
+                    // unmutes if below threshold
+                    unmute(client, result[0], Boolean(result[1]));
+                } else {
+                    // saves user id for next timer
+                    if (nextTime === undefined) {
+                        nextTime = tu;
+                        nextUser = result[0];
+                    } else if (result[2] < +nextTime) {
+                        nextTime = tu;
+                        nextUser = result[0];
+                    }
                 }
             }
         })
