@@ -21,7 +21,7 @@ let HAS_PENDING_UNMUTE = false;
  * @returns {boolean}
  */
 async function unmute(client, userID, member) {
-    // updates flag and emits event to update the pending unmute
+    // updates flag and emits event to update the next pending unmute
     HAS_PENDING_UNMUTE = false;
     unmuteEvents.emit('update');
 
@@ -114,6 +114,7 @@ function controller(client, startTimeout) {
         // clears timer and removes listeners for clean exit
         log('Stopping auto-unmute module...', client, false);
         HAS_PENDING_UNMUTE = false;
+        UNMUTED = false;
         clearTimeout(nextTimeout);
         unmuteEvents.removeAllListeners();
     });
@@ -183,12 +184,13 @@ async function initialize(client) {
         .catch(err => { log(`Error in auto-unmute initialization: ${err}`, client, false, 'error') });
 
     if (nextUser !== undefined) {
-        // starts the next unmute and starts the controller with it
+        // starts the next unmute timer and starts the controller with it
         const data = await setupUnmute(client, nextUser);
         controller(client, data.obj);
-    } else
+    } else {
         // starts the controller
         controller(client);
+    }
 }
 
 exports.main = initialize;
