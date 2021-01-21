@@ -1209,7 +1209,7 @@ describe('nameCheck', function () {
     }
 
     before(() => {
-        silenceLogging(false);
+        silenceLogging(true);
     });
 
     beforeEach(() => {
