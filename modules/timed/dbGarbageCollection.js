@@ -125,7 +125,7 @@ async function checkBanned(client, guild) {
     let delIDs = [];
     await db.buildQuery(`SELECT user_id FROM temp_ban`)
         .execute(async result => {
-            let banned = guild.fetchBan(result[0].toString());
+            let banned = await guild.fetchBan(result[0].toString());
             if (banned === undefined) delIDs.push(result[0]);
         })
         .catch(err => { log(`Error in temp_ban query: ${err}`, client, false, 'error') });

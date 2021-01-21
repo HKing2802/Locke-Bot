@@ -284,13 +284,13 @@ describe('Test Guild', function () {
         client.destroy()
     });
 
-    it('fetchBan gets ban by user', function () {
+    it('fetchBan gets ban by user', async function () {
         const client = new Discord.Client();
         const guild = new classOverrides.TestGuild(client);
         const user = testUtil.createUser(client, "test", "1234");
         guild.members.bans.set(user.id, { reason: "Test Reason", days: 2 });
 
-        const data = guild.fetchBan(user);
+        const data = await guild.fetchBan(user);
         client.destroy();
 
         assert(data != undefined);
@@ -298,13 +298,13 @@ describe('Test Guild', function () {
         assert.equal(data.days, 2);
     });
 
-    it('fetchBan gets ban by ID', function () {
+    it('fetchBan gets ban by ID', async function () {
         const client = new Discord.Client();
         const guild = new classOverrides.TestGuild(client);
         const user = testUtil.createUser(client, "test", "1234");
         guild.members.bans.set(user.id, { reason: "Test Reason 2", days: 5 });
 
-        const data = guild.fetchBan(user.id);
+        const data = await guild.fetchBan(user.id);
         client.destroy();
 
         assert(data != undefined);
@@ -312,12 +312,12 @@ describe('Test Guild', function () {
         assert.equal(data.days, 5);
     });
 
-    it('fetchBan returns undefined if not banned', function () {
+    it('fetchBan returns undefined if not banned', async function () {
         const client = new Discord.Client();
         const guild = new classOverrides.TestGuild(client);
         const user = testUtil.createUser(client, "test", "1234");
 
-        const data = guild.fetchBan(user.id);
+        const data = await guild.fetchBan(user.id);
         client.destroy();
 
         assert.equal(data, undefined);
