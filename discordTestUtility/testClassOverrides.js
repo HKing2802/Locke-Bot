@@ -275,9 +275,9 @@ class TestMember extends Discord.GuildMember {
      * Sets the nickname for this member
      * @param {string} nick The nickname for the guild member
      * @param {string} [reason] Reason for setting the nickname
-     * @returns {TestMember}
+     * @returns {Promise<TestMember>}
      */
-    setNickname(nick, reason) {
+    async setNickname(nick, reason) {
         this._patch({ nick });
         return this
     }
@@ -352,6 +352,20 @@ class TestGuildMemberManager extends Discord.GuildMemberManager {
 
     _fetchSingle({ user, cache }) {
         return this.cache.get(user);
+    }
+
+    _fetchMany({
+        limit = 0,
+        withPresences: presences = false,
+        user: user_ids,
+        query,
+        time = 120e3,
+        nonce = Discord.SnowflakeUtil.generate(),
+        force = false,
+    } = {}) {
+        return new Promise((resolve, reject) => {
+            resolve(this.cache);
+        });
     }
 }
 
