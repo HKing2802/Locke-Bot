@@ -13,24 +13,26 @@ const aliases = ['rk'];
 /**
  * Switches the reactKae toggle
  * command is limited to the author and Kae, the reciever of the reactions
- * @param {Message} message
- * @param {Array<string>} args
+ * @param {Message} message The message received by the bot
+ * @param {Array<string>} args The arguments passed to the command and split by the processor
  * @returns {undefined}
  */
 async function main(message, args) {
     if (message.author.id == config.authorID || message.author.id == config.kaeID) {
-        const current = Boolean(persistent.kaeReact);
+        let current;
+        if (persistent.kaeReact == "true") current = true;
+        else if (persistent.kaeReact == "false") current = false;
         let change = !current;
 
         if (args[0] == "false") change = false;
         if (args[0] == "true") change = true;
 
         persistent.kaeReact = change;
-        fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
-            if (err) log(`Could not write to config JSON: ${err}`, message.client, false, 'error');
+        await fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+            if (err) log(`Could not write to persistent JSON: ${err}`, message.client, false, 'error');
             log(`Switched reactKae to ${change}`, message.client, false);
-            message.delete();
         });
+        await message.delete();
     }
 }
 
