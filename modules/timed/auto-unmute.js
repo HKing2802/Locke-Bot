@@ -11,6 +11,7 @@ const { log } = require('../../src/util.js');
 const unmuteEvents = new events();
 
 let UNMUTED = false;
+let HAS_PENDING_UNMUTE = false;
 
 /**
  * Performs the unmute on the member
@@ -20,7 +21,9 @@ let UNMUTED = false;
  * @returns {boolean}
  */
 async function unmute(client, userID, member) {
+    HAS_PENDING_UNMUTE = false;
     await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${userID}`).execute();
+    unmuteEvents.emit('update');
 
     const target = client.guilds.cache.get(config.guildID).members.cache.get(userID);
     if (!target) return false;
@@ -52,6 +55,7 @@ async function setupUnmute(client, userID) {
 
             if (timeoutTime > 0) {
                 UNMUTED = false;
+                HAS_PENDING_UNMUTE = true;
                 toObject = setTimeout(() => {
                     unmute(client, userID, Boolean(result[0]));
                 }, timeoutTime);
@@ -70,7 +74,6 @@ async function setupUnmute(client, userID) {
  * @returns {Object<number, NodeJS.Timeout>}
  */
 async function updateUnmute(client, nextTimeout) {
-    log('updating next unmute', client, false);
     clearTimeout(nextTimeout);
     let data;
     do {
@@ -82,18 +85,21 @@ async function updateUnmute(client, nextTimeout) {
 }
 
 /**
- * Controls the unmute module and handles changes to the next unmute time
+ * Controls the module and handles changes to the next unmute time
  * @param {Client} client The client of the bot
  * @param {NodeJS.Timeout} startTimeout The timeout object of the next unmute
  */
 function controller(client, startTimeout) {
     let nextTimeout = startTimeout;
 
-    unmuteEvents.on('mute', () => {
+    unmuteEvents.on('update', () => {
         updateUnmute(client, nextTimeout);
     });
-    unmuteEvents.on('garbageCollection', () => {
-        updateUnmute(client, nextTimeout);
+    unmuteEvents.once('stopModule', () => {
+        log('Stopping auto-unmute module...', client, false);
+        HAS_PENDING_UNMUTE = false;
+        clearTimeout(nextTimeout);
+        unmuteEvents.removeAllListeners();
     });
 }
 
@@ -124,17 +130,45 @@ function getStatus() {
     return UNMUTED;
 }
 
+function getPending() {
+    return HAS_PENDING_UNMUTE;
+}
+
 /**
  * Initializes the module
  * Unmutes any members as necessary and determines the next member to unmute
  * @param {Client} client The client of the bot
- * @returns {undefined}
  */
 async function initialize(client) {
     // initializes the module
     // checks muted users for any past threshold
     // performs unmutes as necessary
     // starts controller with starting data
+    log(`Starting auto-unmute module...`, client, false);
+    let nextUser;
+    let nextTime;
+    await db.buildQuery(`SELECT user_id, member, time_unmute FROM muted_users`)
+        .execute(result => {
+            const tu = moment(result[2]).add(5, 'h');
+            if (tu.diff(moment()) < 1000) {
+                unmute(client, result[0], Boolean(result[1]));
+            } else {
+                if (nextTime === undefined) {
+                    nextTime = tu;
+                    nextUser = result[0];
+                } else if (result[2] < +nextTime) {
+                    nextTime = tu;
+                    nextUser = result[0];
+                }
+            }
+        })
+        .catch(err => { log(`Error in auto-unmute initialization: ${err}`, client, false, 'error') });
+
+    if (nextUser !== undefined) {
+        const data = await setupUnmute(client, nextUser);
+        controller(client, data.obj);
+    } else
+        controller(client);
 }
 
 exports.main = initialize;
@@ -145,5 +179,6 @@ exports.testing = {
     controller: controller,
     setupUnmute: setupUnmute,
     getStatus: getStatus,
-    updateUnmute: updateUnmute
+    updateUnmute: updateUnmute,
+    getPending: getPending
 }
