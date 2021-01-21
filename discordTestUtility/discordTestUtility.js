@@ -124,3 +124,4 @@ exports.createRole = createRole;
 exports.createGuild = createGuild;
 exports.testChannel = classOverrides.TestChannel;
 exports.createMessage = createMessage;
+exports.testClient = classOverrides.TestClient;
