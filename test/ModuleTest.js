@@ -378,12 +378,12 @@ describe('memberUpdate', function () {
 
     it('returns on change to no nickname', function (done) {
         const newMember = testUtil.createMember(client, guild, user);
-        oldMember.setNickname('g?');
+        oldMember.setNickname('g®');
 
         handler.testing.compareNick(oldMember, newMember, client)
             .then((complete) => {
-                assert.equal(complete, false);
-                assert.equal(oldMember.nickname, 'g?');
+                assert(!complete);
+                assert.equal(oldMember.nickname, 'g®');
                 assert.equal(newMember.nickname, null);
                 done();
             })
@@ -1191,5 +1191,78 @@ describe('auto-unban', function () {
             assert.equal(guild.members.bans.get(user.id), undefined);
             ab.events.emit('stopModule');
         });
+    });
+});
+
+describe('nameCheck', function () {
+    const nameCheck = require('../modules/timed/nameCheck.js');
+    let client = new Discord.Client();
+    let guild = testUtil.createGuild(client);
+
+    function loadData(num) {
+        let members = [];
+        for (let i = 0; i < num; i++) {
+            let user = testUtil.createUser(client, `member ${i}`, '1234');
+            members.push(testUtil.createMember(client, guild, user).id);
+        }
+        return members;
+    }
+
+    before(() => {
+        silenceLogging(false);
+    });
+
+    beforeEach(() => {
+        client.destroy();
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+    });
+
+    after(() => {
+        client.destroy();
+        silenceLogging(false);
+    });
+
+    it('changes one', function (done) {
+        const members = loadData(1);
+        guild.members.cache.get(members[0]).setNickname(`®abc®`);
+
+        nameCheck.main(client, guild.id)
+            .then((num) => {
+                assert.equal(num, 1);
+                assert.equal(guild.members.cache.get(members[0]).nickname, 'abc');
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('changes multiple', function (done) {
+        const members = loadData(4);
+
+        guild.members.cache.get(members[2]).setNickname(`®®`);
+        guild.members.cache.get(members[1]).setNickname(`®bbcx`);
+
+        nameCheck.main(client, guild.id)
+            .then((num) => {
+                assert.equal(num, 2);
+                assert.equal(guild.members.cache.get(members[1]).nickname, 'bbcx');
+                assert.equal(guild.members.cache.get(members[2]).nickname, config.defaultNickname);
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('checks username', function (done) {
+        const members = loadData(2);
+        const user = testUtil.createUser(client, "Testing®", '1234');
+        members.push(testUtil.createMember(client, guild, user).id);
+
+        nameCheck.main(client, guild.id)
+            .then((num) => {
+                assert.equal(num, 1);
+                assert.equal(guild.members.cache.get(members[2]).nickname, 'Testing');
+                done();
+            })
+            .catch(err => done(err));
     });
 });
