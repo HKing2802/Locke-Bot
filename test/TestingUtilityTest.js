@@ -321,7 +321,26 @@ describe('Test Guild', function () {
         client.destroy();
 
         assert.equal(data, undefined);
-    })
+    });
+
+    it('fetches all members', function (done) {
+        const client = new Discord.Client();
+        const guild = testUtil.createGuild(client);
+        const user = testUtil.createUser(client, "test", "1234");
+        const user2 = testUtil.createUser(client, "test2", "1234");
+        const user3 = testUtil.createUser(client, "test3", "1234");
+        const member = testUtil.createMember(client, guild, user);
+        const member2 = testUtil.createMember(client, guild, user2);
+        const member3 = testUtil.createMember(client, guild, user3);
+
+        guild.members.fetch()
+            .then((members) => {
+                client.destroy();
+                assert.equal(members.size, 3);
+                done();
+            })
+            .catch(err => done(err));
+    });
 });
 
 describe('Test Guild Ban', function () {
