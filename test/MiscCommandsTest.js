@@ -106,7 +106,7 @@ describe('reactKae', function () {
     });
 
     before(() => {
-        util.testing.silenceLogging(false);
+        util.testing.silenceLogging(true);
     });
 
     after(async () => {
@@ -159,3 +159,97 @@ describe('reactKae', function () {
     });
 });
 
+describe('Command Toggle', function () {
+    const toggleBot = require('../commands/toggleBot.js');
+    let client;
+    let guild;
+    let channel;
+    let user;
+
+    async function setValue(val) {
+        const { writeFile } = require('fs');
+        const persistent = require('../persistent.json');
+        persistent.active = val;
+        await writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
+            if (err) throw err;
+        });
+    }
+
+    beforeEach(() => {
+        client = new Discord.Client();
+        guild = testUtil.createGuild(client);
+        channel = new testUtil.testChannel(guild);
+        user = testUtil.createUser(client, "Test User", "1234", false, { id: config.authorID });
+    });
+
+    before(() => {
+        util.testing.silenceLogging(true);
+    });
+
+    after(async () => {
+        // setting active to default value
+        await setValue(true);
+
+        util.testing.silenceLogging(false);
+    });
+
+    afterEach(() => {
+        client.destroy();
+    });
+
+    it('shuts down', async function () {
+        await setValue(true);
+        const msg = await channel.send('.shutdown', user);
+        const ret = await toggleBot.main(msg, []);
+
+        const persistent = require('../persistent.json');
+        assert.equal(persistent.active, false);
+        assert.equal(ret, true);
+        assert.equal(channel.lastMessage, null);
+    });
+
+    it('activates', async function () {
+        await setValue(false);
+        const msg = await channel.send('.activate', user);
+        const ret = await toggleBot.main(msg, []);
+
+        const persistent = require('../persistent.json');
+        assert.equal(persistent.active, true);
+        assert.equal(ret, true);
+        assert.equal(channel.lastMessage, null);
+    });
+
+    it('takes user input', async function () {
+        await setValue(false);
+        const msg = await channel.send('.toggleBot', user);
+        const ret = await toggleBot.main(msg, ['true']);
+
+        const persistent = require('../persistent.json');
+        assert.equal(persistent.active, true);
+        assert.equal(ret, true);
+        assert.equal(channel.lastMessage, null);
+    });
+
+    it('defaults to true', async function () {
+        await setValue(false);
+        const msg = await channel.send('.toggleBot', user);
+        const ret = await toggleBot.main(msg, []);
+
+        const persistent = require('../persistent.json');
+        assert.equal(persistent.active, true);
+        assert.equal(ret, true);
+        assert.equal(channel.lastMessage, null);
+    });
+
+    it('checks author id', async function () {
+        const testuser = testUtil.createUser(client, "test", "1234");
+        await setValue(false);
+        const msg = await channel.send('.toggleBot', testuser);
+        const ret = await toggleBot.main(msg, []);
+
+        const persistent = require('../persistent.json');
+        assert.equal(persistent.active, false);
+        assert.equal(ret, undefined);
+        assert.equal(channel.lastMessage.content, '.toggleBot');
+    });
+});
