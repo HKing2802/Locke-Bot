@@ -1,5 +1,27 @@
 const Discord = require('discord.js');
 
+class TestUserManager extends Discord.UserManager {
+    /**
+     * Override of the fetch function to stop API calls
+   * @param {Discord.Snowflake} id ID of the user
+   * @param {boolean} [cache=true] Whether to cache the new user object if it isn't already
+   * @param {boolean} [force=false] Whether to skip the cache check and request the API
+   * @returns {Promise<Discord.User|undefined>}
+     */
+    async fetch(id, cache = true, force = false) {
+        const existing = this.cache.get(id);
+        if (existing && !existing.partial) return existing;
+        else return undefined;
+    }
+}
+
+class TestClient extends Discord.Client {
+    constructor(options) {
+        super(options);
+        this.users = new TestUserManager(this);
+    }
+}
+
 /**
  * Testing Message Manager for adding a function to fetch messages without Discord API calls
  * @extends {Discord.MessageManager}
@@ -371,3 +393,4 @@ exports.TestChannel = TestChannel;
 exports.TestGuild = TestGuild;
 exports.TestMember = TestMember;
 exports.TestMessage = TestMessage;
+exports.TestClient = TestClient;
