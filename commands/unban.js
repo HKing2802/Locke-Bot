@@ -66,7 +66,7 @@ async function main(message, args) {
         } else {
             const target = message.client.users.resolve(message.mentions.users.first());
             if (target) return await unban(message, args, target);
-            const IDtarget = message.client.users.resolve(args[0]);
+            const IDtarget = await message.client.users.fetch(args[0]);
             if (IDtarget) return await unban(message, args, IDtarget);
             else {
                 return message.channel.send("No user or ID specified")
