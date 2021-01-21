@@ -21,10 +21,14 @@ let HAS_PENDING_UNMUTE = false;
  * @returns {boolean}
  */
 async function unmute(client, userID, member) {
+    // updates flag and emits event to update the pending unmute
     HAS_PENDING_UNMUTE = false;
-    await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${userID}`).execute();
     unmuteEvents.emit('update');
 
+    // removes entry from database
+    await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${userID}`).execute();
+
+    // performs unmute
     const target = client.guilds.cache.get(config.guildID).members.cache.get(userID);
     if (!target) return false;
     else {
@@ -48,22 +52,31 @@ async function unmute(client, userID, member) {
 async function setupUnmute(client, userID) {
     let timeoutTime;
     let toObject;
+
+    // gets info from db
     await db.buildQuery(`SELECT member, time_unmute FROM muted_users where user_id = ${userID}`)
         .execute(async result => {
+            // calculates time to unmute in ms
             const unmuteTime = moment(result[1]).add(5, 'h');
             timeoutTime = unmuteTime.diff(moment());
 
             if (timeoutTime > 0) {
+                // switches flags
                 UNMUTED = false;
                 HAS_PENDING_UNMUTE = true;
+
+                // sets up timeout
                 toObject = setTimeout(() => {
                     unmute(client, userID, Boolean(result[0]));
                 }, timeoutTime);
             } else {
+                // unmutes if threshold has already passed
                 await unmute(client, userID, Boolean(result[0]));
             }
         })
         .catch(err => { log(`Error in setting up unmute timer: ${err}`, client, false, 'error') });
+
+    // returns the time and the timeout object
     return { time: timeoutTime, obj: toObject };
 }
 
@@ -77,6 +90,7 @@ async function updateUnmute(client, nextTimeout) {
     clearTimeout(nextTimeout);
     let data;
     do {
+        // iterates until setUnmute produces the timeout object
         nextUser = await getNextUnmute();
         if (!nextUser) return;
         data = await setupUnmute(client, nextUser);
@@ -93,9 +107,11 @@ function controller(client, startTimeout) {
     let nextTimeout = startTimeout;
 
     unmuteEvents.on('update', () => {
+        // updates the next unmute timeout 
         updateUnmute(client, nextTimeout);
     });
     unmuteEvents.once('stopModule', () => {
+        // clears timer and removes listeners for clean exit
         log('Stopping auto-unmute module...', client, false);
         HAS_PENDING_UNMUTE = false;
         clearTimeout(nextTimeout);
@@ -114,9 +130,11 @@ async function getNextUnmute() {
         .execute(result => {
             if (result[1] != null) {
                 if (result[1] < time) {
+                    // saves if result is less than stored time
                     user = result[0];
                     time = result[1];
                 } else if (time === undefined) {
+                    // saves if time is undefined
                     user = result[0];
                     time = result[1];
                 }
@@ -136,14 +154,10 @@ function getPending() {
 
 /**
  * Initializes the module
- * Unmutes any members as necessary and determines the next member to unmute
+ * Unmutes any members as necessary and determines the next member to unmute, then starts the controller
  * @param {Client} client The client of the bot
  */
 async function initialize(client) {
-    // initializes the module
-    // checks muted users for any past threshold
-    // performs unmutes as necessary
-    // starts controller with starting data
     log(`Starting auto-unmute module...`, client, false);
     let nextUser;
     let nextTime;
@@ -151,8 +165,10 @@ async function initialize(client) {
         .execute(result => {
             const tu = moment(result[2]).add(5, 'h');
             if (tu.diff(moment()) < 1000) {
+                // unmutes if below threshold
                 unmute(client, result[0], Boolean(result[1]));
             } else {
+                // saves user id for next timer
                 if (nextTime === undefined) {
                     nextTime = tu;
                     nextUser = result[0];
@@ -165,9 +181,11 @@ async function initialize(client) {
         .catch(err => { log(`Error in auto-unmute initialization: ${err}`, client, false, 'error') });
 
     if (nextUser !== undefined) {
+        // starts the next unmute and starts the controller with it
         const data = await setupUnmute(client, nextUser);
         controller(client, data.obj);
     } else
+        // starts the controller
         controller(client);
 }
 
