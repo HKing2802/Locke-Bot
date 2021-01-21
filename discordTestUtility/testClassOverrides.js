@@ -385,7 +385,7 @@ class TestGuild extends Discord.Guild {
         this.testMembers = new TestGuildMemberManager(this);
     }
 
-    fetchBan(user) {
+    async fetchBan(user) {
         let id = this.client.users.resolveID(user);
         if (!id) id = user.id;
         if (!id) throw new Error('FETCH_BAN_RESOLVE_ID');
