@@ -13,6 +13,12 @@ const unbanEvents = new events();
 let HAS_PENDING_UNBAN = false;
 let BANNED = false;
 
+/**
+ * Callback method to perform the unban and remove enttry from database
+ * @param {Client} client The client of the bot
+ * @param {string} userID The ID of the user to unban
+ * @returns {boolean}
+ */
 async function unban(client, userID) {
     // updates flags and emits event to update the next pending unban
     HAS_PENDING_UNBAN = false;
@@ -33,6 +39,12 @@ async function unban(client, userID) {
     }
 }
 
+/**
+ * Sets up the timeout of the unban
+ * @param {Client} client The client of the bot
+ * @param {string} userID The ID of the user to unban
+ * @returns {Object<number, NodeJS.Timeout>}
+ */
 async function setupUnban(client, userID) {
     let timeoutTime;
     let toObject;
@@ -64,6 +76,12 @@ async function setupUnban(client, userID) {
     return { time: timeoutTime, obj: toObject };
 }
 
+/**
+ * Updates the pending unban timeout
+ * @param {Client} client The client of the bot
+ * @param {NodeJS.Timeout} nextTimeout The timeout object of the pending unban
+ * @returns {Object<number, NodeJS.Timeout>}
+ */
 async function updateUnban(client, nextTimeout) {
     clearTimeout(nextTimeout);
     let data;
@@ -75,6 +93,11 @@ async function updateUnban(client, nextTimeout) {
     return data
 }
 
+/**
+ * Creates events handlers to handle updates to the pending unban and stopping the module
+ * @param {Client} client The client of the bot
+ * @param {NodeJS.Timeout} startTimeout The starting timeout for the next unban
+ */
 function controller(client, startTimeout) {
     let nextTimeout = startTimeout;
 
@@ -92,6 +115,10 @@ function controller(client, startTimeout) {
     });
 }
 
+/**
+ * Gets the next user ID needed to be unbanned from the database
+ * @returns {string}
+ */
 async function getNextUnban() {
     let user;
     let time;
@@ -116,6 +143,11 @@ function getPending() {
     return HAS_PENDING_UNBAN;
 }
 
+/**
+ * Initializes the module
+ * Checks databse for any users needed to be unbanned and sets up controller with the next unban timeout if present
+ * @param {Client} client The client of the bot
+ */
 async function initialize(client) {
     log(`Starting auto-unban module...`, client, false);
     let nextUser;
