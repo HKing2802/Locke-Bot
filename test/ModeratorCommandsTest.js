@@ -284,7 +284,7 @@ describe('unban', function () {
     })
 
     beforeEach(() => {
-        client = new Discord.Client();
+        client = new testUtil.testClient();
         guild = testUtil.createGuild(client);
         user = testUtil.createUser(client, "Test User", "1234");
         authorUser = testUtil.createUser(client, "Test Author User", "4321");
