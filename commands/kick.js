@@ -3,6 +3,7 @@
 const util = require('../src/util.js');
 require('hjson/lib/require-config');
 const { prefix } = require('../config.hjson');
+const auto_unmute = require('../modules/timed/auto-unmute.js');
 
 const name = "kick";
 const description = "Kicks a user from the server";
@@ -21,11 +22,15 @@ async function kick(message, args, target) {
 
     return target.kick({ reason: `${reason} - Kicked by ${message.author.tag}` })
         .then((m) => {
+
             let msg;
             if (reason == "No reason given")
                 msg = `Kicked ${m.user.tag}`;
             else
                 msg = `Kicked ${m.user.tag} for ${reason}`;
+
+            // tells auto-unmute to update
+            auto_unmute.events.emit('update');
 
             return message.channel.send(msg)
                 .then(() => {

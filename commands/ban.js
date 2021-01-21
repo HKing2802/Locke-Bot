@@ -6,6 +6,7 @@ const config = require('../config.hjson');
 const { GuildMember, Message } = require('discord.js');
 const moment = require('moment');
 const db = require('../src/db.js');
+const auto_unmute = require('../modules/timed/auto-unmute.js');
 
 // Command information
 const name = "ban";
@@ -103,6 +104,10 @@ async function ban(message, args, target) {
                 tag = m.user.tag;
             }
 
+            // tells auto-unmute to update
+            auto_unmute.events.emit('update');
+
+            // constructs message
             let msg = `Banned ${tag}`;
             if (banTime) msg += ` for ${banTime.timeUnban.toNow(true)}`;
             if (reason == "No reason given") msg += `, No reason given.`;

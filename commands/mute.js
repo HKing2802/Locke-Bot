@@ -6,6 +6,7 @@ const db = require('../src/db.js');
 const { getPerm, log, getReason } = require('../src/util.js');
 const moment = require('moment');
 const Discord = require('discord.js');
+const auto_unmute = require('../modules/timed/auto-unmute.js');
 
 const name = 'mute';
 const desc = "Mutes a member";
@@ -106,6 +107,9 @@ async function mute(message, args, target) {
             .catch(err => { log(`Error in querying database in mute: ${err}`, message.client, false, 'error'); });
         log('Logged muted user to Database');
     }
+
+    // tells auto-unmute to update
+    auto_unmute.events.emit('update');
 
     // logs info
     let logmsg = `${message.author.tag} muted ${target.user.tag} for ${reason}`;

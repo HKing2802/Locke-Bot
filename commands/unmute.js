@@ -6,6 +6,7 @@ const { getPerm, log, getReason } = require('../src/util.js');
 const Discord = require('discord.js');
 const db = require('../src/db.js');
 const moment = require('moment');
+const auto_unmute = require('../modules/timed/auto-unmute.js');
 
 const name = "unmute";
 const desc = "Unmutes a member";
@@ -50,6 +51,9 @@ async function unmute(message, args, target) {
     target.roles.remove(message.guild.roles.cache.get(config.mutedRoleID));
     target.roles.add(message.guild.roles.cache.get(config.humanRoleID));
     if (boolMember) target.roles.add(message.guild.roles.cache.get(config.memberRoleID));
+
+    // tells auto-unmute to update
+    auto_unmute.events.emit('update');
 
     // logs data
     log(`${message.author.tag} unmuted ${target.user.tag} for ${reason}`);
