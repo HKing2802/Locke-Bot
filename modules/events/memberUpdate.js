@@ -3,28 +3,39 @@
 require('hjson/lib/require-config');
 const config = require('../../config.hjson');
 const { log } = require('../../src/util.js');
+const { Client, GuildMember } = require('discord.js');
 
-function checkNick(member, client) {
+/**
+ * Checks the nickname/username of a member to fit within nickname rules
+ * @param {GuildMember} member The member to check
+ * @param {Client} client The client of the bot
+ * @param {boolean} logging Wether to log each individual nickname check
+ * @returns {boolean}
+ */
+function checkNick(member, client, logging = true) {
     const re = /[^\x00-\x7F]/g;
-    let newNick = member.nickname.replace(re, '');
-    if (newNick != member.nickname) {
+    let target;
+    if (member.nickname === null) target = member.user.username;
+    else target = member.nickname;
+
+    let newNick = target.replace(re, '');
+    if (newNick != target) {
         if (newNick == '') newNick = config.defaultNickname;
         member.setNickname(newNick);
-        log(`Force changed a member's nickname to ${newNick}`, client);
+        if (logging) log(`Force changed a member's nickname to ${newNick}`, client);
         return true;
     }
 }
 
 async function compareNick(oldMember, newMember, client) {
-    if (oldMember.nickname === newMember.nickname || newMember.nickname === null) return false;
-    if (config.nicknamePass.includes(newMember.id)) return false;
-
-    return checkNick(newMember, client);
+    if (oldMember.nickname == newMember.nickname) return false;
+    else if (config.nicknamePass.includes(newMember.id)) return false;
+    else return checkNick(newMember, client);
 }
 
 function main(client) {
     client.on('guildMemberUpdate', (oldMember, newMember) => {
-        checkNick(oldMember, newMember, client)
+        compareNick(oldMember, newMember, client)
             .catch(err => { log(`Error in nickname check: ${err}`, undefined, false, 'error') });
     });
 }
