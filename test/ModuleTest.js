@@ -592,10 +592,10 @@ describe('auto-unmute', function (done) {
     let user = testUtil.createUser(client, "test user", "1234");
     let humanRole = testUtil.createRole(client, guild, { name: "human", id: config.humanRoleID }).role;
     let mutedRole = testUtil.createRole(client, guild, { name: "muted", id: config.mutedRoleID }).role;
-    let member = testUtil.createMember(client, guild, user, [mutedRole.id], '', {id: "33"});
+    let member = testUtil.createMember(client, guild, user, [mutedRole.id]);
 
     before(async () => {
-        silenceLogging(false);
+        silenceLogging(true);
         await db.connect();
     });
 
@@ -662,6 +662,20 @@ describe('auto-unmute', function (done) {
                     assert(target.roles.cache.has(mutedRole.id));
                     assert(!(target.roles.cache.has(humanRole.id)));
                     assert(!(target.roles.cache.has(config.memberRoleID)));
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('emits update event', function (done) {
+            let flag = false;
+            au.events.on('update', () => {
+                flag = true;
+            });
+
+            au.testing.unmute(client, '123', false)
+                .then(() => {
+                    assert(flag);
                     done();
                 })
                 .catch(err => done(err));
@@ -832,9 +846,62 @@ describe('auto-unmute', function (done) {
 
             const evs = au.events.eventNames();
             assert.equal(evs.length, 2);
-            assert.equal(evs[0], 'mute');
-            assert.equal(evs[1], 'garbageCollection');
+            assert.equal(evs[0], 'update');
+            assert.equal(evs[1], 'stopModule');
             au.events.removeAllListeners();
+        });
+
+        it('stops module', function () {
+            au.testing.controller(client);
+
+            let evs = au.events.eventNames();
+            assert.equal(evs.length, 2)
+
+            au.events.emit('stopModule');
+            evs = au.events.eventNames();
+            assert.equal(evs.length, 0);
+        });
+    });
+
+    describe('initialize', function () {
+        afterEach(async () => {
+            au.events.removeAllListeners();
+            await db.buildQuery(`DELETE FROM muted_users WHERE LENGTH(user_id) = 2`).execute()
+                .catch(err => { throw err });
+        });
+
+        it('starts controller', function (done) {
+            au.main(client)
+                .then(() => {
+                    const evs = au.events.eventNames();
+                    assert.equal(evs.length, 2);
+                    assert.equal(evs[0], 'update');
+                    assert.equal(evs[1], 'stopModule');
+                    done();
+                })
+                .catch(err => done(err));
+        });
+
+        it('starts unmute timer', async function () {
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) VALUES (10, 0, '${moment().add(1, 'h').format(formatting)}')`).execute();
+
+            await au.main(client)
+            assert(au.testing.getPending());
+            au.events.emit('stopModule');
+        });
+
+        it('mutes within threshold', async function () {
+            await db.buildQuery(`INSERT INTO muted_users (user_id, member, time_unmute) 
+                VALUES
+                (${member.id}, 1, '${moment().add(1, 's').format(formatting)}'),
+                (11, 0, '${moment().add(1, 'h').format(formatting)}')`).execute();
+
+            await au.main(client);
+            assert(au.testing.getPending());
+            assert(guild.members.cache.get(member.id).roles.cache.has(humanRole.id));
+            assert(!(guild.members.cache.get(member.id).roles.cache.has(mutedRole.id)));
+            assert(guild.members.cache.get(member.id).roles.cache.has(config.memberRoleID));
+            au.events.emit('stopModule');
         });
     });
 });
