@@ -85,6 +85,11 @@ async function mute(message, args, target) {
     await target.roles.remove(message.guild.roles.cache.get(config.humanRoleID));
     if (member) await target.roles.remove(message.guild.roles.cache.get(config.memberRoleID));
 
+    // constructs DM message
+    let DMmsg = `You have been muted in Locke`
+    if (reason !== "No reason given") DMmsg += ` for ${reason}`;
+    if (muteTime) DMmsg += `\nYou will be unmuted ${muteTime.timeUnmute.toNow()}`;
+
     // constructs response message
     let msg = `Muted ${target.user.tag}`;
     if (muteTime) msg += ` for ${muteTime.timeUnmute.toNow(true)}`;
@@ -116,7 +121,7 @@ async function mute(message, args, target) {
     if (muteTime) logmsg += `Time: ${muteTime.timeUnmute.format()}`;
     log(logmsg);
 
-    // constructs log embed
+    // constructs and sends log embed
     const logEmbed = new Discord.MessageEmbed()
         .setAuthor(message.author.tag)
         .setDescription(target.user.tag)
@@ -126,6 +131,14 @@ async function mute(message, args, target) {
 
     if (muteTime) logEmbed.addField("Duration", muteTime.timeUnmute.toNow(true));
     log(logEmbed, message.client);
+
+    // sends DM message
+    await target.user.createDM()
+        .then((DMchan) => {
+            DMchan.send(DMmsg);
+            target.user.deleteDM();
+        })
+        .catch(err => { log(`Error in sending DM message: ${err}`, message.client, false, 'error') });
 
     // sends response message
     return message.channel.send(msg)
