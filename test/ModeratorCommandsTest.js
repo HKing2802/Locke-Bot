@@ -1,6 +1,6 @@
 const assert = require('assert').strict;
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
-const Discord = require('Discord.js');
+const Discord = require('discord.js');
 const util = require('../src/util.js');
 require('hjson/lib/require-config');
 const config = require('../config.hjson');

@@ -1,6 +1,6 @@
 const assert = require('assert').strict;
 const Discord = require('discord.js');
-const classOverrides = require('../discordTestUtility/testclassOverrides.js');
+const classOverrides = require('../discordTestUtility/testClassOverrides.js');
 const testUtil = require('../discordTestUtility/discordTestUtility.js');
 const util = require("../src/util.js");
 
