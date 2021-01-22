@@ -172,6 +172,54 @@ class TestChannel extends Discord.TextChannel {
     set messages(m) { }
 }
 
+class TestDM extends Discord.DMChannel {
+    /**
+    * @param {Discord.Client} Client The instantiating client
+    * @param {Object} [extraData] Extra data to be passed to the constructor
+    */
+    constructor(Client, extraData = {}) {
+        let data;
+        if (extraData.id) {
+            data = { type: 1, ...extraData };
+        } else {
+            const id = Discord.SnowflakeUtil.generate();
+            data = { type: 1, id: id, ...extraData };
+        }
+        super(Client, data);
+
+        this.testMessages = new TestMessageManager(this);
+    }
+    /**
+    * Sends a message in the test channel
+    * @param {string} content - Message content
+    * @param {Discord.User} [authorUser] - Author of the message as a user
+    * @param {Discord.GuildMember} [authorMember] - Author of the message as a GuildMember
+    * @param {Array<Discord.User>} [mentions] - Array of User objects for mentions in the message
+    * @param {Object} [extraData] - Object of any additional extra data
+    * @param {boolean} [pingEveryone=false] - Boolean if there is an everyone ping in the message
+    * @returns {Promise<Discord.Message>}
+    */
+    async send(content, authorUser, mentions = [], extraData = {}, pingEveryone = false) {
+        const id = Discord.SnowflakeUtil.generate()
+        let data = { id: id, content: content, mentions: mentions, mention_everyone: pingEveryone, ...extraData };
+        if (authorUser) data = { author: authorUser, ...data };
+        this.testMessages.add(data, this);
+        this.lastMessageID = this.messages.fetch(id).id;
+        return this.messages.fetch(id);
+    }
+
+    /**
+     * Gets a message sent in the test channel
+     * @param {import('discord.js').Snowflake} id - ID of the message
+     * @returns {Discord.Message}
+     */
+    get messages() {
+        return this.testMessages;
+    }
+
+    set messages(m) { }
+}
+
 class TestMemberRoleManager extends Discord.GuildMemberRoleManager {
     /**
      * Adds a role (or multiple roles) to the member.
@@ -403,8 +451,25 @@ class TestGuild extends Discord.Guild {
     set members(m) {}
 }
 
+class TestUser extends Discord.User {
+
+    async createDM(force = false) {
+        const dmChan = new TestDM(this.client, { recipients: [this] });
+        this.client.channels.cache.set(dmChan.id, dmChan);
+        return dmChan;
+    }
+
+    async deleteDM() {
+        const { dmChannel } = this;
+        if (!dmChannel) throw new Error('USER_NO_DMCHANNEL');
+        return dmChannel;
+    }
+}
+
 exports.TestChannel = TestChannel;
 exports.TestGuild = TestGuild;
 exports.TestMember = TestMember;
 exports.TestMessage = TestMessage;
 exports.TestClient = TestClient;
+exports.TestUser = TestUser;
+exports.TestDM = TestDM;
