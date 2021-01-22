@@ -17,7 +17,7 @@ function createUser(client, username, discriminator, bot = false, extraData = {}
         const id = Discord.SnowflakeUtil.generate();
         data = { username: username, discriminator: discriminator, bot: bot, id: id, ...extraData };
     }
-    const user = new Discord.User(client, data);
+    const user = new classOverrides.TestUser(client, data);
     client.users.add(user);
     return user;
 }
