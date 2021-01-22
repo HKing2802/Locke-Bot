@@ -762,3 +762,54 @@ describe('createMessage', function () {
         assert.equal(msg.member.user.discriminator, "4321");
     });
 });
+
+describe('Test User', function () {
+    let client = new Discord.Client();
+
+    beforeEach(() => {
+        client.destroy();
+        client = new Discord.Client();
+    });
+
+    after(() => {
+        client.destroy();
+    });
+
+    it('creates DM', function (done) {
+        const user = testUtil.createUser(client, "test", "1234");
+
+        user.createDM()
+            .then((chan) => {
+                assert(chan instanceof classOverrides.TestDM);
+                assert(client.channels.cache.has(chan.id));
+                done();
+            })
+            .catch(err => done(err));
+    });
+
+    it('removes DM', function (done) {
+        const user = testUtil.createUser(client, "test", "1234");
+
+        user.createDM()
+            .then((chan) => {
+                user.deleteDM()
+                    .then((chan) => {
+                        assert(chan instanceof classOverrides.TestDM);
+                        done();
+                    })
+                    .catch(err => done(err));
+            })
+            .catch(err => done(err));
+    });
+
+    it('sends message in DM channel', function (done) {
+        const user = testUtil.createUser(client, "test", "1234");
+
+        user.createDM()
+            .then(async (chan) => {
+                await chan.send('Test Message');
+                assert.equal(chan.lastMessage.content, "Test Message");
+                done();
+            });
+    });
+});
