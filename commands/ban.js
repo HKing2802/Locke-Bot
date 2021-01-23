@@ -90,6 +90,19 @@ async function ban(message, args, target) {
         }
     }
 
+    // constructs DM
+    let DMmsg = `You have been banned in Locke`;
+    if (reason !== "No reason given") DMmsg += ` for ${reason}`;
+    if (banTime) DMmsg += `\nYou will be unbanned in ${banTime.timeUnban.toNow(true)}`;
+
+    /// sends DM message
+    target.user.createDM()
+        .then(async (DMchan) => {
+            await DMchan.send(DMmsg);
+            target.user.deleteDM();
+        })
+        .catch(err => { log(`Error in sending DM message: ${err}`, message.client, false, 'error') });
+
     // executes ban
     return target.ban({ reason: `${reason} - Banned by ${message.author.tag}` })
         .then((m) => {

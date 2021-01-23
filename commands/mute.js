@@ -88,7 +88,7 @@ async function mute(message, args, target) {
     // constructs DM message
     let DMmsg = `You have been muted in Locke`
     if (reason !== "No reason given") DMmsg += ` for ${reason}`;
-    if (muteTime) DMmsg += `\nYou will be unmuted ${muteTime.timeUnmute.toNow()}`;
+    if (muteTime) DMmsg += `\nYou will be unmuted in ${muteTime.timeUnmute.toNow(true)}`;
 
     // constructs response message
     let msg = `Muted ${target.user.tag}`;
@@ -133,9 +133,9 @@ async function mute(message, args, target) {
     log(logEmbed, message.client);
 
     // sends DM message
-    await target.user.createDM()
-        .then((DMchan) => {
-            DMchan.send(DMmsg);
+    target.user.createDM()
+        .then(async (DMchan) => {
+            await DMchan.send(DMmsg);
             target.user.deleteDM();
         })
         .catch(err => { log(`Error in sending DM message: ${err}`, message.client, false, 'error') });

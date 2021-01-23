@@ -20,6 +20,18 @@ async function kick(message, args, target) {
     let reason = util.getReason(args, target);
     if (reason == "") reason = "No reason given";
 
+    // constructs DM message
+    let DMmsg = `You have been kicked from Locke`;
+    if (reason !== "No reason given") DMmsg += ` for ${reason}`;
+
+    // sends DM
+    target.user.createDM()
+        .then(async (dmChan) => {
+            await dmChan.send(DMmsg);
+            target.user.deleteDM();
+        })
+        .catch(err => { log(`Error in sending DM message: ${err}`, message.client, false, 'error') });
+
     return target.kick({ reason: `${reason} - Kicked by ${message.author.tag}` })
         .then((m) => {
 
