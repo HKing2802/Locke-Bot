@@ -30,7 +30,7 @@ async function kick(message, args, target) {
             await dmChan.send(DMmsg);
             target.user.deleteDM();
         })
-        .catch(err => { log(`Error in sending DM message: ${err}`, message.client, false, 'error') });
+        .catch(err => { util.log(`Error in sending DM message: ${err}`, message.client, false, 'error') });
 
     return target.kick({ reason: `${reason} - Kicked by ${message.author.tag}` })
         .then((m) => {
