@@ -58,10 +58,10 @@ function startModules(modules, client) {
     for (const [name, func] of modules) {
         try {
             func(client);
-            log(`Started module ${name}`);
+            log(`Started module ${name}`, client, false);
             started += 1;
         } catch (err) {
-            log(`Error starting module ${name}: ${err}`);
+            log(`Error starting module ${name}: ${err}`, client, false);
         }
     }
     return started;
