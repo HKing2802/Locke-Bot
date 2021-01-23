@@ -13,6 +13,16 @@ class TestUserManager extends Discord.UserManager {
         if (existing && !existing.partial) return existing;
         else return undefined;
     }
+
+    add(data, cache = true, { id, extras = [] } = {}) {
+        const existing = this.cache.get(id || data.id);
+        if (existing && existing._patch && cache) existing._patch(data);
+        if (existing) return existing;
+
+        const entry = this.holds ? new TestUser(this.client, data, ...extras) : data;
+        if (cache) this.cache.set(id || entry.id, entry);
+        return entry;
+    }
 }
 
 class TestClient extends Discord.Client {
