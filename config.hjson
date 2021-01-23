@@ -1,6 +1,6 @@
 {
     # General
-  prefix: .
+  prefix: !
 
     # How long deleted messages are stored for
   messageThreshold:
@@ -122,10 +122,6 @@
     {
       name: Auto-Unmute
       path: timed/auto-unmute.js
-    }
-    {
-      name: Startup Name Check
-      path: timed/nameCheck.js
     }
   ]
 }
