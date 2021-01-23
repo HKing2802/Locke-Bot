@@ -9,7 +9,7 @@ const moment = require('moment');
 
 describe('ban', function () {
     const ban = require('../commands/ban.js');
-    const client = new Discord.Client();
+    const client = new testUtil.testClient();
     let guild;
     let user;
     let member;
@@ -151,6 +151,21 @@ describe('ban', function () {
                             done();
                         })
                         .catch(err => done(err));
+                })
+                .catch(err => done(err));
+        });
+
+        it('sends DM', function (done) {
+            const msg = testUtil.createMessage(channel, '', user);
+            ban.testing.ban(msg, ['', '1d'], member)
+                .then(async (complete) => {
+                    assert(complete);
+
+                    const DMchan = user.dmChannel;
+                    assert.equal(DMchan.lastMessage.content, "You have been banned in Locke\nYou will be unbanned in a day");
+                    await db.buildQuery(`DELETE FROM temp_ban WHERE user_id = ${member.id} LIMIT 1`).execute()
+                        .catch(err => { throw err });
+                    done();
                 })
                 .catch(err => done(err));
         });
@@ -430,7 +445,7 @@ describe('kick', function () {
     let authorUser;
 
     beforeEach(() => {
-        client = new Discord.Client();
+        client = new testUtil.testClient();
         guild = testUtil.createGuild(client);
         user = testUtil.createUser(client, "Test", "1234");
         member = testUtil.createMember(client, guild, user);
@@ -493,6 +508,18 @@ describe('kick', function () {
                         })
                         .catch(err => done(err));
                 });
+        });
+
+        it('sends DM', function (done) {
+            const msg = testUtil.createMessage(channel, '', authorUser);
+            kick.testing.kick(msg, ['', 'Reasoning'], member)
+                .then((complete) => {
+                    assert(complete);
+
+                    assert.equal(user.dmChannel.lastMessage.content, "You have been kicked from Locke for Reasoning");
+                    done();
+                })
+                .catch(err => done(err));
         });
     });
 
@@ -576,7 +603,7 @@ describe('mute', function () {
     let adminRole;
 
     beforeEach(() => {
-        client = new Discord.Client();
+        client = new testUtil.testClient();
         guild = testUtil.createGuild(client);
         user = testUtil.createUser(client, "test", "1234");
         member = testUtil.createMember(client, guild, user);
@@ -776,6 +803,25 @@ describe('mute', function () {
                                     done();
                                 });
                         });
+                });
+        });
+
+        it('sends DM', function (done) {
+            channel.send('mute', authorUser, authorMember)
+                .then((msg) => {
+                    mute.testing.mute(msg, ['', '1d', 'Reasoning'], member)
+                        .then((complete) => {
+                            assert(complete);
+                            assert(member.roles.cache.has(muteRole.id));
+                            assert(!(member.roles.cache.has(humanRole.id)));
+                            assert(!(member.roles.cache.has(memberRole.id)));
+                            assert.equal(channel.lastMessage.content, `Muted ${user.tag} for a day for Reasoning`);
+
+                            const dmChan = user.dmChannel;
+                            assert.equal(dmChan.lastMessage.content, "You have been muted in Locke for Reasoning\nYou will be unmuted in a day");
+                            done();
+                        })
+                        .catch(err => done(err));
                 });
         });
     });
