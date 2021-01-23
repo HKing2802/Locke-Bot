@@ -6,6 +6,8 @@ const db = require('../../src/db.js');
 const { log } = require('../../src/util.js');
 const moment = require('moment');
 const { Client } = require('discord.js');
+const auto_unmute = require('./auto-unmute.js');
+const auto_unban = require('./auto-unban.js');
 
 /**
  * Checks the messages table for delted messages past the threshold
@@ -102,6 +104,9 @@ async function checkMuted(client) {
             .catch(err => { log(`Error in muted_users delete query: ${err}`, client, false, 'error') });
     }
 
+    // updates auto-unmute module
+    auto_unmute.events.emit('update');
+
     // logs and returns number of deleted entries
     log(`Deleted ${delIDs.length} Members from muted table`, client, false);
     return delIDs.length;
@@ -135,6 +140,9 @@ async function checkBanned(client, guild) {
         await db.buildQuery(`DELETE FROM temp_ban WHERE user_id = ${id}`).execute()
             .catch(err => { log(`Error in temp_ban delete query: ${err}`, client, false, 'error') });
     }
+
+    // updates auto-unban module
+    auto_unban.events.emit('update');
 
     // logs and returns number of deleted entries
     log(`Deleted ${delIDs.length} Users from temp ban table`, client, false);
