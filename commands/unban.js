@@ -4,6 +4,7 @@ const util = require('../src/util.js');
 const { Message, User } = require('discord.js');
 require('hjson/lib/require-config');
 const { prefix } = require('../config.hjson');
+const auto_unban = require('../modules/timed/auto-unban.js');
 
 const name = "unban";
 const description = "Unbans a user from the server";
@@ -36,6 +37,9 @@ async function unban(message, args, target) {
                 msg = `Unbanned ${u.tag}`;
             else
                 msg = `Unbanned ${u.tag} for ${reason}`;
+
+            // tells auto-unban to update
+            auto_unban.events.emit('update');
 
             return message.channel.send(msg)
                 .then(() => {
