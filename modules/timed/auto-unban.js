@@ -149,7 +149,6 @@ function getPending() {
  * @param {Client} client The client of the bot
  */
 async function initialize(client) {
-    log(`Starting auto-unban module...`, client, false);
     let nextUser;
     let nextTime;
     await db.buildQuery(`SELECT user_id, time_unban FROM temp_ban`)

@@ -159,7 +159,6 @@ function getPending() {
  * @param {Client} client The client of the bot
  */
 async function initialize(client) {
-    log(`Starting auto-unmute module...`, client, false);
     let nextUser;
     let nextTime;
     await db.buildQuery(`SELECT user_id, member, time_unmute FROM muted_users`)
