@@ -9,7 +9,7 @@
     },
     "scripts": {
         "test": "mocha",
-        "start": "node main.js"
+        "start": "node ./src/main.js"
     },
     "author": "HKing",
     "license": "GPL-3.0-or-later",
