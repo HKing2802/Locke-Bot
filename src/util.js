@@ -182,10 +182,17 @@ function silenceLogging(state) {
     defaultLogger.transports.forEach((t) => {t.silent = state})
 }
 
+function sleep(ms) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, ms)
+    });
+}
+
 exports.getPerm = getPerm;
 exports.filterAttachment = filterAttachment;
 exports.log = log;
 exports.getReason = getReason;
+exports.sleep = sleep;
 exports.testing = {
     checkLogChannels: checkLogChannels,
     silenceLogging: silenceLogging
