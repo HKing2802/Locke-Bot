@@ -3,7 +3,7 @@
 require('hjson/lib/require-config');
 const config = require('../../config.hjson');
 const db = require('../../src/db.js');
-const { log } = require('../../src/util.js');
+const { log, sleep } = require('../../src/util.js');
 const moment = require('moment');
 const { Client } = require('discord.js');
 const auto_unmute = require('./auto-unmute.js');
