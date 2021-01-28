@@ -1,6 +1,6 @@
 /* Gets and runs all modules
  */
-const { log } = require('./util.js');
+const { log, sleep } = require('./util.js');
 const { Client } = require('discord.js');
 const fs = require('fs');
 
@@ -9,9 +9,10 @@ const fs = require('fs');
  * @param {Array<Object>} moduleList Array of objects with name and path
  * @param {string} moduleList.name Name of module
  * @param {string} moduleList.path Path of the module file
+ * @param {boolean} stop If true gets the stop functions for the modules
  * @returns {Map<string, Function>}
  */
-function getModules(moduleList) {
+function getModules(moduleList, stop) {
     const modules = new Map();
 
     for (module of moduleList) {
@@ -28,9 +29,12 @@ function getModules(moduleList) {
         if (fs.existsSync(pathcheck)) {
             const functionImport = require(path);
 
-            const func = functionImport.main;
+            let func;
+            if (stop) func = functionImport.stop;
+            else func = functionImport.start;
+            if (func === undefined && !stop) func = functionImport.main;
 
-            modules.set(module.name, func);
+            if (!stop || (stop && func)) modules.set(module.name, func);
         } else {
             log("Attempting to import module with missing file. Skipping over...", undefined, false, 'warn');
         }
@@ -46,7 +50,7 @@ function getModules(moduleList) {
  * @param {Client} client The client of the bot
  * @returns {number};
  */
-function startModules(modules, client) {
+async function startModules(modules, client) {
     if (!(modules instanceof Map)) {
         log(`Modules parameter is not Map, instead is ${typeof modules}`, undefined, false, 'error');
         return -1;
@@ -63,8 +67,25 @@ function startModules(modules, client) {
         } catch (err) {
             log(`Error starting module ${name}: ${err}`, client, false);
         }
+        await sleep(1000);
     }
     return started;
+}
+
+async function stopModules(modules, client) {
+    if (!(modules instanceof Map)) {
+        log(`Modules parameter is not Map, instead is ${typeof modules}`, undefined, false, 'error');
+        return -1;
+    }
+
+    for (const [name, func] of modules) {
+        try {
+            func(client);
+            log(`Stopped module ${name}`, client, false);
+        } catch (err) {
+            log(`Error stopping module ${name}: ${err}`, client, false);
+        }
+    }
 }
 
 exports.startModules = startModules;
