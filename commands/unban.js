@@ -21,11 +21,11 @@ const aliases = ['ub'];
  * @returns {Promise<boolean>}
  */
 async function unban(message, args, target) {
-    const banned = await message.guild.fetchBan(target);
-    if (!banned) {
-        message.channel.send("This user is not banned");
-        return false;
-    }
+    //const banned = await message.guild.fetchBan(target);
+    //if (!banned) {
+    //    message.channel.send("This user is not banned");
+    //    return false;
+    //}
 
     let reason = util.getReason(args, target);
     if (reason == "") reason = "No reason given";
@@ -68,7 +68,7 @@ async function main(message, args) {
             return message.channel.send("I can't unban everyone")
                 .then(() => { return false });
         } else {
-            const target = message.client.users.resolve(message.mentions.users.first());
+            const target = message.client.users.fetch(message.mentions.users.first());
             if (target) return await unban(message, args, target);
             const IDtarget = await message.client.users.fetch(args[0]);
             if (IDtarget) return await unban(message, args, IDtarget);
