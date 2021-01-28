@@ -9,9 +9,7 @@ class TestUserManager extends Discord.UserManager {
    * @returns {Promise<Discord.User|undefined>}
      */
     async fetch(id, cache = true, force = false) {
-        const existing = this.cache.get(id);
-        if (existing && !existing.partial) return existing;
-        else return undefined;
+        return this.cache.get(id);
     }
 
     add(data, cache = true, { id, extras = [] } = {}) {
