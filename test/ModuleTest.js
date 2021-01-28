@@ -12,8 +12,10 @@ describe('module_handler', function () {
     const handler = require('../src/module_handler.js');
     describe('getModules', function () {
         const goodModule = { name: 'testModule', path: 'test/testModule.js' };
-        const badModule = { name: 'testModule2', path: 'testModule.js' };
+        const goodModule2 = { name: 'testModule2', path: 'test/testModule2.js' };
+        const badModule = { name: 'testModule3', path: 'testModule.js' };
         const testModule = require('../modules/test/testModule.js');
+        const testModule2 = require('../modules/test/testModule2.js');
 
         before(() => {
             silenceLogging(true);
@@ -23,11 +25,31 @@ describe('module_handler', function () {
             silenceLogging(false);
         });
 
-        it('gets module', function () {
+        it('gets module with main', function () {
             const modules = handler.getModules([goodModule]);
             assert.equal(modules.size, 1);
             assert(modules.has(goodModule.name));
             assert.equal(modules.get(goodModule.name), testModule.main);
+        });
+
+        it('gets module with start', function () {
+            const modules = handler.getModules([goodModule2]);
+            assert.equal(modules.size, 1);
+            assert(modules.has(goodModule2.name));
+            assert.equal(modules.get(goodModule2.name), testModule2.start)
+        });
+
+        it('gets module stop', function () {
+            const modules = handler.getModules([goodModule2], true);
+            assert.equal(modules.size, 1);
+            assert(modules.has(goodModule2.name));
+            assert.equal(modules.get(goodModule2.name), testModule2.stop);
+        });
+
+        it('ignores missing stop', function () {
+            const modules = handler.getModules([goodModule], true);
+            assert.equal(modules.size, 0);
+            assert(!modules.has(goodModule.name));
         });
 
         it('skips bad module', function () {
@@ -69,23 +91,23 @@ describe('module_handler', function () {
             silenceLogging(false);
         });
 
-        it('starts modules', function () {
+        it('starts modules', async function () {
             const modules = handler.getModules([goodModule]);
-            const started = handler.startModules(modules, channel);
+            const started = await handler.startModules(modules, channel);
             assert.equal(started, 1);
             assert.equal(channel.lastMessage.content, "Test Module");
         });
 
-        it('safely handles bad module functions', function () {
+        it('safely handles bad module functions', async function () {
             const modules = new Map();
             modules.set('test', 'test');
-            const started = handler.startModules(modules, channel);
+            const started = await handler.startModules(modules, channel);
             assert.equal(started, 0);
             assert.equal(channel.lastMessage, null);
         });
 
-        it('checks modules param is type map', function () {
-            const started = handler.startModules("test", channel);
+        it('checks modules param is type map', async function () {
+            const started = await handler.startModules("test", channel);
             assert.equal(started, -1);
             assert.equal(channel.lastMessage, null);
         });
