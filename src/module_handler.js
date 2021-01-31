@@ -67,7 +67,7 @@ async function startModules(modules, client) {
         } catch (err) {
             log(`Error starting module ${name}: ${err}`, client, false);
         }
-        await sleep(1000);
+        //await sleep(1000);s
     }
     return started;
 }
@@ -75,7 +75,7 @@ async function startModules(modules, client) {
 async function stopModules(modules, client) {
     if (!(modules instanceof Map)) {
         log(`Modules parameter is not Map, instead is ${typeof modules}`, undefined, false, 'error');
-        return -1;
+        return;
     }
 
     for (const [name, func] of modules) {
@@ -90,3 +90,4 @@ async function stopModules(modules, client) {
 
 exports.startModules = startModules;
 exports.getModules = getModules;
+exports.stopModules = stopModules;
