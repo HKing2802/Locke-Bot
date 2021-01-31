@@ -178,8 +178,17 @@ async function initialize(client) {
     }
 }
 
+/**
+ * function to stop the module
+ */
+async function stop() {
+    // emits event to stop module
+    unbanEvents.emit('stopModule');
+}
+
 exports.main = initialize;
 exports.events = unbanEvents;
+exports.stop = stop;
 exports.testing = {
     unban: unban,
     setupUnban: setupUnban,

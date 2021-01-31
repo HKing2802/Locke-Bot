@@ -192,8 +192,17 @@ async function initialize(client) {
     }
 }
 
+/**
+ * Function to stop the module
+ */
+async function stop() {
+    // emits the event to stop the module
+    unmuteEvents.emit('stopModule');
+}
+
 exports.main = initialize;
 exports.events = unmuteEvents;
+exports.stop = stop;
 exports.testing = {
     unmute: unmute,
     getNextUnmute: getNextUnmute,

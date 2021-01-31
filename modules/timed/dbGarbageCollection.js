@@ -8,6 +8,9 @@ const moment = require('moment');
 const { Client } = require('discord.js');
 const auto_unmute = require('./auto-unmute.js');
 const auto_unban = require('./auto-unban.js');
+const events = require('events');
+
+const moduleEvents = new events();
 
 /**
  * Checks the messages table for delted messages past the threshold
@@ -170,19 +173,43 @@ async function sweep(client) {
 }
 
 /**
- * Starts the timed portion of this module
+ * Controller to start and store the sweep interval and set up the listener to stop the module
+ * @param {number} startTime Time in ms between sweeps
+ */
+async function controller(startTime) {
+    const interval = setInterval(sweep, startTime);
+    interval.unref();
+
+    moduleEvents.once('stopModule', () => {
+        clearInterval(interval);
+    });
+}
+
+/**
+ * Starts the timed portion of the module
  */
 function startModule() {
     // starts timed interval for sweep
     const msTime = config.gcSweepInterval * 60 * 60 * 1000;
-    setInterval(sweep, msTime);
+    controller(msTime);
+}
+
+/**
+ * Function to stop the module
+ */
+function stopModule() {
+    // emits the event to stop the module
+    moduleEvents.emit('stopModule');
 }
 
 exports.main = startModule;
 exports.sweep = sweep;
+exports.stop = stopModule;
 exports.testing = {
     messages: checkMessages,
     edits: checkEdits,
     muted: checkMuted,
-    banned: checkBanned
+    banned: checkBanned,
+    controller: controller,
+    events: moduleEvents
 }
