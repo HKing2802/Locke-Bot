@@ -9,7 +9,8 @@
     },
     "scripts": {
         "test": "mocha",
-        "start": "node ./src/main.js"
+        "start": "node ./src/start.js",
+        "stop": "node ./src/stop.js"
     },
     "author": "HKing",
     "license": "GPL-3.0-or-later",
