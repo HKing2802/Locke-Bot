@@ -112,7 +112,38 @@ describe('module_handler', function () {
             assert.equal(channel.lastMessage, null);
         });
     });
-})
+
+    describe('stop modules', function () {
+        const module = { name: 'testModule2', path: 'test/testModule2.js' };
+        const client = new Discord.Client();
+        const guild = testUtil.createGuild(client, undefined);
+        let channel;
+
+        before(() => {
+            silenceLogging(true);
+        });
+
+        beforeEach(() => {
+            channel = new testUtil.testChannel(guild);
+        });
+
+        after(() => {
+            client.destroy();
+            silenceLogging(false);
+        });
+
+        it('stops module', async function () {
+            const modules = handler.getModules([module], true);
+            await handler.stopModules(modules, channel);
+            assert.equal(channel.lastMessage.content, "Test Module");
+        });
+
+        it('checks modules param is type map', async function () {
+            await handler.startModules("test", channel);
+            assert.equal(channel.lastMessage, null);
+        });
+    });
+});
 
 describe('messageProcess', function () {
     const messageProcess = require('../modules/events/messageProcess.js');
@@ -602,6 +633,14 @@ describe('garbage collection', function () {
                     .catch(err => done(err));
             })
             .catch(err => done(err));
+    });
+
+    it('starts stopModule listener', async function () {
+        await gb.testing.controller(20000000);
+
+        const evs = gb.testing.events.eventNames();
+        assert.equal(evs.length, 1);
+        assert.equal(evs[0], "stopModule");
     });
 });
 
