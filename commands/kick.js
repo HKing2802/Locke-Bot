@@ -25,7 +25,7 @@ async function kick(message, args, target) {
     if (reason !== "No reason given") DMmsg += ` for ${reason}`;
 
     // sends DM
-    target.user.createDM()
+    await target.user.createDM()
         .then(async (dmChan) => {
             await dmChan.send(DMmsg);
             target.user.deleteDM();

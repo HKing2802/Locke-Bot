@@ -97,7 +97,7 @@ async function ban(message, args, target) {
     if (banTime) DMmsg += `\nYou will be unbanned in ${banTime.timeUnban.toNow(true)}`;
 
     /// sends DM message
-    target.user.createDM()
+    await target.user.createDM()
         .then(async (DMchan) => {
             await DMchan.send(DMmsg);
             target.user.deleteDM();
