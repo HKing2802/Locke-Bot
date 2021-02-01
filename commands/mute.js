@@ -133,7 +133,7 @@ async function mute(message, args, target) {
     log(logEmbed, message.client);
 
     // sends DM message
-    await starget.user.createDM()
+    await target.user.createDM()
         .then(async (DMchan) => {
             await DMchan.send(DMmsg);
             target.user.deleteDM();
