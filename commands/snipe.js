@@ -287,9 +287,9 @@ async function main(message, args) {
                     return await getEdits(message, args, num);
                 }
             } else {
-                const target = message.guild.members.fetch(message.mentions.users.first());
+                const target = await message.guild.members.fetch(message.mentions.users.first());
                 if (target) return await getDeleted(message, args, target);
-                const IDtarget = message.guild.members.fetch(args[0]);
+                const IDtarget = await message.guild.members.fetch(args[0]);
                 if (IDtarget) return await getDeleted(message, args, IDtarget);
                 else {
                     return message.channel.send("No member or ID specified")
