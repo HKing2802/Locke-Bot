@@ -1,5 +1,12 @@
 .vs
 .vscode
 /node_modules/**
-/node_modules/
-auth_act.json
+auth.json
+*.njsproj
+*.sln
+/Locke Bot.njsproj.user
+/obj/**
+/bin/**
+/logs/*
+/test/logs
+/sql
