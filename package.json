@@ -1,22 +1,35 @@
 {
     "name": "locke-bot",
-    "version": "1.4.5",
-    "description": "Special bot for Locke Server",
+    "version": "2.0.0",
+    "description": "Special bot for the Locke Server",
     "main": "bot.js",
     "engines": {
         "node": "12.7.0",
         "npm": "6.10.0"
     },
     "scripts": {
-        "test": "echo \"Error: no test specified\" && exit 1",
-        "start": "node bot.js"
+        "test": "mocha",
+        "start": "node ./src/start.js",
+        "stop": "node ./src/stop.js"
     },
     "author": "HKing",
+    "license": "GPL-3.0-or-later",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/HKing2802/Locke-Bot"
+    },
     "dependencies": {
-        "aws-sdk": "^2.663.0",
-        "cloudmersive-virus-api-client": "^1.1.3",
-        "discord.js": "^12.2.0",
-        "dynobot-framework": "^1.1.4",
-        "winston": "^3.2.1"
+        "@mysql/xdevapi": "8.0.22",
+        "discord.js": "^12.5.1",
+        "hjson": "^3.2.2",
+        "moment": "^2.29.1",
+        "sqlstring": "^2.3.2",
+        "winston": "^3.3.3",
+        "winston-daily-rotate-file": "^4.5.0"
+    },
+    "devDependencies": {
+        "@chrisalderson/winston-spy": "^1.0.2",
+        "mocha": "^8.2.1",
+        "sinon": "^9.2.2"
     }
 }
