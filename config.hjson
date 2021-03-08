@@ -28,7 +28,7 @@
 
 
     # Nickname Enforcement
-    # The nickname if a memer's nickname or username is all non-ascii characters
+    # The nickname if a member's nickname or username is all non-ascii characters
   defaultNickname: "Please Use ASCII Characters"
 
     # IDs of members with nickname passes
