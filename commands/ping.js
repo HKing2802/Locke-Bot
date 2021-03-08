@@ -1,5 +1,4 @@
 /* Simple command to respond to a ping
- * Template for new commands
  */
 
 const { Message } = require("discord.js");
