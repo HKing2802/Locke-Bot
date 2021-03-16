@@ -25,12 +25,7 @@ function start(client) {
  * No parameters are passed to the stop function
  */
 function stop() {
-    if (channel instanceof Discord.Channel) {
-        channel.send("Test Module")
-            .then((msg) => { return msg });
-    } else {
-        return channel;
-    }
+
 }
 
 /*
