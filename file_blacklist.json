@@ -3,5 +3,11 @@
     ".bat",
     ".cmd",
     ".ps1",
-    ".sh"
+    ".sh",
+    ".vbs",
+    ".com",
+    ".lnk",
+    ".reg",
+    ".vb",
+    ".msi",
 ]
