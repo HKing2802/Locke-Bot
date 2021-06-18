@@ -56,21 +56,19 @@ function getPerm(member, boolHelp=false) {
  * @returns {string}
  */
 function getReason(args, target, startIndex=0) {
-    // since a command is always going to call getReason() after parsing the other
-    // args out (for example, time muted comes before the reason, as in:
-    //      .mute <@!targetid> 2h spamming off topic
-    // all we need to do is slice the array at the starting index of the reason
-    // and join them with spaces to replicate how it was actually typed so it
-    // reads well.
-    if ( args.length >= startIndex )
-    {
-        return args.slice(startIndex).join(' ').trim();
-    }
-    
-    // however, if the args array is not large enough to accommodate startIndex,
-    // we know a reason wasn't provided, and we can just return an empty string
-    // for the command itself to handle
-    return "";
+    const name = `<@!${target.id}>`;
+    const id = `${target.id}`;
+    let reason = "";
+
+    for (let i = startIndex; i < args.length; i++) {
+        if (args[i].indexOf(name) == -1) {
+            if (args[i].indexOf(id) == -1)
+                reason += `${args[i]} `;
+            else
+                reason += `${args[i].substr(id.length)} `;
+        } else
+            reason += `${args[i].substr(name.length)} `;
+        return reason.trim();
 }
 
 /**
