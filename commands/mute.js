@@ -74,7 +74,7 @@ async function mute(message, args, target) {
     if (muteTime) reason = getReason(args, target, 2);
     else reason = getReason(args, target);
 
-    if (reason == "") reason = "No reason given";
+    if (reason == "" || reason == undefined) reason = "No reason given";
     if (target.roles.cache.has(config.memberRoleID)) member = true;
 
     // adds role
