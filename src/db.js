@@ -10,7 +10,7 @@ const db_config = {
     host: auth.db_host,
     user: auth.db_user,
     password: auth.db_pass,
-    schema: 'lockebot_db',
+    schema: 'lockebot_test_db',
     port: auth.db_port
 };
 
@@ -32,7 +32,6 @@ async function db_connect(sessionConfig = db_config) {
     return mysqlx.getSession(db_config)
         .then(s => {
             CONNECTED = true;
-            log('Connected to database');
             session = s;
             return;
         })
