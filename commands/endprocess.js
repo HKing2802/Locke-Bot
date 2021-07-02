@@ -21,7 +21,9 @@ async function shutdown(client) {
 }
 
 async function main(message, args) {
-    await shutdown(message.client);
+    if (message.author.id === config.authorID) {
+        await shutdown(message.client);
+    }
 }
 
 exports.main = main;
