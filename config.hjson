@@ -125,5 +125,9 @@
       name: Auto-Unmute
       path: timed/auto-unmute.js
     }
+    {
+      name: Startup Nickname Check
+      path: timed/nameCheck.js
+    }
   ]
 }
