@@ -14,15 +14,15 @@
   snipeMessages: 10
     
     # IDs
-  guildID: "608027300683841766"
-  helperRoleID: "860608046623358976"
-  modRoleID: "860607993715359814"
-  adminRoleID: "860607938996600853"
-  dadminRoleID: "860608158955601990"
+  guildID: "560847285874065408"
+  helperRoleID: "560853327894806568"
+  modRoleID: "560853468953313299"
+  adminRoleID: "560853657608781841"
+  dadminRoleID: "625898632830517249"
   authorID: "324302699460034561"
-  memberRoleID: "802663424601358386"
-  mutedRoleID: "802663335954612226"
-  humanRoleID: "802663390127718481"
+  memberRoleID: "561708861182967828"
+  mutedRoleID: "562452717445054474"
+  humanRoleID: "608319663780265989"
   modsgayEmojiID: "760065066832887818"
   kaeID: "259573995710447616"
 
@@ -34,7 +34,10 @@
     # IDs of members with nickname passes
     # These members don't get checked for their nickname
   nicknamePass:
-  []
+  [
+    "285475344817848320"
+    "328051236139958272"
+  ]
   
     
     # Logging
@@ -42,14 +45,18 @@
   [
     [
       "608027300683841766"
-      "860607573153153035"
+      "801688925923442719"
+    ]
+    [
+      "560847285874065408"
+      "560848944868098090"
     ]
   ]
 
     # These channels receive more detailed logging information
   allLogsChannels:
   [
-    "860607573153153035"
+    "801688925923442719"
   ]
 
 
