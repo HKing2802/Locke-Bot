@@ -42,9 +42,9 @@ function getPerm(member, boolHelp=false) {
         return true;
     } else if (member.guild.ownerID == member.id) {
         return true;
-    } else {
-        return false;
     }
+    
+    return false;
 }
 
 /**
@@ -68,8 +68,7 @@ function getReason(args, target, startIndex=0) {
                 reason += `${args[i].substr(id.length)} `;
         } else
             reason += `${args[i].substr(name.length)} `;
-    }
-    return reason.trim();
+        return reason.trim();
 }
 
 /**
@@ -95,7 +94,7 @@ async function filterAttachment(message) {
     if (abuseAttachement !== undefined) {
         return message.delete()
             .then(msg => {
-                msg.channel.send(`Sorry ${msg.author.tag}, I deleted that file because it's file-type `
+                msg.channel.send(`Sorry ${msg.author.tag}, I deleted that file because its file-type `
                     + "is blacklisted in our spam filter")
                 return true;
             });
