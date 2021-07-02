@@ -57,7 +57,7 @@ async function setupUnmute(client, userID) {
     await db.buildQuery(`SELECT member, time_unmute FROM muted_users where user_id = ${userID}`)
         .execute(async result => {
             // calculates time to unmute in ms
-            const unmuteTime = moment(result[1]).add(5, 'h');
+            const unmuteTime = moment(result[1]).add(4, 'h');
             timeoutTime = unmuteTime.diff(moment());
 
             if (timeoutTime > 0) {
@@ -112,7 +112,6 @@ function controller(client, startTimeout) {
     });
     unmuteEvents.once('stopModule', () => {
         // clears timer and removes listeners for clean exit
-        log('Stopping auto-unmute module...', client, false);
         HAS_PENDING_UNMUTE = false;
         UNMUTED = false;
         clearTimeout(nextTimeout);

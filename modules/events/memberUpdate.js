@@ -22,7 +22,7 @@ function checkNick(member, client, logging = true) {
     if (newNick != target) {
         if (newNick == '') newNick = config.defaultNickname;
         member.setNickname(newNick);
-        if (logging) log(`Force changed a member's nickname to ${newNick}`, client);
+        if (logging) log(`Force changed a member's nickname to \`${newNick}\``, client);
         return true;
     }
 }

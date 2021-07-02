@@ -74,7 +74,7 @@ async function mute(message, args, target) {
     if (muteTime) reason = getReason(args, target, 2);
     else reason = getReason(args, target);
 
-    if (reason == "") reason = "No reason given";
+    if (reason == "" || reason == undefined) reason = "No reason given";
     if (target.roles.cache.has(config.memberRoleID)) member = true;
 
     // adds role
@@ -105,6 +105,10 @@ async function mute(message, args, target) {
 
         if (member) member = 1;
         else member = 0;
+
+        db.buildQuery(`DELETE FROM muted_users WHERE user_id=${target.user.id}`)
+            .execute()
+            .catch(err => { log(`Error in querying database to remove duplicate data: ${err}`, message.client, false, 'error'); });
 
         // Builds and executes query to Database
         db.buildQuery(`INSERT INTO muted_users(user_id, name, member, time_unmute) VALUES (${target.id}, '${target.user.username}', ${member}, ${timeUnmute})`)

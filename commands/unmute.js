@@ -61,6 +61,7 @@ async function unmute(message, args, target) {
     // constructs log embed
     const logEmbed = new Discord.MessageEmbed()
         .setAuthor(message.author.tag)
+        .setDescription(target.user.tag)
         .setTitle('Unmute')
         .addField('Reason', reason)
         .setFooter(moment().format("dddd, MMMM Do YYYY, HH:mm:ss"));
