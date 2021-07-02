@@ -80,10 +80,10 @@ async function stopModules(modules, client) {
 
     for (const [name, func] of modules) {
         try {
-            func(client);
-            log(`Stopped module ${name}`, client, false);
+            await func(client);
+            console.log(`Stopped module ${name}`);
         } catch (err) {
-            log(`Error stopping module ${name}: ${err}`, client, false);
+            console.log(`Error stopping module ${name}: ${err}`);
         }
     }
 }
