@@ -107,7 +107,6 @@ function controller(client, startTimeout) {
     });
     unbanEvents.on('stopModule', () => {
         // clears timer and removes listeners for a clean exit
-        log('Stopping auto-unban module...', client, false);
         HAS_PENDING_UNBAN = false;
         BANNED = false
         clearTimeout(nextTimeout);

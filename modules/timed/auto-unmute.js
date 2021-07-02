@@ -112,7 +112,6 @@ function controller(client, startTimeout) {
     });
     unmuteEvents.once('stopModule', () => {
         // clears timer and removes listeners for clean exit
-        log('Stopping auto-unmute module...', client, false);
         HAS_PENDING_UNMUTE = false;
         UNMUTED = false;
         clearTimeout(nextTimeout);
