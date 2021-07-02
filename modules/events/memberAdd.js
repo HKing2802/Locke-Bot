@@ -2,7 +2,6 @@
  */
 
 const { checkNick } = require('./memberUpdate.js');
-const { log } = require('../../src/util.js');
 
 function main(client) {
     client.on('guildMemberAdd', (member) => {
