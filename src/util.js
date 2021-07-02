@@ -69,6 +69,7 @@ function getReason(args, target, startIndex=0) {
         } else
             reason += `${args[i].substr(name.length)} `;
         return reason.trim();
+    }
 }
 
 /**
@@ -195,4 +196,4 @@ exports.sleep = sleep;
 exports.testing = {
     checkLogChannels: checkLogChannels,
     silenceLogging: silenceLogging
-};
+}
