@@ -131,7 +131,7 @@ describe('filter attachment', function () {
                 util.filterAttachment(m)
                     .then((deleted) => {
                         assert(deleted)
-                        assert.equal(channel.lastMessage.content, "Sorry test#1234, I deleted that file because it's file-type is blacklisted in our spam filter");
+                        assert.equal(channel.lastMessage.content, "Sorry test#1234, I deleted that file because its file-type is blacklisted in our spam filter");
                         done();
                     })
                     .catch(err => done(err));
