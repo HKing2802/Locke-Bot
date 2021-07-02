@@ -21,7 +21,7 @@ const defaultLogger = winston.createLogger({
         new winston.transports.DailyRotateFile({
             frequency: '1d',
             filename: 'LockeBot-logs-%DATE%.log',
-            dirname: '.\\logs\\',
+            dirname: 'logs',
             datePattern: 'YYYY-MM-DD',
             maxFiles: '10d'
         })
