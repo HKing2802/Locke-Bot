@@ -79,7 +79,7 @@ function getReason(args, target, startIndex=0) {
  */
 function isBlacklisted(filename) {
     for (let i = 0; i < file_blacklist.length; i++) {
-        if (filename.toLowerCase().endsWith(file_blacklist[i]))
+        if (filename.endsWith(file_blacklist[i]))
             return true;
     }
     return false;
@@ -91,8 +91,8 @@ function isBlacklisted(filename) {
  * @returns {Promise<boolean>}
  */
 async function filterAttachment(message) {
-    let abuseAttachment = message.attachments.find(attachment => isBlacklisted(attachment.name))
-    if (abuseAttachment !== undefined) {
+    let abuseAttachement = message.attachments.find(attachment => isBlacklisted(attachment.name))
+    if (abuseAttachement !== undefined) {
         return message.delete()
             .then(msg => {
                 msg.channel.send(`Sorry ${msg.author.tag}, I deleted that file because its file-type `
