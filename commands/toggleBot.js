@@ -8,7 +8,7 @@ const persistent = require('../persistent.json');
 const { log } = require('../src/util.js');
 const { Message } = require('discord.js');
 
-const name = "toggebot";
+const name = "togglebot";
 const aliases = ["shutdown", "activate"]
 
 /**
