@@ -1,6 +1,6 @@
 {
     # General
-  prefix: !
+  prefix: .
 
     # How long deleted messages are stored for
   messageThreshold:
@@ -14,7 +14,7 @@
   snipeMessages: 10
     
     # IDs
-  guildID: "560847285874065408"
+  guildID: "862397899576836096"
   helperRoleID: "560853327894806568"
   modRoleID: "560853468953313299"
   adminRoleID: "560853657608781841"
@@ -44,26 +44,25 @@
   logChannel:
   [
     [
-      "608027300683841766"
-      "801688925923442719"
-    ]
-    [
-      "560847285874065408"
-      "560848944868098090"
+      "862397899576836096"
+      "862433886054907915"
     ]
   ]
 
     # These channels receive more detailed logging information
   allLogsChannels:
   [
-    "801688925923442719"
+    "862433886054907915"
   ]
 
 
     # Other
     
-    # interval between garbage collection sweeps in hours
+    # interval between garbage collection sweeps, in hours
     gcSweepInterval: 12
+
+    # interval between restarting the database connection, in hours
+    dbRestartInterval: 24
 
 
     # Commands
@@ -128,6 +127,10 @@
     {
       name: Startup Nickname Check
       path: timed/nameCheck.js
+    }
+    {
+      name: Database Keep Alive
+      path: timed/dbKeepAlive.js
     }
   ]
 }
