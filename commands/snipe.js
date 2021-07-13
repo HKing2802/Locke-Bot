@@ -14,7 +14,7 @@ const name = 'snipe';
 const description = `Gets the user's deleted messages. Displays the last ${config.snipeMessages} messages by default.\nCan also show the previous edits of a deleted message, where number is the number to the left of each deleted message`;
 const usage = `${config.prefix}snipe <member mention|member ID> [options] - Gets Deleted messages` +
     '\n' + `${config.prefix}snipe edits <number> [options] - Gets edits of a deleted message` +
-    '\n' + `Options: \`all\` - displays all deleted messags`;
+    '\n' + `Options: \`all\` - displays all deleted messags of the target`;
 const type = "Moderation";
 
 /**
@@ -229,7 +229,7 @@ async function getEdits(message, args, editNum) {
     channel ? channel = `#${channel.name}` : channel = "???";
     member ? member = `@${member.user.tag}` : member = "???";
     const delTimestamp = moment(messageData[3]).add('5', 'h').format('YYYY-MM-DD HH:mm:ss');
-    const sendTimestamp = moment(messageData[2]).add('5', 'h').format('YYYY-MM-DD HH:mm:ss');
+    const sendTimestamp = moment(messageData[2]).add('4', 'h').format('YYYY-MM-DD HH:mm:ss');
 
     // constructs outgoing contents
     let editContents = [];
