@@ -140,7 +140,8 @@ async function getDeleted(message, args, target) {
     // constructs outgoing contents with timestamp and escaped content
     let msgContents = [];
     persistent.snipeData.msgs = [];
-    for (let id of msgBuffer.keys()) {
+    const msgBufferArray = Array.from(msgBuffer.keys()).reverse();
+    for (let id of msgBufferArray) {
         persistent.snipeData.msgs.push(id);
         let delContent = msgBuffer.get(id);
         msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('M/DD H:mm:ss')} - ${escapeMessage(delContent[1], message.guild)}`)
