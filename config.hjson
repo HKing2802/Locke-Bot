@@ -14,7 +14,7 @@
   snipeMessages: 10
     
     # IDs
-  guildID: "862397899576836096"
+  guildID: "560847285874065408"
   helperRoleID: "560853327894806568"
   modRoleID: "560853468953313299"
   adminRoleID: "560853657608781841"
@@ -44,12 +44,16 @@
   logChannel:
   [
     [
-      "862397899576836096"
-      "862433886054907915"
+      "608027300683841766"
+      "801688925923442719"
+    ]
+    [
+      "560847285874065408"
+      "560848944868098090"
     ]
   ]
 
-    # These channels receive more detailed logging information
+   # These channels receive more detailed logging information
   allLogsChannels:
   [
     "862433886054907915"
