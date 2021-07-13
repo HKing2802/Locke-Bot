@@ -10,7 +10,7 @@ const db_config = {
     host: auth.db_host,
     user: auth.db_user,
     password: auth.db_pass,
-    schema: 'lockebot_db',
+    schema: auth.db_schema,
     port: auth.db_port
 };
 
