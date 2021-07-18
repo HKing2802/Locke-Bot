@@ -142,7 +142,6 @@ async function mute(message, args, target) {
 
     // constructs response message
     let msg = `Muted ${target.user.tag}`;
-    if (muteTime) msg += ` for ${muteTime.timeUnmute.toNow(true)}`;
     if (reason == "No reason given") msg += ', No reason given';
     else msg += ` for ${reason}`;
 
