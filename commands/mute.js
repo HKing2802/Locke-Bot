@@ -70,13 +70,13 @@ async function addToDatabase(client, target, member, muteTime) {
     }
 
     // gets muted users table from session
-    const table = db.getSession().getTable('muted_users');
+    const table = db.getSessionSchema().getTable('muted_users');
 
     // converts the member boolean to a tinyint for insertion
     const memberval = member ? 1 : 0;
 
     // formats unmute time for database
-    let timeUnmute = 'NULL';
+    let timeUnmute = null;
     if (muteTime) timeUnmute = `'${muteTime.timeUnmute.format('YYYY-MM-DD HH:mm:ss')}'`;
 
     // deletes any entries with the same user id.
