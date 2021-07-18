@@ -56,6 +56,56 @@ function parseTime(args, target) {
 }
 
 /**
+ * Adds a muted member to the muted users databse
+ * @param {Discord.Client} client The bot's client for logging
+ * @param {Discord.GuildMember} target The target of the mute
+ * @param {boolean} member Boolean if the target has the member role
+ * @param {moment} muteTime The date and time of the unmute
+ */
+async function addToDatabase(client, target, member, muteTime) {
+    // checks connection to database
+    if (!db.connected()) {
+        log(`Not connected to database. Skipping database entry...`, message.client, false, 'warn');
+        return;
+    }
+
+    // gets muted users table from session
+    const table = db.getSession().getTable('muted_users');
+
+    // converts the member boolean to a tinyint for insertion
+    const memberval = member ? 1 : 0;
+
+    // formats unmute time for database
+    let timeUnmute = 'NULL';
+    if (muteTime) timeUnmute = `'${muteTime.timeUnmute.format('YYYY-MM-DD HH:mm:ss')}'`;
+
+    // deletes any entries with the same user id.
+    // this prevents insertion errors where the target was unmuted manually before the timer
+    // ran out, and before garbage collection removed the unnecessary entry
+    table
+        .delete()
+        .where(`user_id = :id`)
+        .bind('id', target.id)
+        .limit(1)
+        .execute()
+        .catch(err => {
+            log(`Error in querying database to remove duplicate data: ${err} `, client, false, 'error');
+        });
+
+    // inserts the data into the database
+    table
+        .insert(['user_id', 'name', 'member', 'time_unmute'])
+        .values(target.id, target.user.username, memberval, timeUnmute)
+        .execute()
+        .then(() => {
+            log('Logged muted user to Database');
+        })
+        .catch(err => {
+            log(`Error in querying database in mute: ${err}`, client, false, 'error');
+        });
+}
+
+/**
  * Checks permissions of the target and carries out the role exchange
  * @param {Discord.Message} message
  * @param {Array<string>} args
@@ -96,26 +146,11 @@ async function mute(message, args, target) {
     if (reason == "No reason given") msg += ', No reason given';
     else msg += ` for ${reason}`;
 
-    // adds to db
-    if (!db.connected()) log(`Not Connected to database. Skipping database entry...`, message.client, false, 'warn');
-    else {
-        // sets timeUnmute to formatted time if exists, or undefined otherwise
-        let timeUnmute = 'NULL';
-        if (muteTime) timeUnmute = `'${muteTime.timeUnmute.format('YYYY-MM-DD HH:mm:ss')}'`;
-
-        if (member) member = 1;
-        else member = 0;
-
-        db.buildQuery(`DELETE FROM muted_users WHERE user_id=${target.user.id}`)
-            .execute()
-            .catch(err => { log(`Error in querying database to remove duplicate data: ${err}`, message.client, false, 'error'); });
-
-        // Builds and executes query to Database
-        db.buildQuery(`INSERT INTO muted_users(user_id, name, member, time_unmute) VALUES (${target.id}, '${target.user.username}', ${member}, ${timeUnmute})`)
-            .execute()
-            .catch(err => { log(`Error in querying database in mute: ${err}`, message.client, false, 'error'); });
-        log('Logged muted user to Database');
-    }
+    // adds to database
+    addToDatabase(message.client, target, member, muteTime)
+        .catch(err => {
+            log(`Error in adding to database in mute: ${err}`, message.client, false, 'error');
+        });
 
     // tells auto-unmute to update
     auto_unmute.events.emit('update');
