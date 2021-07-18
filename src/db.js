@@ -1,10 +1,9 @@
 const mysqlx = require('@mysql/xdevapi');
 const auth = require('../auth.json');
 const { log } = require('../src/util.js');
-const SqlString = require('sqlstring');
 
 let CONNECTED = false;
-let session;
+let SESSION;
 
 const db_config = {
     host: auth.db_host,
@@ -24,7 +23,7 @@ const db_config = {
  * @param {number} sessionConfig.port The port of the connection
  */
 async function db_connect(sessionConfig = db_config) {
-    if (CONNECTED && session !== undefined) {
+    if (CONNECTED && SESSION !== undefined) {
         log('Attempting to connect to database while already connected. Disconnecting...', undefined, false, 'warn');
         db_disconnect();
     }
@@ -33,7 +32,7 @@ async function db_connect(sessionConfig = db_config) {
         .then(s => {
             CONNECTED = true;
             log('Connected to database');
-            session = s;
+            SESSION = s;
             return;
         })
         .catch(err => {
@@ -56,7 +55,7 @@ function getConnected() {
 async function db_disconnect() {
     if (!CONNECTED) return;
     try {
-        await session.close();
+        await SESSION.close();
         log('Disconnected from Database');
         CONNECTED = false;
     } catch (error) {
@@ -69,13 +68,25 @@ async function db_disconnect() {
  * Throws error if not connected to database, check if connected by checking db.connected;
  * @param {string} query The SQL query
  * @returns {mysqlx.SqlExecute}
+ * @deprecated
  */
 function buildQuery(query) {
-    if (!CONNECTED) throw Error('Not connected to a Database');
-    return session.sql(SqlString.format(query));
+    if (!CONNECTED) { throw Error('Not connected to a Database'); }
+    else { return SESSION.sql(query); }
+}
+
+/**
+ * Gets the current session with the MySql server
+ * Throws error if not connected to database, check if connected by checking db.connected;
+ * @returns {mysqlx.Session}
+ */
+function getSession() {
+    if (!CONNECTED) { throw Error('Not connected to a Database'); }
+    else { return SESSION; }
 }
 
 exports.connect = db_connect;
 exports.disconnect = db_disconnect;
 exports.buildQuery = buildQuery;
+exports.getSession = getSession;
 exports.connected = getConnected;
