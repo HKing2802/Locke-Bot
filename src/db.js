@@ -78,15 +78,15 @@ function buildQuery(query) {
 /**
  * Gets the current session with the MySql server
  * Throws error if not connected to database, check if connected by checking db.connected;
- * @returns {mysqlx.Session}
+ * @returns {mysqlx.Schema}
  */
-function getSession() {
+function getSessionSchema() {
     if (!CONNECTED) { throw Error('Not connected to a Database'); }
-    else { return SESSION; }
+    else { return SESSION.getDefaultSchema(); }
 }
 
 exports.connect = db_connect;
 exports.disconnect = db_disconnect;
 exports.buildQuery = buildQuery;
-exports.getSession = getSession;
+exports.getSessionSchema = getSessionSchema;
 exports.connected = getConnected;
