@@ -17,6 +17,28 @@ const usage = `${config.prefix}snipe <member mention|member ID> [options] - Gets
     '\n' + `Options: \`all\` - displays all deleted messags of the target`;
 const type = "Moderation";
 
+// sql prepared statements
+const getDeletedStatement = db
+    .getSessionSchema()
+    .getTable('messages')
+    .select(['id', 'send_time', 'content'])
+    .where('user_id = :id')
+    .order_by('send_time DESC');
+
+const getEditsStatement = db
+    .getSessionSchema()
+    .getTable('edits')
+    .select(['num', 'edit_time', 'content'])
+    .where('msg_id = :id')
+    .order_by('edit_time DESC');
+
+const getMessageData = db
+    .getSessionSchema()
+    .getTable('messages')
+    .select(['user_id', 'channel_id', 'send_time', 'delete_time', 'content'])
+    .where('id = :id')
+    .limit(1);
+
 /**
  * Escapes pings from message content so that the member is not pinged
  * @param {string} content
@@ -122,13 +144,14 @@ async function getDeleted(message, args, target) {
     // Gets all deleted messages and stores them in msgBuffer
     // msgBuffer is Map<number, Array<number, string>>
     const msgBuffer = new Map();
-    await db.buildQuery(`SELECT id, send_time, content FROM messages WHERE user_id = ${target.id} LIMIT ${msgLimit}`)
-        .execute(result => {
+    await getDeletedStatement
+        .bind('id', target.id)
+        .limit(msgLimit)
+        .execute(function (result) {
             msgBuffer.set(result[0], [result[1], result[2]]);
         })
         .catch(err => {
             log(`Error in Snipe query: ${err}`, message.client, false, 'error');
-            return false;
         });
 
     // checks if no messages are found
@@ -140,8 +163,7 @@ async function getDeleted(message, args, target) {
     // constructs outgoing contents with timestamp and escaped content
     let msgContents = [];
     persistent.snipeData.msgs = [];
-    const msgBufferArray = Array.from(msgBuffer.keys()).reverse();
-    for (let id of msgBufferArray) {
+    for (let id of msgBuffer.keys()) {
         persistent.snipeData.msgs.push(id);
         let delContent = msgBuffer.get(id);
         msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('M/DD H:mm:ss')} - ${escapeMessage(delContent[1], message.guild)}`)
@@ -197,25 +219,27 @@ async function getEdits(message, args, editNum) {
     // editBuffer is Map<number, Array<number, string>>
     let extraEdits = 0;
     const editBuffer = new Map();
-    await db.buildQuery(`SELECT num, edit_time, content FROM edits WHERE msg_id = ${msgID}`)
-        .execute(result => {
-            if (editBuffer.size >= editLimit) extraEdits += 1;
-            else editBuffer.set(result[0], [result[1], result[2]]);
+
+    await getEditsStatement
+        .bind('id', msgID)
+        .execute(function (result) {
+            if (editBuffer.size >= editLimit) { extraEdits += 1; }
+            else { editBuffer.set(result[0], [result[1], result[2]]); }
         })
         .catch(err => {
             log(`Error in Snipe Edits query: ${err}`, message.client, false, 'error');
-            return false;
         });
 
     // gets message data
     let messageData;
-    await db.buildQuery(`SELECT user_id, channel_id, send_time, delete_time, content FROM messages WHERE id = ${msgID} LIMIT 1`)
-        .execute(result => {
+
+    await getMessageData
+        .bind('id', msgID)
+        .execute(function (result) {
             messageData = result;
         })
         .catch(err => {
             log(`Error in getting Edit message data: ${err}`, message.client, false, 'error');
-            return false;
         });
 
     // checks message data
