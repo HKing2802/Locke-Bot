@@ -14,6 +14,18 @@ const usage = `${config.prefix}unmute <member mention> [reason]`
     + '\n' + `${config.prefix}unmute <member ID> [reason]`;
 const type = "Moderation";
 
+// sql prepared statements
+const checkStatement = db
+    .getSessionSchema()
+    .getTable('muted_users')
+    .select(['member'])
+    .where('user_id = :id');
+
+const removeStatement = db
+    .getSessionSchema()
+    .getTable('muted_users')
+    .delete()
+    .where('user_id = :id');
 
 async function unmute(message, args, target) {
     // checks target perm
@@ -33,18 +45,26 @@ async function unmute(message, args, target) {
     if (reason == "") reason = "No reason given";
 
     // checks db if member
-    let boolMember;
+    let boolMember = false;
     if (!db.connected()) log(`Not Connected to database. Skipping database check...`, message.client, false, 'warn');
     else {
         // checks if member
-        await db.buildQuery(`SELECT member FROM muted_users WHERE user_id = ${target.id}`)
-            .execute(result => {
-                boolMember = !!result[0];
+        await checkStatement
+            .bind('id', target.id)
+            .execute(function (res) {
+                boolMember = !!res;
             })
-            .catch(err => { log(`Error in querying database in unmute: ${err}`, message.client, false, 'error') })
+            .catch(err => {
+                log(`Error in querying database in unmute: ${err}`, message.client, false, 'error');
+            });
+
         // removes entry
-        await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${target.id} LIMIT 1`).execute()
-            .catch(err => { log(`Error in querying databse in unmute delete: ${err}`, message.client, false, 'error') });
+        removeStatement
+            .bind('id', target.id)
+            .execute()
+            .catch(err => {
+                log(`Error in querying database in unmute delete: ${err}`, message.client, false, 'error');
+            });
     }
 
     // performs unmute
