@@ -19,8 +19,6 @@ function bot_init() {
         // Connect to Database
         db.connect()
             .then(async () => {
-                log(`Connected to Database`, client, false);
-
                 const { sweep } = require('../modules/timed/dbGarbageCollection.js');
 
                 // startup garbage collection
