@@ -14,9 +14,6 @@ const moduleEvents = new events();
 
 // sql prepared statements
 const schema = db.getSessionSchema()
-const messageStatement = schema
-    .getTable('messages')
-    .select(['id', 'send_time']);
 
 const messageDeleteStatement = schema
     .getTable('messages')
@@ -24,19 +21,11 @@ const messageDeleteStatement = schema
     .where('id = :id')
     .limit(1);
 
-const mutedStatement = schema
-    .getTable('muted_users')
-    .select(['user_id']);
-
 const mutedDeleteStatement = schema
     .getTable('muted_users')
     .delete()
     .where('user_id = :id')
     .limit(1);
-
-const bannedStatement = schema
-    .getTable('temp_ban')
-    .select('user_id');
 
 const bannedDeleteStatement = schema
     .getTable('temp_ban')
@@ -56,7 +45,9 @@ async function checkMessages(client) {
 
     // gets the data
     let delIDs = [];
-    return messageStatement
+    return schema
+        .getTable('messages')
+        .select(['id', 'send_time'])
         .execute(result => {
             // checks time against threshold
             if (+moment(result[1]) < +threshold) {
@@ -118,7 +109,9 @@ async function checkMuted(client) {
 
     // checks all members if still muted
     let delIDs = [];
-    await mutedStatement
+    await schema
+        .getTable('muted_users')
+        .select(['user_id'])
         .execute(result => {
             // gets member object from guild
             let member = guild.members.cache.get(result[0]);
@@ -162,7 +155,9 @@ async function checkBanned(client, guild) {
     
     // gets entries and check if banned
     let delIDs = [];
-    await bannedStatement
+    await schema
+        .getTable('temp_ban')
+        .select('user_id')
         .execute(async result => {
             let banned = await guild.fetchBan(result[0].toString());
             if (banned === undefined) delIDs.push(result[0]);

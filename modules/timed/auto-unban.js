@@ -17,14 +17,6 @@ const deleteBanStatement = db
     .delete()
     .where('user_id = :id');
 
-const getBanInfoStatement = db
-    .getSessionSchema()
-    .getTable('temp_ban')
-    .select(['user_id', 'time_unban'])
-    .orderBy('time_unban ASC')
-    .limit(1);
-
-
 let HAS_PENDING_UNBAN = false;
 let BANNED = false;
 
@@ -73,7 +65,12 @@ async function setupUnban(client, userID) {
     let unbanned = false
 
     // gets info from db
-    await getBanInfoStatement
+    await db
+        .getSessionSchema()
+        .getTable('temp_ban')
+        .select(['user_id', 'time_unban'])
+        .orderBy('time_unban ASC')
+        .limit(1)
         .execute(async result => {
             // calculates time to unban in ms
             const unbanTime = moment(result[1]).add(5, 'h');

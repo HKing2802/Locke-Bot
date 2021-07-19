@@ -4,16 +4,8 @@ const db = require('../../src/db.js');
 const { log } = require('../../src/util.js');
 const moment = require('moment');
 
-// sql prepared statements
-const insertMessageStatement = db
-    .getSessionSchema()
-    .getTable('messages')
-    .insert(['id', 'user_id', 'channel_id', 'send_time', 'content']);
-
-const insertEditsStatement = db
-    .getSessionSchema()
-    .getTable('edits')
-    .insert(['id', 'msg_id', 'num', 'edit_time', 'content']);
+// database schema
+const schema = db.getSessionSchema();
 
 async function recordDeleted(message) {
     if (message.author.bot) return false;
@@ -23,8 +15,9 @@ async function recordDeleted(message) {
             log('Could not log deleted message: Not connected to database', undefined, false, 'warn');
             return false;
         }
-        const sendTime = moment(message.createdTimestamp).format('YYYY-MM-DD HH:mm:ss');
-        insertMessageStatement
+        const sendTime = moment(message.createdTimestamp).add(1, 'h').format('YYYY-MM-DD HH:mm:ss');
+        schema.getTable('messages')
+            .insert(['id', 'user_id', 'channel_id', 'send_time', 'content'])
             .values(message.id, message.author.id, message.channel.id, sendTime, message.content)
             .execute()
             .catch(err => {
@@ -36,7 +29,8 @@ async function recordDeleted(message) {
             for (let i = 1; i < message.edits.length; i++) {
                 const editTime = moment(message.edits[i].createdAt).format('YYYY-MM-DD HH:mm:ss');
                 const editID = String(message.id) + String(i);
-                insertEditsStatement
+                schema.getTable('edits')
+                    .insert(['id', 'msg_id', 'num', 'edit_time', 'content'])
                     .values(editID, message.id, i, editTime, message.edits[i].content)
                     .execute()
                     .catch(err => {

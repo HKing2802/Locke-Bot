@@ -16,9 +16,6 @@ const usage = `${config.prefix}ban <member mention> [reason]` +
     '\n' + `${config.prefix}ban <member ID> [reason]`;
 const type = "Moderation";
 
-// sql prepared statement
-const insertStatement = db.getSessionSchema().getTable('temp_ban').insert(['user_id', 'time_unban']);
-
 /**
  * Adds a temporarily deleted member to the database
  * @param {Discord.Client} client
@@ -32,7 +29,9 @@ async function addToDatabase(client, target, banTime) {
     }
     const timeUnban = `'${banTime.format('YYYY-MM-DD HH:mm:ss')}'`;
 
-    insertStatement
+    db.getSessionSchema()
+        .getTable('temp_ban')
+        .insert(['user_id', 'time_unban'])
         .values(target.id, timeUnban)
         .execute()
         .then(() => {
