@@ -68,7 +68,6 @@ async function db_disconnect() {
  * Throws error if not connected to database, check if connected by checking db.connected;
  * @param {string} query The SQL query
  * @returns {mysqlx.SqlExecute}
- * @deprecated
  */
 function buildQuery(query) {
     if (!CONNECTED) { throw Error('Not connected to a Database'); }
@@ -76,7 +75,7 @@ function buildQuery(query) {
 }
 
 /**
- * Gets the current session with the MySql server
+ * Gets the default schema object of the current session with the MySql server
  * Throws error if not connected to database, check if connected by checking db.connected;
  * @returns {mysqlx.Schema}
  */
