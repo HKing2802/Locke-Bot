@@ -35,10 +35,9 @@ let BANNED = false;
  * @returns {boolean}
  */
 async function unban(client, userID) {
-    // updates flags and emits event to update the next pending unban
+    // updates flags
     HAS_PENDING_UNBAN = false;
     BANNED = true;
-    unbanEvents.emit('update');
 
     // removes entry from database
     await deleteBanStatement
@@ -47,6 +46,9 @@ async function unban(client, userID) {
         .catch(err => {
             log(`Error in deleting Temp Ban entry: ${err}`, client, false, 'error');
         });
+
+    // emits update event to set up the next pending unban
+    unbanEvents.emit('update');
 
     // performs unban
     const guild = client.guilds.cache.get(config.guildID);
@@ -117,12 +119,12 @@ async function updateUnban(client, nextTimeout) {
  * Creates events handlers to handle updates to the pending unban and stopping the module
  * @param {Client} client The client of the bot
  */
-function controller(client) {
-    let nextTimeout = updateUnban(client, null).obj;
+async function controller(client) {
+    let nextTimeout = await updateUnban(client, null).obj;
 
     unbanEvents.on('update', () => {
         // force updates the next unban timeout
-        nextTimeout = updateUnban(client, nextTimeout).obj;
+        nextTimeout = await updateUnban(client, nextTimeout).obj;
     });
     unbanEvents.once('stopModule', () => {
         // clears timer and removes listeners for a clean exit
