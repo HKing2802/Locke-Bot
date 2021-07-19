@@ -35,7 +35,7 @@ async function recordDeleted(message) {
         if (message.edits.length > 1) {
             for (let i = 1; i < message.edits.length; i++) {
                 const editTime = moment(message.edits[i].createdAt).format('YYYY-MM-DD HH:mm:ss');
-                const editId = String(message.id) + String(i);
+                const editID = String(message.id) + String(i);
                 insertEditsStatement
                     .values(editID, message.id, i, editTime, message.edits[i].content)
                     .execute()
