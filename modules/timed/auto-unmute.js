@@ -21,7 +21,7 @@ const getMuteInfoStatement = db
     .getSessionSchema()
     .getTable('muted_users')
     .select(['user_id', 'time_unmute', 'member'])
-    .order_by('time_unmute ASC');
+    .orderBy('time_unmute ASC');
 
 let UNMUTED = false;
 let HAS_PENDING_UNMUTE = false;
@@ -72,7 +72,7 @@ async function setupUnmute(client) {
     // gets info from db
    return getMuteInfoStatement
         .execute()
-        .then(results => {
+        .then(async results => {
             let result;
             while (result = results.fetchOne()) {
                 if (result[1] === null) { continue }
@@ -110,7 +110,7 @@ async function setupUnmute(client) {
  */
 async function updateUnmute(client, nextTimeout) {
     clearTimeout(nextTimeout);
-    return await setupUnmute(client, nextUser);
+    return await setupUnmute(client);
 }
 
 /**
@@ -120,7 +120,7 @@ async function updateUnmute(client, nextTimeout) {
 async function controller(client) {
     let nextTimeout = await updateUnmute(client, null).obj;
 
-    unmuteEvents.on('update', () => {
+    unmuteEvents.on('update', async () => {
         // updates the next unmute timeout 
         nextTimeout = await updateUnmute(client, nextTimeout).obj;
     });

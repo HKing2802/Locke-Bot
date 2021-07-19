@@ -23,14 +23,14 @@ const getDeletedStatement = db
     .getTable('messages')
     .select(['id', 'send_time', 'content'])
     .where('user_id = :id')
-    .order_by('send_time DESC');
+    .orderBy('send_time DESC');
 
 const getEditsStatement = db
     .getSessionSchema()
     .getTable('edits')
     .select(['num', 'edit_time', 'content'])
     .where('msg_id = :id')
-    .order_by('edit_time DESC');
+    .orderBy('edit_time DESC');
 
 const getMessageData = db
     .getSessionSchema()

@@ -21,7 +21,7 @@ const getBanInfoStatement = db
     .getSessionSchema()
     .getTable('temp_ban')
     .select(['user_id', 'time_unban'])
-    .order_by('time_unban ASC')
+    .orderBy('time_unban ASC')
     .limit(1);
 
 
@@ -122,7 +122,7 @@ async function updateUnban(client, nextTimeout) {
 async function controller(client) {
     let nextTimeout = await updateUnban(client, null).obj;
 
-    unbanEvents.on('update', () => {
+    unbanEvents.on('update', async () => {
         // force updates the next unban timeout
         nextTimeout = await updateUnban(client, nextTimeout).obj;
     });
