@@ -1,7 +1,6 @@
 /* Module to handle message event
  */
-require('hjson/lib/require-config');
-const config = require('../../config.hjson');
+const config = require('../../src/config.js');
 const persistent = require('../../persistent.json');
 const util = require('../../src/util.js');
 const { process, getFunctions } = require('../../commands/processor.js');
@@ -17,20 +16,10 @@ let commands;
 async function messageProcess(message) {
     if (await util.filterAttachment(message)) return;
 
-    if (message.content.substring(0, 1) == config.prefix) {
+    if (message.content.substring(0, 1) == config.get('prefix')) {
         // checks if bot response is active and is in a guild and not a DM
-        if (persistent.active && message.guild != null) {
-            if (!commands) commands = getFunctions(config.commands);
-            return process(message, commands)
-                .then((status) => { return status })
-                .catch(err => {
-                    util.log(`Error on processing message: ${err}`, undefined, false, 'error');
-                    return false;
-                });
-
-        // checks if message author is author and then processes even if active is false
-        } else if (message.author.id == config.authorID) {  
-            if (!commands) commands = getFunctions(config.commands);
+        if ((persistent.active && message.guild != null) || message.author.id == config.get('authorID')) {
+            if (!commands) commands = getFunctions(config.get('commands'));
             return process(message, commands)
                 .then((status) => { return status })
                 .catch(err => {
