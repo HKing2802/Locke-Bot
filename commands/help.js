@@ -36,9 +36,9 @@ function getCommandData(name) {
             .setDescription(commandData.description);
 
         if (!(commandData.type) || commandData.type === "") {
-            embed.setFooter(`${commandData.type}\nv${package.version} -- Developed by HKing#9193`);
-        } else {
             embed.setFooter(`Misc\nv${package.version} -- Developed by HKing#9193`);
+        } else {
+            embed.setFooter(`${commandData.type}\nv${package.version} -- Developed by HKing#9193`);
         }
 
         if (commandData.usage && commandData.usage !== "") {
