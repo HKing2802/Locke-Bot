@@ -12,7 +12,7 @@ const name = "ping";
 const description = "Pong!";
 
 // the type of the command, which will be the category in the help menu
-const type = "Other"
+const type = "Misc"
 
 /**
  * The main function of the command, where all code that needs to be run is placed/referenced here 
@@ -26,6 +26,8 @@ function main(message, args) {
 }
 
 exports.name = name;
-exports.description = description;
-exports.type = type;
 exports.main = main;
+exports.data = {
+    description: description,
+    type: type
+}

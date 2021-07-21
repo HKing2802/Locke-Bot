@@ -24,7 +24,10 @@ async function checkMessages(client) {
 
     // gets the data
     let delIDs = [];
-    return db.buildQuery(`SELECT id, send_time FROM messages`)
+    return db
+        .getSessionSchema()
+        .getTable('messages')
+        .select(['id', 'send_time'])
         .execute(result => {
             // checks time against threshold
             if (+moment(result[1]) < +threshold) {
@@ -35,7 +38,14 @@ async function checkMessages(client) {
         .then(async function () {
             // loops through ids and deletes them
             for (let id of delIDs) {
-                await db.buildQuery(`DELETE FROM messages WHERE id = ${id} LIMIT 1`).execute()
+                await db
+                    .getSessionSchema()
+                    .getTable('messages')
+                    .delete()
+                    .where('id = :id')
+                    .limit(1)
+                    .bind('id', id)
+                    .execute()
                     .catch(err => { log(`Error in message delete: ${err}`, client, false, 'error') });
 
             }
@@ -53,7 +63,6 @@ async function checkMessages(client) {
  * @returns {number}
  */
 async function checkEdits(client) {
-
     // gets and counts all edits without a matching message
     let numDel = 0;
     await db.buildQuery(`SELECT edits.* FROM edits LEFT JOIN messages ON edits.msg_id = messages.id WHERE messages.id IS NULL`)
@@ -87,7 +96,10 @@ async function checkMuted(client) {
 
     // checks all members if still muted
     let delIDs = [];
-    await db.buildQuery(`SELECT * FROM muted_users`)
+    await db
+        .getSessionSchema()
+        .getTable('muted_users')
+        .select(['user_id'])
         .execute(result => {
             // gets member object from guild
             let member = guild.members.cache.get(result[0]);
@@ -103,7 +115,14 @@ async function checkMuted(client) {
 
     // deletes entries from table
     for (let id of delIDs) {
-        await db.buildQuery(`DELETE FROM muted_users WHERE user_id = ${id}`).execute()
+        await db
+            .getSessionSchema()
+            .getTable('muted_users')
+            .delete()
+            .where('user_id = :id')
+            .limit(1)
+            .bind('id', id)
+            .execute()
             .catch(err => { log(`Error in muted_users delete query: ${err}`, client, false, 'error') });
     }
 
@@ -131,7 +150,10 @@ async function checkBanned(client, guild) {
     
     // gets entries and check if banned
     let delIDs = [];
-    await db.buildQuery(`SELECT user_id FROM temp_ban`)
+    await db
+        .getSessionSchema()
+        .getTable('temp_ban')
+        .select('user_id')
         .execute(async result => {
             let banned = await guild.fetchBan(result[0].toString());
             if (banned === undefined) delIDs.push(result[0]);
@@ -140,7 +162,14 @@ async function checkBanned(client, guild) {
 
     // deletes entries from table
     for (let id of delIDs) {
-        await db.buildQuery(`DELETE FROM temp_ban WHERE user_id = ${id}`).execute()
+        await db
+            .getSessionSchema()
+            .getTable('temp_ban')
+            .delete()
+            .where('user_id = :id')
+            .limit(1)
+            .bind('id', id)
+            .execute()
             .catch(err => { log(`Error in temp_ban delete query: ${err}`, client, false, 'error') });
     }
 

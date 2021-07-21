@@ -58,7 +58,7 @@ async function process(message, commands) {
         return;
     }
 
-    // parses messgae to command and arguments
+    // parses message to command and arguments
     const cmdparsed = message.content.substring(1).toLowerCase().split(" ");
     const cmd = cmdparsed[0];
     const args = cmdparsed.splice(1);

@@ -14,7 +14,7 @@ const name = 'snipe';
 const description = `Gets the user's deleted messages. Displays the last ${config.snipeMessages} messages by default.\nCan also show the previous edits of a deleted message, where number is the number to the left of each deleted message`;
 const usage = `${config.prefix}snipe <member mention|member ID> [options] - Gets Deleted messages` +
     '\n' + `${config.prefix}snipe edits <number> [options] - Gets edits of a deleted message` +
-    '\n' + `Options: \`all\` - displays all deleted messags`;
+    '\n' + `Options: \`all\` - displays all deleted messags/edits of the target`;
 const type = "Moderation";
 
 /**
@@ -122,13 +122,19 @@ async function getDeleted(message, args, target) {
     // Gets all deleted messages and stores them in msgBuffer
     // msgBuffer is Map<number, Array<number, string>>
     const msgBuffer = new Map();
-    await db.buildQuery(`SELECT id, send_time, content FROM messages WHERE user_id = ${target.id} LIMIT ${msgLimit}`)
-        .execute(result => {
+    await db
+        .getSessionSchema()
+        .getTable('messages')
+        .select(['id', 'send_time', 'content'])
+        .where('user_id = :id')
+        .orderBy('send_time DESC')
+        .bind('id', target.id)
+        .limit(msgLimit)
+        .execute(function (result) {
             msgBuffer.set(result[0], [result[1], result[2]]);
         })
         .catch(err => {
             log(`Error in Snipe query: ${err}`, message.client, false, 'error');
-            return false;
         });
 
     // checks if no messages are found
@@ -196,25 +202,37 @@ async function getEdits(message, args, editNum) {
     // editBuffer is Map<number, Array<number, string>>
     let extraEdits = 0;
     const editBuffer = new Map();
-    await db.buildQuery(`SELECT num, edit_time, content FROM edits WHERE msg_id = ${msgID}`)
-        .execute(result => {
-            if (editBuffer.size >= editLimit) extraEdits += 1;
-            else editBuffer.set(result[0], [result[1], result[2]]);
+
+    await db
+        .getSessionSchema()
+        .getTable('edits')
+        .select(['num', 'edit_time', 'content'])
+        .where('msg_id = :id')
+        .orderBy('edit_time DESC')
+        .bind('id', msgID)
+        .execute(function (result) {
+            if (editBuffer.size >= editLimit) { extraEdits += 1; }
+            else { editBuffer.set(result[0], [result[1], result[2]]); }
         })
         .catch(err => {
             log(`Error in Snipe Edits query: ${err}`, message.client, false, 'error');
-            return false;
         });
 
     // gets message data
     let messageData;
-    await db.buildQuery(`SELECT user_id, channel_id, send_time, delete_time, content FROM messages WHERE id = ${msgID} LIMIT 1`)
-        .execute(result => {
+
+    await db
+        .getSessionSchema()
+        .getTable('messages')
+        .select(['user_id', 'channel_id', 'send_time', 'delete_time', 'content'])
+        .where('id = :id')
+        .limit(1)
+        .bind('id', msgID)
+        .execute(function (result) {
             messageData = result;
         })
         .catch(err => {
             log(`Error in getting Edit message data: ${err}`, message.client, false, 'error');
-            return false;
         });
 
     // checks message data
@@ -229,7 +247,7 @@ async function getEdits(message, args, editNum) {
     channel ? channel = `#${channel.name}` : channel = "???";
     member ? member = `@${member.user.tag}` : member = "???";
     const delTimestamp = moment(messageData[3]).add('5', 'h').format('YYYY-MM-DD HH:mm:ss');
-    const sendTimestamp = moment(messageData[2]).add('5', 'h').format('YYYY-MM-DD HH:mm:ss');
+    const sendTimestamp = moment(messageData[2]).add('4', 'h').format('YYYY-MM-DD HH:mm:ss');
 
     // constructs outgoing contents
     let editContents = [];

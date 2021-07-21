@@ -13,62 +13,94 @@ const description = "Displays this message";
 const type = "Other";
 
 /**
- * Gets command data from each command file
- * Reads name, description and type
- * @param {Array<string>} nameList Array of file names, as would be in the config
- * @returns {Map<string, string>} Data <function name, function description>
- * @returns {Map<string, Array<string>>} Categories <category, Array<function name>>
+ * Gets the command data from the command file and
+ * constructs the message embed
+ * @param {string} name The name of the command
+ * @returns {Discord.MessageEmbed | string } Constructed message embed or a String response for nonexistent command
  */
-function getData(nameList) {
-    let data = new Map();
-    let categories = new Map();
+function getCommandData(name) {
+    const path = `./${name}.js`;
+    let pathcheck = `./commands/${name}.js`;
+
+    if (fs.existsSync(pathcheck)) {
+        const command = require(path);
+        const commandData = command.data;
+
+        if (commandData.description === "" || !(commandData.description)) {
+            return "That command does not exist";
+        }
+
+        const embed = new Discord.MessageEmbed()
+            .setAuthor("LockeBot")
+            .setTitle(command.name)
+            .setDescription(commandData.description);
+
+        if (!(commandData.type) || commandData.type === "") {
+            embed.setFooter(`Misc\nv${package.version} -- Developed by HKing#9193`);
+        } else {
+            embed.setFooter(`${commandData.type}\nv${package.version} -- Developed by HKing#9193`);
+        }
+
+        if (commandData.usage && commandData.usage !== "") {
+            embed.addField("Usage", commandData.usage);
+        }
+
+        if (commandData.aliases && (commandData.aliases !== "" || commandData.aliases !== [])) {
+            let aliasList = "";
+            for (let name of commandData.aliases) {
+                if (aliasList !== "") {
+                    aliasList += `\n${name}`;
+                } else {
+                    aliasList += name;
+                }
+            }
+
+            embed.addField("Aliases", aliasList);
+        }
+
+        return embed;
+    } else {
+        return "That command does not exist";
+    }
+}
+
+/**
+ * Filters name list to only the commands that are intended to be shown 
+ * in the help menu, which are all commands with a description field
+ * and sorts them by category
+ * @param {Array<string>} nameList An array of names to be filtered
+ * @returns {Map<string, Array<string>>} Map of categorized command names in the format <category, Array<name>>
+ * @private
+ */
+function getCommandList(nameList) {
+    const commandList = new Map();
 
     for (let i = 0; i < nameList.length; i++) {
         // constructs path from filename
         let path = `./${nameList[i]}.js`;
         let pathcheck = `./commands/${nameList[i]}.js`;
 
-        // checks that the file exists
         if (fs.existsSync(pathcheck)) {
-            const functionImport = require(path);
-            const functionData = functionImport.data;
+            const command = require(path);
+            const commandData = command.data;
 
-            if (!functionData) continue;
-            if (functionData.description == "" || !(functionData.description)) continue;
-            if (!(functionImport.name) || data.has(functionImport.name)) continue;
+            if (!commandData) { continue; }
+            else if (commandData.description === "" || !(commandData.description)) { continue; }
+            else if (!(command.name)) { continue; }
 
-            let type;
-            if (functionData.type == "" || !(functionData.type)) {
-                type = "Misc";
+            const type = (commandData.type === "" || !(commandData.type)) ? 'Misc' : commandData.type;
+
+            if (commandList.has(type)) {
+                const temp = commandList.get(type);
+                temp.push(command.name);
+                temp.sort();
+                commandList.set(type, temp);
             } else {
-                type = functionData.type;
+                commandList.set(type, [command.name]);
             }
-
-            if (categories.has(type)) {
-                const temp = categories.get(type);
-                temp.push(functionImport.name);
-                categories.set(type, temp);
-            } else {
-                categories.set(type, [functionImport.name]);
-            }
-
-            let desc = functionData.description;
-            if (functionData.usage && functionData.usage != "") desc += `\n  Usage: ${functionData.usage}`;
-            if (functionData.aliases && functionData.aliases != "" && Array.isArray(functionData.aliases)) {
-                desc += `\n  Aliases: ${functionData.aliases[0]}`;
-                for (let i = 1; i < functionData.aliases.length; i++) {
-                    desc += `, ${functionData.aliases[i]}`;
-                }
-            }
-
-            data.set(functionImport.name, desc);
-
-        } else {
-            log("Attempting to import command data from a missing file. Skipping over...", undefined, false, "warn");
         }
     }
-
-    return { data, categories };
+    return commandList;
 }
 
 /**
@@ -79,41 +111,46 @@ function getData(nameList) {
  * @returns {Promise<Discord.Message>} Return used only for testing
  */
 function help(message, args, nameListOverride) {
-    const embed = new Discord.MessageEmbed()
-        .setAuthor("LockeBot")
-        .setTitle("Help Menu")
-        .setDescription("----------------------------------------")
-        .setFooter("v" + package.version + " -- Developed by HKing#9193");
+    const nameList = nameListOverride ? nameListOverride : config.commands;
 
-    let nameList;
-    nameListOverride ? nameList = nameListOverride : nameList = config.commands;
-    const { data, categories } = getData(nameList);
-    for (let category of categories.keys()) {
-        let value = "";
-        for (let name of categories.get(category)) {
-            value += `${name}: ${data.get(name)}\n`
+    if (args.length === 0) {
+        const embed = new Discord.MessageEmbed()
+            .setAuthor("LockeBot")
+            .setTitle("Help Menu")
+            .setDescription("----------------------------------------")
+            .setFooter('Use ' + config.prefix + 'help <command> for more information\nv' + package.version + " -- Developed by HKing#9193");
+
+        const commands = getCommandList(nameList);
+
+        for (let type of commands.keys()) {
+            let value = "";
+            for (let name of commands.get(type)) {
+                value += `${name}\n`;
+            }
+            embed.addField(type, value);
         }
-        embed.addField(category, value);
+
+        return message.channel.send(embed)
+            .catch(err => { log(`Could not send help message: ${err}`, undefined, false, 'error'); });
+    } else {
+        let cmdTarget;
+        for (let name of nameList) {
+            if (name === args[0]) {
+                cmdTarget = name;
+                break;
+            }
+        }
+
+        return message.channel.send(getCommandData(cmdTarget))
+            .catch(err => { log(`Could not send help message: ${err}`, undefined, false, 'error'); });
     }
-    return message.channel.send(embed)
-        .then((m) => { return m })
-        .catch(err => { log(`Could not send help message: ${err}`, undefined, false, "error") });
 }
 
 exports.main = help;
 exports.name = name;
+exports.data = {
+    description: description,
+    type: type
+}
 exports.testing = {
-    getData: getData
 };
-
-/*
- *         .addFields(
-            { name: 'Ping', value: 'Pong!' },
-            { name: 'mute', value: 'Mutes a user, must ba a Mod/Admin' },
-            { name: 'unmute', value: 'Unmutes a user, must be a Mod/Admin' },
-            { name: 'snipe', value: 'Gets the user\'s deleted messages, must be a Mod/Admin' },
-            { name: 'verify', value: 'verifies a user, must be a staff member' },
-            { name: 'kick', value: 'Kicks a user from the server, must be a Mod/Admin' },
-            { name: 'ban', value: 'Bans a user from the server, must be a Mod/Admin' },
-            { name: 'Help', value: 'Displays this Message' })
- */

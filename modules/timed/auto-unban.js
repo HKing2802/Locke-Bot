@@ -20,13 +20,24 @@ let BANNED = false;
  * @returns {boolean}
  */
 async function unban(client, userID) {
-    // updates flags and emits event to update the next pending unban
+    // updates flags
     HAS_PENDING_UNBAN = false;
     BANNED = true;
-    unbanEvents.emit('update');
 
     // removes entry from database
-    await db.buildQuery(`DELETE FROM temp_ban WHERE user_id = ${userID}`).execute();
+    await db
+        .getSessionSchema()
+        .getTable('temp_ban')
+        .delete()
+        .where('user_id = :id')
+        .bind('id', userID)
+        .execute()
+        .catch(err => {
+            log(`Error in deleting Temp Ban entry: ${err}`, client, false, 'error');
+        });
+
+    // emits update event to set up the next pending unban
+    unbanEvents.emit('update');
 
     // performs unban
     const guild = client.guilds.cache.get(config.guildID);
@@ -48,32 +59,39 @@ async function unban(client, userID) {
 async function setupUnban(client, userID) {
     let timeoutTime;
     let toObject;
+    let unbanned = false
 
     // gets info from db
-    await db.buildQuery(`SELECT time_unban FROM temp_ban WHERE user_id = ${userID}`)
+    await db
+        .getSessionSchema()
+        .getTable('temp_ban')
+        .select(['user_id', 'time_unban'])
+        .orderBy('time_unban ASC')
+        .limit(1)
         .execute(async result => {
             // calculates time to unban in ms
-            const unbanTime = moment(result[0]).add(5, 'h');
+            const unbanTime = moment(result[1]).add(5, 'h');
             timeoutTime = unbanTime.diff(moment());
 
-            if (timeoutTime > 0) {
+            if (timeoutTime > 1000) {
                 // switches flag
                 HAS_PENDING_UNBAN = true;
                 BANNED = false;
 
                 // sets up timeout
                 toObject = setTimeout(() => {
-                    unban(client, userID);
+                    unban(client, result[0]);
                 }, timeoutTime);
             } else {
                 // unmutes if threshold has already passed
-                await unban(client, userID);
+                await unban(client, result[0]);
+                unbanned = true;
             }
         })
         .catch(err => { log(`Error in setting up unban timer: ${err}`, client, false, 'error') });
 
     // returns the time and timeout object
-    return { time: timeoutTime, obj: toObject };
+    return { time: timeoutTime, obj: toObject, unbanned: unbanned };
 }
 
 /**
@@ -86,52 +104,29 @@ async function updateUnban(client, nextTimeout) {
     clearTimeout(nextTimeout);
     let data;
     do {
-        nextUser = await getNextUnban();
-        if (!nextUser) return;
-        data = await setupUnban(client, nextUser);
-    } while (data.obj === undefined);
+        data = await setupUnban(client);
+    } while (data.unbanned === true);
     return data
 }
 
 /**
  * Creates events handlers to handle updates to the pending unban and stopping the module
  * @param {Client} client The client of the bot
- * @param {NodeJS.Timeout} startTimeout The starting timeout for the next unban
  */
-function controller(client, startTimeout) {
-    let nextTimeout = startTimeout;
+async function controller(client) {
+    let nextTimeout = await updateUnban(client, null).obj;
 
-    unbanEvents.on('update', () => {
+    unbanEvents.on('update', async () => {
         // force updates the next unban timeout
-        updateUnban(client, nextTimeout);
+        nextTimeout = await updateUnban(client, nextTimeout).obj;
     });
-    unbanEvents.on('stopModule', () => {
+    unbanEvents.once('stopModule', () => {
         // clears timer and removes listeners for a clean exit
         HAS_PENDING_UNBAN = false;
         BANNED = false
         clearTimeout(nextTimeout);
         unbanEvents.removeAllListeners();
     });
-}
-
-/**
- * Gets the next user ID needed to be unbanned from the database
- * @returns {string}
- */
-async function getNextUnban() {
-    let user;
-    let time;
-    await db.buildQuery(`SELECT user_id, time_unban FROM temp_ban`)
-        .execute(result => {
-            if (result[1] != null) {
-                if (time === undefined || result[1] < time) {
-                    user = result[0];
-                    time = result[1];
-                }
-            }
-        })
-        .catch(err => { throw err });
-    return user;
 }
 
 function getStatus() {
@@ -143,41 +138,6 @@ function getPending() {
 }
 
 /**
- * Initializes the module
- * Checks databse for any users needed to be unbanned and sets up controller with the next unban timeout if present
- * @param {Client} client The client of the bot
- */
-async function initialize(client) {
-    let nextUser;
-    let nextTime;
-    await db.buildQuery(`SELECT user_id, time_unban FROM temp_ban`)
-        .execute(result => {
-            if (result[1] != null) {
-                const tu = moment(result[1]).add(5, 'h');
-                if (tu.diff(moment()) < 1000) {
-                    // unbans if below threshold
-                    unban(client, result[0]);
-                } else {
-                    if (nextTime === undefined || result[2] < +nextTime) {
-                        nextTime = tu;
-                        nextUser = result[0];
-                    }
-                }
-            }
-        })
-        .catch(err => { log(`Error in auto-unban initialization: ${err}`, client, false, 'error') });
-
-    if (nextUser !== undefined) {
-        // starts the next unban timer and starts the controller with it
-        const data = await setupUnban(client, nextUser);
-        controller(client, data.obj);
-    } else {
-        // starts the controller
-        controller(client);
-    }
-}
-
-/**
  * function to stop the module
  */
 async function stop() {
@@ -185,7 +145,7 @@ async function stop() {
     unbanEvents.emit('stopModule');
 }
 
-exports.main = initialize;
+exports.main = controller;
 exports.events = unbanEvents;
 exports.stop = stop;
 exports.testing = {
@@ -193,7 +153,6 @@ exports.testing = {
     setupUnban: setupUnban,
     updateUnban: updateUnban,
     controller: controller,
-    getNextUnban: getNextUnban,
     getPending: getPending,
     getStatus: getStatus
 }

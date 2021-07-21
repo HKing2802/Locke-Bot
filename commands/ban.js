@@ -17,6 +17,32 @@ const usage = `${config.prefix}ban <member mention> [reason]` +
 const type = "Moderation";
 
 /**
+ * Adds a temporarily deleted member to the database
+ * @param {Discord.Client} client
+ * @param {Discord.GuildMember} target
+ * @param {moment} banTime
+ */
+async function addToDatabase(client, target, banTime) {
+    if (!db.connected()) {
+        log(`Not Connected to database. Skipping database entry...`, client, false, 'warn');
+        return;
+    }
+    const timeUnban = `'${banTime.format('YYYY-MM-DD HH:mm:ss')}'`;
+
+    db.getSessionSchema()
+        .getTable('temp_ban')
+        .insert(['user_id', 'time_unban'])
+        .values(target.id, timeUnban)
+        .execute()
+        .then(() => {
+            log('Logged temporary banned user to database');
+        })
+        .catch(err => {
+            log(`Error in querying database in ban: ${err}`, client, false, 'error');
+        });
+}
+
+/**
  * Parses the time argument to get a timestamp when the member is meant to be unbanned
  * @param {Array<string>} args The arguments provided to the command and split by processor
  * @param {Discord.GuildMember} target The target member of the ban
@@ -80,15 +106,7 @@ async function ban(message, args, target) {
 
     // inserts into database if time provided
     if (banTime) {
-        if (!db.connected()) log(`Not Connected to database. Skipping database entry...`, message.client, false, 'warn');
-        else {
-            const timeUnban = `'${banTime.timeUnban.format('YYYY-MM-DD HH:mm:ss')}'`;
-            const timeBan = `'${moment().format('YYYY-MM-DD HH:mm:ss')}'`;
-            await db.buildQuery(`INSERT INTO temp_ban(user_id, time_banned, time_unban) VALUES (${target.id}, ${timeBan}, ${timeUnban})`)
-                .execute()
-                .catch(err => { log(`Error in querying database in ban: ${err}`, message.client, false, 'error') });
-            log('Logged temporary banned user to database');
-        }
+        addToDatabase(message.client, target, banTime);
     }
 
     // constructs DM

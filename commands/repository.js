@@ -18,7 +18,7 @@ async function main(message, args) {
         .setTitle("Repository")
         .setThumbnail(message.client.user.avatarURL())
         .setDescription(package.repository.url)
-        .setFooter("v" + package.version + " — Developed by HKing#9193");
+        .setFooter("v" + package.version + " -- Developed by HKing#9193");
     message.channel.send(embed);
 }
 
