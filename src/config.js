@@ -135,7 +135,7 @@ function setLiveData(name, value) {
 
 exports.initialize = init;
 exports.rebuildConfig = buildConfigData;
-exports.get = getConfig;
+exports.getConfig = getConfig;
 exports.liveData = {
     get: getLiveData,
     set: setLiveData
