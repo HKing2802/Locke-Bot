@@ -131,28 +131,28 @@ function checkLogChannels(idList) {
  * @returns {Promise<Discord.Message>|Promise<undefined>}
  */
 async function log(content, client, allChannels = true, level = 'info', logChannelOverride, logger = defaultLogger) {
-    // Checks if logging channel ids are loaded and loads if not present or if there is an override provided
-    let logChannels;
-    if (logChannelOverride) logChannels = logChannelOverride;
-    if (!logChannels) {
-        logChannels = checkLogChannels(config.getConfig('logChannel'));
-        if (!(Array.isArray(logChannels))) {
-            client = false;
-            logger.warn(`Could not load logging channel ids: ${logChannels}. Skipping channel log...`);
-        }
-    } else if (logChannelOverride && logChannels) {
-        logChannels = checkLogChannels(logChannels);
-        if (!(Array.isArray(logChannels))) {
-            client = false;
-            logger.warn(`Could not load logging channel override ids: ${logChannels}. Skipping channel log...`);
-        }
-    }
-
     // logs to console if not an embed
     if (!(content instanceof Discord.MessageEmbed)) logger.log(level, content);
 
     // logs to channel
     if (client) {
+        // Checks if logging channel ids are loaded and loads if not present or if there is an override provided
+        let logChannels;
+        if (logChannelOverride) logChannels = logChannelOverride;
+        if (!logChannels) {
+            logChannels = checkLogChannels(config.getConfig('logChannel'));
+            if (!(Array.isArray(logChannels))) {
+                logger.warn(`Could not load logging channel ids: ${logChannels}. Skipping channel log...`);
+                return;
+            }
+        } else if (logChannelOverride && logChannels) {
+            logChannels = checkLogChannels(logChannels);
+            if (!(Array.isArray(logChannels))) {
+                logger.warn(`Could not load logging channel override ids: ${logChannels}. Skipping channel log...`);
+                return;
+            }
+        }
+
         return await Promise.all(logChannels.map(async (arr) => {
             const guild = client.guilds.cache.get(arr[0]);
             if (!guild) {
