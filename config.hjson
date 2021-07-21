@@ -84,7 +84,6 @@
     ban
     repository
     reactKae
-    togglebot
     unban
     endprocess
   ]
@@ -150,11 +149,12 @@
       default: true
     }
     {
-      name: snipeData
-      default: {
-                 time: 0,
-                 msgs: []
-               }
+      name: lastSnipeTime
+      default: 0
+    }
+    {
+      name: lastSnipeMsgs
+      default: []
     }
   ]
 }
