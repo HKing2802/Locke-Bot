@@ -5,9 +5,6 @@ require('hjson/lib/require-config');
 const { log } = require('./util.js');
 const { Client } = require('discord.js');
 
-// stored client for logging
-let LOG_CLIENT;
-
 let CONFIG_DATA;
 let CONFIG_NAMES;
 
@@ -22,6 +19,8 @@ let LIVE_DATA_NAMES;
  * @private
  */
 function buildConfigData() {
+    log('Building Config Data...');
+
     CONFIG_DATA = new Object();
     CONFIG_NAMES = new Set();
 
@@ -40,7 +39,6 @@ function buildConfigData() {
     }
 
     Object.freeze(CONFIG_DATA);
-    log("Initialized Config Data", LOG_CLIENT, false);
 }
 
 /**
@@ -51,6 +49,8 @@ function buildConfigData() {
  * @private
  */
 function buildLiveData() {
+    log('Building Live Data...');
+
     LIVE_DATA = new Object();
     LIVE_DATA_NAMES = new Set();
 
@@ -69,18 +69,16 @@ function buildLiveData() {
     }
 
     Object.seal(LIVE_DATA);
-    log("Initialized Live Data", LOG_CLIENT, false);
 }
 
 /**
  * Initializes the config module at startup
- * @param {Client} client
  */
-function init(client) {
-    LOG_CLIENT = client;
-
+function init() {
     buildConfigData();
     buildLiveData();
+
+    log('Configs Initialized');
 }
 
 /**
@@ -90,9 +88,9 @@ function init(client) {
  */
 function getConfig(name) {
     if (CONFIG_DATA === undefined || CONFIG_NAMES === undefined) {
-        log("Config data not initialized on attempted read", LOG_CLIENT, false, 'error');
+        log("Config data not initialized on attempted read", undefined, false, 'error');
     } else if (!(CONFIG_NAMES.has(name))) {
-        log(`Attempt to read nonexistent config data by name: \`${name}\``, LOG_CLIENT, false, 'warn');
+        log(`Attempt to read nonexistent config data by name: \`${name}\``, undefined, false, 'warn');
     } else {
         return CONFIG_DATA[name];
     }
@@ -106,9 +104,9 @@ function getConfig(name) {
  */
 function getLiveData(name) {
     if (LIVE_DATA === undefined || LIVE_DATA_NAMES === undefined) {
-        log("Live Data not initialized on attempted read", LOG_CLIENT, false, 'error');
+        log("Live Data not initialized on attempted read", undefined, false, 'error');
     } else if (!(LIVE_DATA_NAMES.has(name))) {
-        log(`Attempted to read nonexistent live data by name: \`${name}\``, LOG_CLIENT, false, 'warn');
+        log(`Attempted to read nonexistent live data by name: \`${name}\``, undefined, false, 'warn');
     } else {
         return LIVE_DATA[name];
     }
@@ -122,9 +120,9 @@ function getLiveData(name) {
  */
 function setLiveData(name, value) {
     if (LIVE_DATA === undefined || LIVE_DATA_NAMES === undefined) {
-        log("Live Data not initialized on attempted write", LOG_CLIENT, false, 'error');
+        log("Live Data not initialized on attempted write", undefined, false, 'error');
     } else if (!(LIVE_DATA_NAMES.has(name))) {
-        log(`Attempted to write to nonexistent live data by name: \`${name}\``, LOG_CLIENT, false, 'warn');
+        log(`Attempted to write to nonexistent live data by name: \`${name}\``, undefined, false, 'warn');
     } else {
         Object.defineProperty(LIVE_DATA, name, {
             value: value,
