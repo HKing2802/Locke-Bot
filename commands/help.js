@@ -16,7 +16,7 @@ const type = "Other";
  * Gets the command data from the command file and
  * constructs the message embed
  * @param {string} name The name of the command
- * @returns {Discord.MessageEmbed} Constructed message embed
+ * @returns {Discord.MessageEmbed | string } Constructed message embed or a String response for nonexistent command
  */
 function getCommandData(name) {
     const path = `./${name}.js`;
@@ -26,7 +26,41 @@ function getCommandData(name) {
         const command = require(path);
         const commandData = command.data;
 
-        
+        if (commandData.description === "" || !(commandData.description)) {
+            return "That command does not exist";
+        }
+
+        const embed = new Discord.MessageEmbed()
+            .setAuthor("LockeBot")
+            .setTitle(command.name)
+            .setDescription(commandData.description);
+
+        if (!(commandData.type) || commandData.type === "") {
+            embed.setFooter(`${commandData.type}\nv${package.version} -- Developed by HKing#9193`);
+        } else {
+            embed.setFooter(`Misc\nv${package.version} -- Developed by HKing#9193`);
+        }
+
+        if (commandData.usage && commandData.usage !== "") {
+            embed.addField("Usage", commandData.usage);
+        }
+
+        if (commandData.aliases && (commandData.aliases !== "" || commandData.aliases !== [])) {
+            let aliasList = "";
+            for (let name of commandData.aliases) {
+                if (aliasList !== "") {
+                    aliasList += `\n${name}`;
+                } else {
+                    aliasList += name;
+                }
+            }
+
+            embed.addField("Aliases", aliasList);
+        }
+
+        return embed;
+    } else {
+        return "That command does not exist";
     }
 }
 
@@ -59,6 +93,7 @@ function getCommandList(nameList) {
             if (commandList.has(type)) {
                 const temp = commandList.get(type);
                 temp.push(command.name);
+                temp.sort();
                 commandList.set(type, temp);
             } else {
                 commandList.set(type, [command.name]);
@@ -98,27 +133,24 @@ function help(message, args, nameListOverride) {
         return message.channel.send(embed)
             .catch(err => { log(`Could not send help message: ${err}`, undefined, false, 'error'); });
     } else {
-
-    }
-
-
-
-    
-    const { data, categories } = getData(nameList);
-    for (let category of categories.keys()) {
-        let value = "";
-        for (let name of categories.get(category)) {
-            value += `${name}: ${data.get(name)}\n`
+        let cmdTarget;
+        for (let name of nameList) {
+            if (name === args[0]) {
+                cmdTarget = name;
+                break;
+            }
         }
-        embed.addField(category, value);
+
+        return message.channel.send(getCommandData(cmdTarget))
+            .catch(err => { log(`Could not send help message: ${err}`, undefined, false, 'error'); });
     }
-    return message.channel.send(embed)
-        .then((m) => { return m })
-        .catch(err => { log(`Could not send help message: ${err}`, undefined, false, "error") });
 }
 
 exports.main = help;
 exports.name = name;
+exports.data = {
+    description: description,
+    type: type
+}
 exports.testing = {
-    getData: getData
 };
