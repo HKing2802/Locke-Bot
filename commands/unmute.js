@@ -14,19 +14,6 @@ const usage = `${config.prefix}unmute <member mention> [reason]`
     + '\n' + `${config.prefix}unmute <member ID> [reason]`;
 const type = "Moderation";
 
-// sql prepared statements
-const checkStatement = db
-    .getSessionSchema()
-    .getTable('muted_users')
-    .select(['member'])
-    .where('user_id = :id');
-
-const removeStatement = db
-    .getSessionSchema()
-    .getTable('muted_users')
-    .delete()
-    .where('user_id = :id');
-
 async function unmute(message, args, target) {
     // checks target perm
     if (getPerm(target)) {
@@ -49,7 +36,11 @@ async function unmute(message, args, target) {
     if (!db.connected()) log(`Not Connected to database. Skipping database check...`, message.client, false, 'warn');
     else {
         // checks if member
-        await checkStatement
+        await db
+            .getSessionSchema()
+            .getTable('muted_users')
+            .select(['member'])
+            .where('user_id = :id')
             .bind('id', target.id)
             .execute(function (res) {
                 boolMember = !!res;
@@ -59,7 +50,10 @@ async function unmute(message, args, target) {
             });
 
         // removes entry
-        removeStatement
+        db.getSessionSchema()
+            .getTable('muted_users')
+            .delete()
+            .where('user_id = :id')
             .bind('id', target.id)
             .execute()
             .catch(err => {

@@ -12,27 +12,6 @@ const events = require('events');
 
 const moduleEvents = new events();
 
-// sql prepared statements
-const schema = db.getSessionSchema()
-
-const messageDeleteStatement = schema
-    .getTable('messages')
-    .delete()
-    .where('id = :id')
-    .limit(1);
-
-const mutedDeleteStatement = schema
-    .getTable('muted_users')
-    .delete()
-    .where('user_id = :id')
-    .limit(1);
-
-const bannedDeleteStatement = schema
-    .getTable('temp_ban')
-    .delete()
-    .where('user_id = :id')
-    .limit(1);
-
 /**
  * Checks the messages table for delted messages past the threshold
  * Returns the number of messages deleted
@@ -58,7 +37,14 @@ async function checkMessages(client) {
         .then(async function () {
             // loops through ids and deletes them
             for (let id of delIDs) {
-                await messageDeleteStatement.bind('id', id).execute()
+                await db
+                    .getSessionSchema()
+                    .getTable('messages')
+                    .delete()
+                    .where('id = :id')
+                    .limit(1)
+                    .bind('id', id)
+                    .execute()
                     .catch(err => { log(`Error in message delete: ${err}`, client, false, 'error') });
 
             }
@@ -127,7 +113,14 @@ async function checkMuted(client) {
 
     // deletes entries from table
     for (let id of delIDs) {
-        await mutedDeleteStatement.bind('id', id).execute()
+        await db
+            .getSessionSchema()
+            .getTable('muted_users')
+            .delete()
+            .where('user_id = :id')
+            .limit(1)
+            .bind('id', id)
+            .execute()
             .catch(err => { log(`Error in muted_users delete query: ${err}`, client, false, 'error') });
     }
 
@@ -166,7 +159,14 @@ async function checkBanned(client, guild) {
 
     // deletes entries from table
     for (let id of delIDs) {
-        await bannedDeleteStatement.bind('id', id).execute()
+        await db
+            .getSessionSchema()
+            .getTable('temp_ban')
+            .delete()
+            .where('user_id = :id')
+            .limit(1)
+            .bind('id', id)
+            .execute()
             .catch(err => { log(`Error in temp_ban delete query: ${err}`, client, false, 'error') });
     }
 

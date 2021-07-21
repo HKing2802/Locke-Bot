@@ -10,13 +10,6 @@ const { log } = require('../../src/util.js');
 
 const unbanEvents = new events();
 
-// sql prepared statements
-const deleteBanStatement = db
-    .getSessionSchema()
-    .getTable('temp_ban')
-    .delete()
-    .where('user_id = :id');
-
 let HAS_PENDING_UNBAN = false;
 let BANNED = false;
 
@@ -32,7 +25,11 @@ async function unban(client, userID) {
     BANNED = true;
 
     // removes entry from database
-    await deleteBanStatement
+    await db
+        .getSessionSchema()
+        .getTable('temp_ban')
+        .delete()
+        .where('user_id = :id')
         .bind('id', userID)
         .execute()
         .catch(err => {

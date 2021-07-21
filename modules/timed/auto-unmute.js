@@ -10,13 +10,6 @@ const { log } = require('../../src/util.js');
 
 const unmuteEvents = new events();
 
-// sql prepared statements
-const deleteMuteStatement = db
-    .getSessionSchema()
-    .getTable('muted_users')
-    .delete()
-    .where('user_id = :id');
-
 let UNMUTED = false;
 let HAS_PENDING_UNMUTE = false;
 
@@ -32,7 +25,11 @@ async function unmute(client, userID, member) {
     HAS_PENDING_UNMUTE = false;
 
     // removes entry from database
-    await deleteMuteStatement
+    await db
+        .getSessionSchema()
+        .getTable('muted_users')
+        .delete()
+        .where('user_id = :id')
         .bind('id', userID)
         .execute()
         .catch(err => {

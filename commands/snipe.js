@@ -17,28 +17,6 @@ const usage = `${config.prefix}snipe <member mention|member ID> [options] - Gets
     '\n' + `Options: \`all\` - displays all deleted messags of the target`;
 const type = "Moderation";
 
-// sql prepared statements
-const getDeletedStatement = db
-    .getSessionSchema()
-    .getTable('messages')
-    .select(['id', 'send_time', 'content'])
-    .where('user_id = :id')
-    .orderBy('send_time DESC');
-
-const getEditsStatement = db
-    .getSessionSchema()
-    .getTable('edits')
-    .select(['num', 'edit_time', 'content'])
-    .where('msg_id = :id')
-    .orderBy('edit_time DESC');
-
-const getMessageData = db
-    .getSessionSchema()
-    .getTable('messages')
-    .select(['user_id', 'channel_id', 'send_time', 'delete_time', 'content'])
-    .where('id = :id')
-    .limit(1);
-
 /**
  * Escapes pings from message content so that the member is not pinged
  * @param {string} content
@@ -144,7 +122,12 @@ async function getDeleted(message, args, target) {
     // Gets all deleted messages and stores them in msgBuffer
     // msgBuffer is Map<number, Array<number, string>>
     const msgBuffer = new Map();
-    await getDeletedStatement
+    await db
+        .getSessionSchema()
+        .getTable('messages')
+        .select(['id', 'send_time', 'content'])
+        .where('user_id = :id')
+        .orderBy('send_time DESC')
         .bind('id', target.id)
         .limit(msgLimit)
         .execute(function (result) {
@@ -220,7 +203,12 @@ async function getEdits(message, args, editNum) {
     let extraEdits = 0;
     const editBuffer = new Map();
 
-    await getEditsStatement
+    await db
+        .getSessionSchema()
+        .getTable('edits')
+        .select(['num', 'edit_time', 'content'])
+        .where('msg_id = :id')
+        .orderBy('edit_time DESC')
         .bind('id', msgID)
         .execute(function (result) {
             if (editBuffer.size >= editLimit) { extraEdits += 1; }
@@ -233,7 +221,12 @@ async function getEdits(message, args, editNum) {
     // gets message data
     let messageData;
 
-    await getMessageData
+    await db
+        .getSessionSchema()
+        .getTable('messages')
+        .select(['user_id', 'channel_id', 'send_time', 'delete_time', 'content'])
+        .where('id = :id')
+        .limit(1)
         .bind('id', msgID)
         .execute(function (result) {
             messageData = result;
