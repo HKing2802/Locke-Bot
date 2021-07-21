@@ -14,11 +14,11 @@ function bot_init() {
     client.login(auth.token);
 
     client.once('ready', async () => {
-        log(`------------------------------------------------------------------`, client, false);
-        log(`Logged in as ${client.user.tag}`, client, false);
-
         // initialize configs
         config.initialize(client);
+
+        log(`------------------------------------------------------------------`, client, false);
+        log(`Logged in as ${client.user.tag}`, client, false);
 
         // Connect to Database
         db.connect()
