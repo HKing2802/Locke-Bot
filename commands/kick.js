@@ -1,7 +1,7 @@
 /* command to kick a member
  */
 const util = require('../src/util.js');
-const prefix = require('../src/config.js').get('prefix');
+const prefix = require('../src/config.js').getConfig('prefix');
 const auto_unmute = require('../modules/timed/auto-unmute.js');
 
 const name = "kick";
