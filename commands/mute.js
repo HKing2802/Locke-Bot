@@ -9,8 +9,8 @@ const auto_unmute = require('../modules/timed/auto-unmute.js');
 
 const name = 'mute';
 const desc = "Mutes a member";
-const usage = `${config.get('prefix')}mute <member mention> [duration] [reason]`
-    + '\n' + `${config.get('prefix')}mute <member ID> [duration] [reason]`;
+const usage = `${config.getConfig('prefix')}mute <member mention> [duration] [reason]`
+    + '\n' + `${config.getConfig('prefix')}mute <member ID> [duration] [reason]`;
 const type = "Moderation";
 
 /**
@@ -124,15 +124,15 @@ async function mute(message, args, target) {
     else reason = getReason(args, target);
 
     if (reason == "" || reason == undefined) reason = "No reason given";
-    if (target.roles.cache.has(config.get('memberRoleID'))) member = true;
+    if (target.roles.cache.has(config.getConfig('memberRoleID'))) member = true;
 
     // adds role
-    const role = message.guild.roles.cache.get(config.get('mutedRoleID'));
+    const role = message.guild.roles.cache.get(config.getConfig('mutedRoleID'));
     await target.roles.add(role);
 
     // removes role(s)
-    await target.roles.remove(message.guild.roles.cache.get(config.get('humanRoleID')));
-    if (member) await target.roles.remove(message.guild.roles.cache.get(config.get('memberRoleID')));
+    await target.roles.remove(message.guild.roles.cache.get(config.getConfig('humanRoleID')));
+    if (member) await target.roles.remove(message.guild.roles.cache.get(config.getConfig('memberRoleID')));
 
     // constructs DM message
     let DMmsg = `You have been muted in Locke`

@@ -1,9 +1,9 @@
 const config = require('../../src/config.js');
 
 function react(message) {
-    if (message.author.id === config.get('kaeID') && config.liveData.get('kaeReact')) {
+    if (message.author.id === config.getConfig('kaeID') && config.liveData.get('kaeReact')) {
         // reacts with emoji
-        message.react(message.guild.emojis.cache.get(config.get('modsgayEmojiID')));
+        message.react(message.guild.emojis.cache.get(config.getConfig('modsgayEmojiID')));
     }
 }
 

@@ -39,15 +39,15 @@ async function unmute(client, userID, member) {
     unmuteEvents.emit('update');
 
     // performs unmute
-    const target = client.guilds.cache.get(config.get('guildID')).members.cache.get(userID);
+    const target = client.guilds.cache.get(config.getConfig('guildID')).members.cache.get(userID);
     if (!target) return false;
     else {
-        if (target.roles.cache.has(config.get('humanRoleID'))) return false;
+        if (target.roles.cache.has(config.getConfig('humanRoleID'))) return false;
         else {
             UNMUTED = true;
-            await target.roles.remove(config.get('mutedRoleID'));
-            await target.roles.add(config.get('humanRoleID'));
-            if (member) await target.roles.add(config.get('memberRoleID'));
+            await target.roles.remove(config.getConfig('mutedRoleID'));
+            await target.roles.add(config.getConfig('humanRoleID'));
+            if (member) await target.roles.add(config.getConfig('memberRoleID'));
             return true;
         }
     }

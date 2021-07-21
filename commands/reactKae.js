@@ -15,7 +15,7 @@ const aliases = ['rk'];
  * @returns {undefined}
  */
 async function main(message, args) {
-    if (message.author.id == config.get('authorID') || message.author.id == config.get('kaeID')) {
+    if (message.author.id == config.getConfig('authorID') || message.author.id == config.getConfig('kaeID')) {
         let change;
         if (args[0].toLowerCase() === "false") { change = false; }
         else if (args[0].toLowerCase() === "true") { change = true; }

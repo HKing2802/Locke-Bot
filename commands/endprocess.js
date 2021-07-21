@@ -12,7 +12,7 @@ async function shutdown(client) {
     client.removeAllListeners();
 
     // shuts down modules
-    const modules = moduleHandler.getModules(config.get('modules'), true);
+    const modules = moduleHandler.getModules(config.getConfig('modules'), true);
     await moduleHandler.stopModules(modules, client);
 
     client.destroy();
@@ -20,7 +20,7 @@ async function shutdown(client) {
 }
 
 async function main(message, args) {
-    if (message.author.id === config.get('authorID')) {
+    if (message.author.id === config.getConfig('authorID')) {
         await shutdown(message.client);
     }
 }

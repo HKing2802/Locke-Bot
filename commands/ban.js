@@ -11,8 +11,8 @@ const auto_unban = require('../modules/timed/auto-unban.js');
 // Command information
 const name = "ban";
 const description = "Bans a member from the server";
-const usage = `${config.get('prefix')}ban <member mention> [reason]` +
-    '\n' + `${config.get('prefix')}ban <member ID> [reason]`;
+const usage = `${config.getConfig('prefix')}ban <member mention> [reason]` +
+    '\n' + `${config.getConfig('prefix')}ban <member ID> [reason]`;
 const type = "Moderation";
 
 /**

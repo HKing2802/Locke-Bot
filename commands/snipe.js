@@ -8,9 +8,9 @@ const moment = require('moment');
 
 // Command Information
 const name = 'snipe';
-const description = `Gets the user's deleted messages. Displays the last ${config.get('snipeMessages')} messages by default.\nCan also show the previous edits of a deleted message, where number is the number to the left of each deleted message`;
-const usage = `${config.get('prefix')}snipe <member mention|member ID> [options] - Gets Deleted messages` +
-    '\n' + `${config.get('prefix')}snipe edits <number> [options] - Gets edits of a deleted message` +
+const description = `Gets the user's deleted messages. Displays the last ${config.getConfig('snipeMessages')} messages by default.\nCan also show the previous edits of a deleted message, where number is the number to the left of each deleted message`;
+const usage = `${config.getConfig('prefix')}snipe <member mention|member ID> [options] - Gets Deleted messages` +
+    '\n' + `${config.getConfig('prefix')}snipe edits <number> [options] - Gets edits of a deleted message` +
     '\n' + `Options: \`all\` - displays all deleted messags/edits of the target`;
 const type = "Moderation";
 
@@ -107,7 +107,7 @@ async function sendLargeMessage(contents, channel) {
  */
 async function getDeleted(message, args, target) {
     // gets max munber of messages to display
-    let msgLimit = config.get('snipeMessages');
+    let msgLimit = config.getConfig('snipeMessages');
     if (args[1] == 'all') msgLimit = 50;
 
     // checks if connected to database
@@ -188,7 +188,7 @@ async function getEdits(message, args, editNum) {
     }
 
     // gets max number of edits to display
-    let editLimit = config.get('snipeMessages');
+    let editLimit = config.getConfig('snipeMessages');
     if (args[2] == 'all') editLimit = 50;
 
     // gets all edits and stores them in editBuffer

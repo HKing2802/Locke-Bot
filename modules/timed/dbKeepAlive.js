@@ -23,7 +23,7 @@ function restartDatabaseConnection(client) {
 }
 
 function start(client) {
-    const msTime = config.get('dbRestartInterval') * 60 * 60 * 1000;
+    const msTime = config.getConfig('dbRestartInterval') * 60 * 60 * 1000;
     const interval = setInterval(restartDatabaseConnection, msTime, client);
 
     interval.unref;

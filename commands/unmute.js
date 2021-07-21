@@ -9,8 +9,8 @@ const auto_unmute = require('../modules/timed/auto-unmute.js');
 
 const name = "unmute";
 const desc = "Unmutes a member";
-const usage = `${config.get('prefix')}unmute <member mention> [reason]`
-    + '\n' + `${config.get('prefix')}unmute <member ID> [reason]`;
+const usage = `${config.getConfig('prefix')}unmute <member mention> [reason]`
+    + '\n' + `${config.getConfig('prefix')}unmute <member ID> [reason]`;
 const type = "Moderation";
 
 async function unmute(message, args, target) {
@@ -21,7 +21,7 @@ async function unmute(message, args, target) {
     }
 
     // checks if member is muted
-    if (!target.roles.cache.has(config.get('mutedRoleID'))) {
+    if (!target.roles.cache.has(config.getConfig('mutedRoleID'))) {
         return message.channel.send("Member is not muted")
             .then(() => { return false });
     }
@@ -61,9 +61,9 @@ async function unmute(message, args, target) {
     }
 
     // performs unmute
-    target.roles.remove(message.guild.roles.cache.get(config.get('mutedRoleID')));
-    target.roles.add(message.guild.roles.cache.get(config.get('humanRoleID')));
-    if (boolMember) target.roles.add(message.guild.roles.cache.get(config.get('memberRoleID')));
+    target.roles.remove(message.guild.roles.cache.get(config.getConfig('mutedRoleID')));
+    target.roles.add(message.guild.roles.cache.get(config.getConfig('humanRoleID')));
+    if (boolMember) target.roles.add(message.guild.roles.cache.get(config.getConfig('memberRoleID')));
 
     // tells auto-unmute to update
     auto_unmute.events.emit('update');

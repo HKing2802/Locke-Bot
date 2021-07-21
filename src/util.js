@@ -35,9 +35,9 @@ const defaultLogger = winston.createLogger({
  * @returns {boolean}
  */
 function getPerm(member, boolHelp=false) {
-    if (member.roles.cache.has(config.get('modRoleID')) || member.roles.cache.has(config.get('dadminRoleID')) || member.roles.cache.has(config.get('adminRoleID'))) {
+    if (member.roles.cache.has(config.getConfig('modRoleID')) || member.roles.cache.has(config.getConfig('dadminRoleID')) || member.roles.cache.has(config.getConfig('adminRoleID'))) {
         return true;
-    } else if (member.roles.cache.has(config.get('helperRoleID')) && boolHelp) {
+    } else if (member.roles.cache.has(config.getConfig('helperRoleID')) && boolHelp) {
         return true;
     } else if (member.guild.ownerID == member.id) {
         return true;
@@ -135,7 +135,7 @@ async function log(content, client, allChannels = true, level = 'info', logChann
     let logChannels;
     if (logChannelOverride) logChannels = logChannelOverride;
     if (!logChannels) {
-        logChannels = checkLogChannels(config.get('logChannel'));
+        logChannels = checkLogChannels(config.getConfig('logChannel'));
         if (!(Array.isArray(logChannels))) {
             client = false;
             logger.warn(`Could not load logging channel ids: ${logChannels}. Skipping channel log...`);
@@ -162,7 +162,7 @@ async function log(content, client, allChannels = true, level = 'info', logChann
                 if (!channel) {
                     logger.warn(`Could not load channel for ID ${arr[1]} in guild ${guild.name}`);
                 } else {
-                    if (allChannels || config.get('allLogsChannels').includes(channel.id)) {
+                    if (allChannels || config.getConfig('allLogsChannels').includes(channel.id)) {
                         return channel.send(content)
                             .then((m) => { return m });
                     }

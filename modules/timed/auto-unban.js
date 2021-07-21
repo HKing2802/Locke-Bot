@@ -39,7 +39,7 @@ async function unban(client, userID) {
     unbanEvents.emit('update');
 
     // performs unban
-    const guild = client.guilds.cache.get(config.get('guildID'));
+    const guild = client.guilds.cache.get(config.getConfig('guildID'));
     const target = await client.users.fetch(userID);
 
     if (!guild || !target) return false;

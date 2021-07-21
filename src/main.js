@@ -27,7 +27,7 @@ function bot_init() {
                 await sweep(client);
 
                 // initializes modules
-                const modules = moduleHandler.getModules(config.get('modules'));
+                const modules = moduleHandler.getModules(config.getConfig('modules'));
                 const started = await moduleHandler.startModules(modules, client);
                 log(`${started}/${modules.size} Modules Initialized. Startup complete`, client, false);
             })

@@ -14,7 +14,7 @@ const { Client } = require('discord.js');
  * @returns {number}
  */
 async function serverCheck(client, serverID) {
-    let id = config.get('guildID');
+    let id = config.getConfig('guildID');
     if (serverID) id = serverID;
 
     const guild = await client.guilds.fetch(id);
@@ -25,7 +25,7 @@ async function serverCheck(client, serverID) {
 
     // this will take even longer
     for (let member of members.values()) {
-        if (config.get('nicknamePass').includes(member.id)) continue;
+        if (config.getConfig('nicknamePass').includes(member.id)) continue;
         else {
             if(checkNick(member, client, false)) numChanged += 1;
         }

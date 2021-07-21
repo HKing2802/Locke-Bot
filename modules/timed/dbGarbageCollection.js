@@ -19,7 +19,7 @@ const moduleEvents = new events();
  */
 async function checkMessages(client) {
     // gets the threshold time in ms
-    const threshold = moment().subtract(config.get('messageThreshold').num, config.get('messageThreshold').unit);
+    const threshold = moment().subtract(config.getConfig('messageThreshold').num, config.getConfig('messageThreshold').unit);
 
     // gets the data
     let delIDs = [];
@@ -87,9 +87,9 @@ async function checkEdits(client) {
  */
 async function checkMuted(client) {
     // gets guild to check if muted
-    const guild = client.guilds.cache.get(config.get('guildID'));
+    const guild = client.guilds.cache.get(config.getConfig('guildID'));
     if (!guild) {
-        log(`Error in getting guild: No such ID ${config.get('guildID')}`, client, false, 'error');
+        log(`Error in getting guild: No such ID ${config.getConfig('guildID')}`, client, false, 'error');
         return;
     }
 
@@ -107,7 +107,7 @@ async function checkMuted(client) {
                 delIDs.push(result[0]);
             } else {
                 // if member has been unmuted
-                if (!(member.roles.cache.has(config.get('mutedRoleID')))) delIDs.push(result[0]);
+                if (!(member.roles.cache.has(config.getConfig('mutedRoleID')))) delIDs.push(result[0]);
             }
         })
         .catch(err => { log(`Error in muted_users query: ${err}`, client, false, 'error') });
@@ -141,9 +141,9 @@ async function checkMuted(client) {
  */
 async function checkBanned(client, guild) {
     // gets guild to check if banned
-    if (!guild) guild = client.guilds.cache.get(config.get('guildID'));
+    if (!guild) guild = client.guilds.cache.get(config.getConfig('guildID'));
     if (!guild) {
-        log(`Error in getting guild: No such ID ${config.get('guildID')}`, client, false, 'error');
+        log(`Error in getting guild: No such ID ${config.getConfig('guildID')}`, client, false, 'error');
         return;
     }
     
@@ -218,7 +218,7 @@ async function controller(startTime) {
  */
 function startModule() {
     // starts timed interval for sweep
-    const msTime = config.get('gcSweepInterval') * 60 * 60 * 1000;
+    const msTime = config.getConfig('gcSweepInterval') * 60 * 60 * 1000;
     controller(msTime);
 }
 

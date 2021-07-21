@@ -16,10 +16,10 @@ let commands;
 async function messageProcess(message) {
     if (await util.filterAttachment(message)) return;
 
-    if (message.content.substring(0, 1) == config.get('prefix')) {
+    if (message.content.substring(0, 1) == config.getConfig('prefix')) {
         // checks if bot response is active and is in a guild and not a DM
-        if ((persistent.active && message.guild != null) || message.author.id == config.get('authorID')) {
-            if (!commands) commands = getFunctions(config.get('commands'));
+        if ((persistent.active && message.guild != null) || message.author.id == config.getConfig('authorID')) {
+            if (!commands) commands = getFunctions(config.getConfig('commands'));
             return process(message, commands)
                 .then((status) => { return status })
                 .catch(err => {
