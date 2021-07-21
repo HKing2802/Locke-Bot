@@ -24,7 +24,8 @@ async function checkMessages(client) {
 
     // gets the data
     let delIDs = [];
-    return schema
+    return db
+        .getSessionSchema()
         .getTable('messages')
         .select(['id', 'send_time'])
         .execute(result => {
@@ -95,7 +96,8 @@ async function checkMuted(client) {
 
     // checks all members if still muted
     let delIDs = [];
-    await schema
+    await db
+        .getSessionSchema()
         .getTable('muted_users')
         .select(['user_id'])
         .execute(result => {
@@ -148,7 +150,8 @@ async function checkBanned(client, guild) {
     
     // gets entries and check if banned
     let delIDs = [];
-    await schema
+    await db
+        .getSessionSchema()
         .getTable('temp_ban')
         .select('user_id')
         .execute(async result => {
