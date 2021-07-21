@@ -17,12 +17,6 @@ const deleteMuteStatement = db
     .delete()
     .where('user_id = :id');
 
-const getMuteInfoStatement = db
-    .getSessionSchema()
-    .getTable('muted_users')
-    .select(['user_id', 'time_unmute', 'member'])
-    .orderBy('time_unmute ASC');
-
 let UNMUTED = false;
 let HAS_PENDING_UNMUTE = false;
 
@@ -70,7 +64,11 @@ async function unmute(client, userID, member) {
  */
 async function setupUnmute(client) {
     // gets info from db
-   return getMuteInfoStatement
+    return db
+        .getSessionSchema()
+        .getTable('muted_users')
+        .select(['user_id', 'time_unmute', 'member'])
+        .orderBy('time_unmute ASC')
         .execute()
         .then(async results => {
             let result;
