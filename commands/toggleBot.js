@@ -1,6 +1,10 @@
 /* Command to stop command responses
  */
 
+//----------------------------------\\
+//            DEPRECATED            \\
+//----------------------------------\\
+
 const fs = require('fs');
 require('hjson/lib/require-config');
 const config = require('../config.hjson');
