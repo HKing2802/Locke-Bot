@@ -136,4 +136,25 @@
       path: timed/dbKeepAlive.js
     }
   ]
+
+    # Format of the live data stored in the config handler
+    # ex. flags and data that needs to be kept between command runs
+  liveDataFormat:
+  [
+    {
+      name: active
+      default: true
+    }
+    {
+      name: kaeReact
+      default: true
+    }
+    {
+      name: snipeData
+      default: {
+                 time: 0,
+                 msgs: []
+               }
+    }
+  ]
 }
