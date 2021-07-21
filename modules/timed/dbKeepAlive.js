@@ -1,7 +1,6 @@
 // Module to restart the connection to the database to ensure constant connection
 
-require('hjson/lib/require-config');
-const config = require('../../config.hjson');
+const config = require('../../src/config.js');
 const { Client } = require('discord.js');
 const db = require('../../src/db.js');
 const { log } = require('../../src/util.js')
@@ -24,7 +23,7 @@ function restartDatabaseConnection(client) {
 }
 
 function start(client) {
-    const msTime = config.dbRestartInterval * 60 * 60 * 1000;
+    const msTime = config.get('dbRestartInterval') * 60 * 60 * 1000;
     const interval = setInterval(restartDatabaseConnection, msTime, client);
 
     interval.unref;

@@ -1,6 +1,5 @@
 // Set of utility functions for Lockebot
-require('hjson/lib/require-config');
-const config = require('../config.hjson');
+const config = require('./config.js');
 const Discord = require('discord.js');
 const winston = require('winston');
 const file_blacklist = require('../file_blacklist.json');
@@ -36,9 +35,9 @@ const defaultLogger = winston.createLogger({
  * @returns {boolean}
  */
 function getPerm(member, boolHelp=false) {
-    if (member.roles.cache.has(config.modRoleID) || member.roles.cache.has(config.dadminRoleID) || member.roles.cache.has(config.adminRoleID)) {
+    if (member.roles.cache.has(config.get('modRoleID')) || member.roles.cache.has(config.get('dadminRoleID')) || member.roles.cache.has(config.get('adminRoleID'))) {
         return true;
-    } else if (member.roles.cache.has(config.helperRoleID) && boolHelp) {
+    } else if (member.roles.cache.has(config.get('helperRoleID')) && boolHelp) {
         return true;
     } else if (member.guild.ownerID == member.id) {
         return true;
@@ -136,7 +135,7 @@ async function log(content, client, allChannels = true, level = 'info', logChann
     let logChannels;
     if (logChannelOverride) logChannels = logChannelOverride;
     if (!logChannels) {
-        logChannels = checkLogChannels(config.logChannel);
+        logChannels = checkLogChannels(config.get('logChannel'));
         if (!(Array.isArray(logChannels))) {
             client = false;
             logger.warn(`Could not load logging channel ids: ${logChannels}. Skipping channel log...`);
@@ -163,7 +162,7 @@ async function log(content, client, allChannels = true, level = 'info', logChann
                 if (!channel) {
                     logger.warn(`Could not load channel for ID ${arr[1]} in guild ${guild.name}`);
                 } else {
-                    if (allChannels || config.allLogsChannels.includes(channel.id)) {
+                    if (allChannels || config.get('allLogsChannels').includes(channel.id)) {
                         return channel.send(content)
                             .then((m) => { return m });
                     }

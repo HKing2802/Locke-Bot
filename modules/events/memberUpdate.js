@@ -1,7 +1,6 @@
 /* Module to handle guild member updates
  */
-require('hjson/lib/require-config');
-const config = require('../../config.hjson');
+const config = require('../../src/config.js');
 const { log } = require('../../src/util.js');
 const { Client, GuildMember } = require('discord.js');
 
@@ -20,7 +19,7 @@ function checkNick(member, client, logging = true) {
 
     let newNick = target.replace(re, '');
     if (newNick != target) {
-        if (newNick == '') newNick = config.defaultNickname;
+        if (newNick == '') newNick = config.get('defaultNickname');
         member.setNickname(newNick);
         if (logging) log(`Force changed a member's nickname to \`${newNick}\``, client);
         return true;
@@ -29,7 +28,7 @@ function checkNick(member, client, logging = true) {
 
 async function compareNick(oldMember, newMember, client) {
     if (oldMember.nickname == newMember.nickname) return false;
-    else if (config.nicknamePass.includes(newMember.id)) return false;
+    else if (config.get('nicknamePass').includes(newMember.id)) return false;
     else return checkNick(newMember, client);
 }
 

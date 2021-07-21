@@ -2,8 +2,7 @@
  */
 
 const { checkNick } = require('../events/memberUpdate.js');
-require('hjson/lib/require-config');
-const config = require('../../config.hjson');
+const config = require('../../src/config.js');
 const { log } = require('../../src/util.js');
 const { Client } = require('discord.js');
 
@@ -15,7 +14,7 @@ const { Client } = require('discord.js');
  * @returns {number}
  */
 async function serverCheck(client, serverID) {
-    let id = config.guildID;
+    let id = config.get('guildID');
     if (serverID) id = serverID;
 
     const guild = await client.guilds.fetch(id);
@@ -26,7 +25,7 @@ async function serverCheck(client, serverID) {
 
     // this will take even longer
     for (let member of members.values()) {
-        if (config.nicknamePass.includes(member.id)) continue;
+        if (config.get('nicknamePass').includes(member.id)) continue;
         else {
             if(checkNick(member, client, false)) numChanged += 1;
         }
