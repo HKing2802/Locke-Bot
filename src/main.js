@@ -1,6 +1,7 @@
 const { Client } = require('discord.js');
 const auth = require('../auth.json');
 require('hjson/lib/require-config');
+const { sweep } = require('../modules/timed/dbGarbageCollection.js');
 const config = require('../config.hjson');
 const db = require('./db.js');
 const { log } = require('./util.js');
@@ -19,8 +20,6 @@ function bot_init() {
         // Connect to Database
         db.connect()
             .then(async () => {
-                const { sweep } = require('../modules/timed/dbGarbageCollection.js');
-
                 // startup garbage collection
                 await sweep(client);
 
