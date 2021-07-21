@@ -2,7 +2,7 @@
  */
 const moduleHandler = require('../src/module_handler.js');
 const { log } = require('../src/util.js');
-const config = require('../config.js');
+const config = require('../src/config.js');
 
 async function shutdown(client) {
     console.log('starting shutdown')
