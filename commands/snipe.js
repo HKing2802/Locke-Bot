@@ -14,7 +14,7 @@ const name = 'snipe';
 const description = `Gets the user's deleted messages. Displays the last ${config.snipeMessages} messages by default.\nCan also show the previous edits of a deleted message, where number is the number to the left of each deleted message`;
 const usage = `${config.prefix}snipe <member mention|member ID> [options] - Gets Deleted messages` +
     '\n' + `${config.prefix}snipe edits <number> [options] - Gets edits of a deleted message` +
-    '\n' + `Options: \`all\` - displays all deleted messags of the target`;
+    '\n' + `Options: \`all\` - displays all deleted messags/edits of the target`;
 const type = "Moderation";
 
 /**
