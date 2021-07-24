@@ -162,10 +162,10 @@ async function log(content, client, allChannels = true, level = 'info', logChann
                 if (!channel) {
                     logger.warn(`Could not load channel for ID ${arr[1]} in guild ${guild.name}`);
                 } else {
-                    if (allChannels || config.getConfig('allLogsChannels').includes(channel.id)) {
+                    if (allChannels || (config.getConfig('allInfoLogsChannels').includes(channel.id) && level === 'info') || config.getConfig('allErrorLogsChannels').includes(channel.id) && level !== 'info') {
                         return channel.send(content)
                             .then((m) => { return m });
-                    }
+                    } 
                 }
             }
         }));
