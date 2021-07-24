@@ -1,8 +1,7 @@
 /* Command to display help message
  */
 
-require('hjson/lib/require-config');
-const config = require('../config.hjson');
+const config = require('../src/config.js');
 const { log } = require('../src/util.js');
 const fs = require('fs');
 const Discord = require('discord.js');
@@ -111,14 +110,14 @@ function getCommandList(nameList) {
  * @returns {Promise<Discord.Message>} Return used only for testing
  */
 function help(message, args, nameListOverride) {
-    const nameList = nameListOverride ? nameListOverride : config.commands;
+    const nameList = nameListOverride ? nameListOverride : config.getConfig('commands');
 
     if (args.length === 0) {
         const embed = new Discord.MessageEmbed()
             .setAuthor("LockeBot")
             .setTitle("Help Menu")
             .setDescription("----------------------------------------")
-            .setFooter('Use ' + config.prefix + 'help <command> for more information\nv' + package.version + " -- Developed by HKing#9193");
+            .setFooter('Use ' + config.getConfig('prefix') + 'help <command> for more information\nv' + package.version + " -- Developed by HKing#9193");
 
         const commands = getCommandList(nameList);
 

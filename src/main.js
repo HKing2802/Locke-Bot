@@ -1,11 +1,11 @@
 const { Client } = require('discord.js');
 const auth = require('../auth.json');
-require('hjson/lib/require-config');
 const { sweep } = require('../modules/timed/dbGarbageCollection.js');
-const config = require('../config.hjson');
 const db = require('./db.js');
 const { log } = require('./util.js');
 const moduleHandler = require('./module_handler.js');
+
+const config = require('./config.js');
 
 
 function bot_init() {
@@ -14,9 +14,12 @@ function bot_init() {
     client.login(auth.token);
 
     client.once('ready', async () => {
+        // initialize configs
+        config.initialize(client);
+
         log(`------------------------------------------------------------------`, client, false);
         log(`Logged in as ${client.user.tag}`, client, false);
-        
+
         // Connect to Database
         db.connect()
             .then(async () => {
@@ -24,7 +27,7 @@ function bot_init() {
                 await sweep(client);
 
                 // initializes modules
-                const modules = moduleHandler.getModules(config.modules);
+                const modules = moduleHandler.getModules(config.getConfig('modules'));
                 const started = await moduleHandler.startModules(modules, client);
                 log(`${started}/${modules.size} Modules Initialized. Startup complete`, client, false);
             })

@@ -2,8 +2,7 @@
 */
 const util = require('../src/util.js');
 const { Message, User } = require('discord.js');
-require('hjson/lib/require-config');
-const { prefix } = require('../config.hjson');
+const { prefix } = require('../src/config.js').getConfig('prefix');
 const auto_unban = require('../modules/timed/auto-unban.js');
 
 const name = "unban";

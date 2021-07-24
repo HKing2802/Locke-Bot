@@ -2,8 +2,7 @@
  */
 const moduleHandler = require('../src/module_handler.js');
 const { log } = require('../src/util.js');
-require('hjson/lib/require-config');
-const config = require('../config.hjson');
+const config = require('../src/config.js');
 
 async function shutdown(client) {
     console.log('starting shutdown')
@@ -13,7 +12,7 @@ async function shutdown(client) {
     client.removeAllListeners();
 
     // shuts down modules
-    const modules = moduleHandler.getModules(config.modules, true);
+    const modules = moduleHandler.getModules(config.getConfig('modules'), true);
     await moduleHandler.stopModules(modules, client);
 
     client.destroy();
@@ -21,7 +20,7 @@ async function shutdown(client) {
 }
 
 async function main(message, args) {
-    if (message.author.id === config.authorID) {
+    if (message.author.id === config.getConfig('authorID')) {
         await shutdown(message.client);
     }
 }

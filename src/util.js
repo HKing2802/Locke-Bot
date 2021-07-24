@@ -1,6 +1,5 @@
 // Set of utility functions for Lockebot
-require('hjson/lib/require-config');
-const config = require('../config.hjson');
+const config = require('./config.js');
 const Discord = require('discord.js');
 const winston = require('winston');
 const file_blacklist = require('../file_blacklist.json');
@@ -36,9 +35,9 @@ const defaultLogger = winston.createLogger({
  * @returns {boolean}
  */
 function getPerm(member, boolHelp=false) {
-    if (member.roles.cache.has(config.modRoleID) || member.roles.cache.has(config.dadminRoleID) || member.roles.cache.has(config.adminRoleID)) {
+    if (member.roles.cache.has(config.getConfig('modRoleID')) || member.roles.cache.has(config.getConfig('dadminRoleID')) || member.roles.cache.has(config.getConfig('adminRoleID'))) {
         return true;
-    } else if (member.roles.cache.has(config.helperRoleID) && boolHelp) {
+    } else if (member.roles.cache.has(config.getConfig('helperRoleID')) && boolHelp) {
         return true;
     } else if (member.guild.ownerID == member.id) {
         return true;
@@ -132,28 +131,28 @@ function checkLogChannels(idList) {
  * @returns {Promise<Discord.Message>|Promise<undefined>}
  */
 async function log(content, client, allChannels = true, level = 'info', logChannelOverride, logger = defaultLogger) {
-    // Checks if logging channel ids are loaded and loads if not present or if there is an override provided
-    let logChannels;
-    if (logChannelOverride) logChannels = logChannelOverride;
-    if (!logChannels) {
-        logChannels = checkLogChannels(config.logChannel);
-        if (!(Array.isArray(logChannels))) {
-            client = false;
-            logger.warn(`Could not load logging channel ids: ${logChannels}. Skipping channel log...`);
-        }
-    } else if (logChannelOverride && logChannels) {
-        logChannels = checkLogChannels(logChannels);
-        if (!(Array.isArray(logChannels))) {
-            client = false;
-            logger.warn(`Could not load logging channel override ids: ${logChannels}. Skipping channel log...`);
-        }
-    }
-
     // logs to console if not an embed
     if (!(content instanceof Discord.MessageEmbed)) logger.log(level, content);
 
     // logs to channel
     if (client) {
+        // Checks if logging channel ids are loaded and loads if not present or if there is an override provided
+        let logChannels;
+        if (logChannelOverride) logChannels = logChannelOverride;
+        if (!logChannels) {
+            logChannels = checkLogChannels(config.getConfig('logChannel'));
+            if (!(Array.isArray(logChannels))) {
+                logger.warn(`Could not load logging channel ids: ${logChannels}. Skipping channel log...`);
+                return;
+            }
+        } else if (logChannelOverride && logChannels) {
+            logChannels = checkLogChannels(logChannels);
+            if (!(Array.isArray(logChannels))) {
+                logger.warn(`Could not load logging channel override ids: ${logChannels}. Skipping channel log...`);
+                return;
+            }
+        }
+
         return await Promise.all(logChannels.map(async (arr) => {
             const guild = client.guilds.cache.get(arr[0]);
             if (!guild) {
@@ -163,7 +162,7 @@ async function log(content, client, allChannels = true, level = 'info', logChann
                 if (!channel) {
                     logger.warn(`Could not load channel for ID ${arr[1]} in guild ${guild.name}`);
                 } else {
-                    if (allChannels || config.allLogsChannels.includes(channel.id)) {
+                    if (allChannels || config.getConfig('allLogsChannels').includes(channel.id)) {
                         return channel.send(content)
                             .then((m) => { return m });
                     }

@@ -1,14 +1,13 @@
 /* Command to give a member the human role
  */
 const { log, getPerm } = require('../src/util.js');
-require('hjson/lib/require-config');
-const config = require('../config.hjson');
+const config = require('../src/config.js');
 const { Message, GuildMember } = require('discord.js');
 
 // Command Data
 const name = 'verify';
 const description = "Verifies a member";
-const usage = `${config.prefix}verify <member mention|member ID>`;
+const usage = `${config.getConfig('prefix')}verify <member mention|member ID>`;
 const type = 'Moderation';
 
 /**
@@ -18,11 +17,11 @@ const type = 'Moderation';
  * @returns {boolean}
  */
 async function verify(message, target) {
-    if (target.roles.cache.has(config.humanRoleID)) {
+    if (target.roles.cache.has(config.getConfig('humanRoleID'))) {
         message.channel.send('Member already verified');
         return false;
     } else {
-        const role = message.guild.roles.cache.get(config.humanRoleID);
+        const role = message.guild.roles.cache.get(config.getConfig('humanRoleID'));
         await target.roles.add(role);
         message.channel.send('Member verified');
         log(`Member verified`);

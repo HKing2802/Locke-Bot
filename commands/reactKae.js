@@ -1,9 +1,6 @@
 /* Simple module to toggle the reactKae module
  */
-const fs = require('fs');
-require('hjson/lib/require-config');
-const config = require('../config.hjson');
-const persistent = require('../persistent.json');
+const config = require('../src/config.js');
 const { log } = require('../src/util.js');
 const { Message } = require('discord.js');
 
@@ -18,20 +15,17 @@ const aliases = ['rk'];
  * @returns {undefined}
  */
 async function main(message, args) {
-    if (message.author.id == config.authorID || message.author.id == config.kaeID) {
-        let current;
-        if (persistent.kaeReact == "true") current = true;
-        else if (persistent.kaeReact == "false") current = false;
-        let change = !current;
+    if (message.author.id == config.getConfig('authorID') || message.author.id == config.getConfig('kaeID')) {
+        let change;
+        if (args[0].toLowerCase() === "false") { change = false; }
+        else if (args[0].toLowerCase() === "true") { change = true; }
+        else {
+            change = !(config.liveData.get('kaeReact'));
+        }
 
-        if (args[0] == "false") change = false;
-        if (args[0] == "true") change = true;
+        config.liveData.set('kaeReact', change);
+        log(`Switched reactKae to ${change}`, message.client, false);
 
-        persistent.kaeReact = change;
-        await fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
-            if (err) log(`Could not write to persistent JSON: ${err}`, message.client, false, 'error');
-            log(`Switched reactKae to ${change}`, message.client, false);
-        });
         await message.delete();
     }
 }

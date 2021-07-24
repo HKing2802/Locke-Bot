@@ -1,7 +1,6 @@
 /* Module to sweep through the muted users database and unmute when necessary
  */
-require('hjson/lib/require-config');
-const config = require('../../config.hjson');
+const config = require('../../src/config.js');
 const db = require('../../src/db.js');
 const events = require('events');
 const moment = require('moment');
@@ -40,15 +39,15 @@ async function unmute(client, userID, member) {
     unmuteEvents.emit('update');
 
     // performs unmute
-    const target = client.guilds.cache.get(config.guildID).members.cache.get(userID);
+    const target = client.guilds.cache.get(config.getConfig('guildID')).members.cache.get(userID);
     if (!target) return false;
     else {
-        if (target.roles.cache.has(config.humanRoleID)) return false;
+        if (target.roles.cache.has(config.getConfig('humanRoleID'))) return false;
         else {
             UNMUTED = true;
-            await target.roles.remove(config.mutedRoleID);
-            await target.roles.add(config.humanRoleID);
-            if (member) await target.roles.add(config.memberRoleID);
+            await target.roles.remove(config.getConfig('mutedRoleID'));
+            await target.roles.add(config.getConfig('humanRoleID'));
+            if (member) await target.roles.add(config.getConfig('memberRoleID'));
             return true;
         }
     }

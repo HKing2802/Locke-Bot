@@ -1,8 +1,7 @@
 /* Command to ban a member
  */
 const { getPerm, getReason, log } = require('../src/util.js');
-require('hjson/lib/require-config');
-const config = require('../config.hjson');
+const config = require('../src/config.js');
 const { GuildMember, Message } = require('discord.js');
 const moment = require('moment');
 const db = require('../src/db.js');
@@ -12,8 +11,8 @@ const auto_unban = require('../modules/timed/auto-unban.js');
 // Command information
 const name = "ban";
 const description = "Bans a member from the server";
-const usage = `${config.prefix}ban <member mention> [reason]` +
-    '\n' + `${config.prefix}ban <member ID> [reason]`;
+const usage = `${config.getConfig('prefix')}ban <member mention> [reason]` +
+    '\n' + `${config.getConfig('prefix')}ban <member ID> [reason]`;
 const type = "Moderation";
 
 /**

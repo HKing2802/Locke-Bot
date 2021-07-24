@@ -1,7 +1,6 @@
 /* Module to sweep through temporarily banned users database and unban where necessary
  */
-require('hjson/lib/require-config');
-const config = require('../../config.hjson');
+const config = require('../../src/config.js');
 const db = require('../../src/db.js');
 const events = require('events');
 const moment = require('moment');
@@ -40,7 +39,7 @@ async function unban(client, userID) {
     unbanEvents.emit('update');
 
     // performs unban
-    const guild = client.guilds.cache.get(config.guildID);
+    const guild = client.guilds.cache.get(config.getConfig('guildID'));
     const target = await client.users.fetch(userID);
 
     if (!guild || !target) return false;

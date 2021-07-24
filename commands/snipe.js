@@ -1,19 +1,16 @@
 /* Command to get a member's deleted messages
  */
 const db = require('../src/db.js');
-require('hjson/lib/require-config');
-const config = require('../config.hjson');
-const persistent = require('../persistent.json');
+const config = require('../src/config.js');
 const { log, getPerm } = require('../src/util.js');
 const { Message, GuildMember, TextChannel } = require('discord.js');
 const moment = require('moment');
-const fs = require('fs');
 
 // Command Information
 const name = 'snipe';
-const description = `Gets the user's deleted messages. Displays the last ${config.snipeMessages} messages by default.\nCan also show the previous edits of a deleted message, where number is the number to the left of each deleted message`;
-const usage = `${config.prefix}snipe <member mention|member ID> [options] - Gets Deleted messages` +
-    '\n' + `${config.prefix}snipe edits <number> [options] - Gets edits of a deleted message` +
+const description = `Gets the user's deleted messages. Displays the last ${config.getConfig('snipeMessages')} messages by default.\nCan also show the previous edits of a deleted message, where number is the number to the left of each deleted message`;
+const usage = `${config.getConfig('prefix')}snipe <member mention|member ID> [options] - Gets Deleted messages` +
+    '\n' + `${config.getConfig('prefix')}snipe edits <number> [options] - Gets edits of a deleted message` +
     '\n' + `Options: \`all\` - displays all deleted messags/edits of the target`;
 const type = "Moderation";
 
@@ -110,7 +107,7 @@ async function sendLargeMessage(contents, channel) {
  */
 async function getDeleted(message, args, target) {
     // gets max munber of messages to display
-    let msgLimit = config.snipeMessages;
+    let msgLimit = config.getConfig('snipeMessages');
     if (args[1] == 'all') msgLimit = 50;
 
     // checks if connected to database
@@ -145,18 +142,16 @@ async function getDeleted(message, args, target) {
 
     // constructs outgoing contents with timestamp and escaped content
     let msgContents = [];
-    persistent.snipeData.msgs = [];
+    let snipeDataMsgs = [];
     for (let id of msgBuffer.keys()) {
-        persistent.snipeData.msgs.push(id);
+        snipeDataMsgs.push(id);
         let delContent = msgBuffer.get(id);
         msgContents.push(`[${msgContents.length + 1}] ${moment(delContent[0]).add(5, 'h').format('M/DD H:mm:ss')} - ${escapeMessage(delContent[1], message.guild)}`)
     }
 
-    // saves data to persistent
-    persistent.snipeData.time = moment().valueOf();
-    await fs.writeFile('./persistent.json', JSON.stringify(persistent, null, 2), (err) => {
-        if (err) log(`Error in writing persistent data for snipe`, message.client, false, 'error');
-    });
+    // saves data to Live Data
+    config.liveData.set('lastSnipeTime', moment().valueOf());
+    config.liveData.set('lastSnipeMsgs', snipeDataMsgs);
 
     // sends deleted messages
     return sendLargeMessage(msgContents, message.channel)
@@ -178,24 +173,22 @@ async function getDeleted(message, args, target) {
  * @returns {boolean}
  */
 async function getEdits(message, args, editNum) {
-    const persistent = require('../persistent.json'); // ensures data is the most up to date
-
     // checks if snipe has been used to get deleted messages in the past 30 minutes
-    const delMsgTime = moment(persistent.snipeData.time);
+    const delMsgTime = moment(config.liveData.get('lastSnipeTime'));
     if (moment().diff(delMsgTime, 'm', true) > 30) {
         message.channel.send(`Snipe has not been used to get deleted messages in the past half-hour`);
         return false;
     }
 
     // gets and checks the message ID
-    const msgID = persistent.snipeData.msgs[editNum - 1];
+    const msgID = config.liveData.get('lastSnipeMsgs')[editNum - 1];
     if (msgID === undefined) {
-        message.channel.send(`Incorrect message number: must be within 1-${persistent.snipeData.msgs.length}`);
+        message.channel.send(`Incorrect message number: must be within 1-${config.liveData.get('lastSnipeMsgs').length}`);
         return false;
     }
 
     // gets max number of edits to display
-    let editLimit = config.snipeMessages;
+    let editLimit = config.getConfig('snipeMessages');
     if (args[2] == 'all') editLimit = 50;
 
     // gets all edits and stores them in editBuffer
