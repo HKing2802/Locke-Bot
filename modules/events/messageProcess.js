@@ -17,7 +17,8 @@ async function messageProcess(message) {
     if (await util.filterAttachment(message)) return;
 
     if (message.content.substring(0, 1) == config.getConfig('prefix')) {
-        // checks if bot response is active and is in a guild and not a DM
+        // checks if bot response is active and that it is in a guild and not a DM
+        // also checks if the message came from the bot author, and will process it regardless of the active flag if true
         if ((persistent.active && message.guild != null) || message.author.id == config.getConfig('authorID')) {
             if (!commands) commands = getFunctions(config.getConfig('commands'));
             return process(message, commands)
