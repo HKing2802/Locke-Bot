@@ -10,7 +10,7 @@ const package = require('../package.json');
 
 const name = "help";
 const description = "Displays this message";
-const type = "Other";
+const type = "Misc";
 
 /**
  * Gets the command data from the command file and
