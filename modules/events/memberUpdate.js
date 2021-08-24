@@ -17,7 +17,7 @@ function checkNick(member, client, logging = true) {
     if (member.nickname === null) target = member.user.username;
     else target = member.nickname;
 
-    let newNick = target.replace(re, '');
+    let newNick = target.replace(re, '').trim();
     if (newNick != target) {
         if (newNick == '') newNick = config.getConfig('defaultNickname');
         member.setNickname(newNick);
