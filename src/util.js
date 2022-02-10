@@ -154,20 +154,22 @@ async function log(content, client, allChannels = true, level = 'info', logChann
         }
 
         return await Promise.all(logChannels.map(async (arr) => {
-            const guild = client.guilds.cache.get(arr[0]);
-            if (!guild) {
-                logger.warn(`Could not load guild for ID ${arr[0]} and channel ID ${arr[1]}`);
-            } else {
-                const channel = guild.channels.cache.get(arr[1]);
-                if (!channel) {
-                    logger.warn(`Could not load channel for ID ${arr[1]} in guild ${guild.name}`);
+            client.guilds.fetch(arr[0]).then((guild) => {
+                if (!guild) {
+                    logger.warn(`Could not load guild for ID ${arr[0]} and channel ID ${arr[1]}`);
                 } else {
-                    if (allChannels || (config.getConfig('allInfoLogsChannels').includes(channel.id) && level === 'info') || (config.getConfig('allErrorLogsChannels').includes(channel.id) && level !== 'info')) {
-                        return channel.send(content)
-                            .then((m) => { return m });
-                    } 
+                    guild.channels.fetch(arr[1]).then((channel) => {
+                        if (!channel) {
+                            logger.warn(`Could not load channel for ID ${arr[1]} in guild ${guild.name}`);
+                        } else {
+                            if (allChannels || (config.getConfig('allInfoLogsChannels').includes(channel.id) && level === 'info') || (config.getConfig('allErrorLogsChannels').includes(channel.id) && level !== 'info')) {
+                                return channel.send(content)
+                                    .then((m) => { return m });
+                            }
+                        }
+                    });
                 }
-            }
+            });
         }));
     }
 }
