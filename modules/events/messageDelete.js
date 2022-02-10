@@ -12,7 +12,7 @@ async function recordDeleted(message) {
             log('Could not log deleted message: Not connected to database', undefined, false, 'warn');
             return false;
         }
-        const sendTime = moment(message.createdTimestamp).add(1, 'h').format('YYYY-MM-DD HH:mm:ss');
+        const sendTime = moment(message.createdTimestamp).format('YYYY-MM-DD HH:mm:ss');
         db.getSessionSchema().getTable('messages')
             .insert(['id', 'user_id', 'channel_id', 'send_time', 'content'])
             .values(message.id, message.author.id, message.channel.id, sendTime, message.content)
@@ -22,7 +22,7 @@ async function recordDeleted(message) {
             });
 
         // checks for and records edits
-        if (message.edits.length > 1) {
+        if (message.edits) {
             for (let i = 1; i < message.edits.length; i++) {
                 let editTime;
 		editTime = i > 0 ? message.edits[i - 1].editedAt : message.editedAt;
@@ -38,7 +38,7 @@ async function recordDeleted(message) {
         }
 
         let logmsg = "Logged Deleted Message";
-        if (message.edits.length > 1) logmsg += ` with ${message.edits.length - 1} Edits`;
+        if (message.edits) logmsg += ` with ${message.edits.length - 1} Edits`;
         log(logmsg);
         return true;
     }
