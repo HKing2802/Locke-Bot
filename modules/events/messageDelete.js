@@ -24,14 +24,15 @@ async function recordDeleted(message) {
         // checks for and records edits
         if (message.edits.length > 1) {
             for (let i = 1; i < message.edits.length; i++) {
-                const editTime = moment(message.edits[i].createdAt).format('YYYY-MM-DD HH:mm:ss');
+                let editTime;
+		editTime = i > 0 ? message.edits[i - 1].editedAt : message.editedAt;
                 const editID = String(message.id) + String(i);
                 db.getSessionSchema().getTable('edits')
                     .insert(['id', 'msg_id', 'num', 'edit_time', 'content'])
                     .values(editID, message.id, i, editTime, message.edits[i].content)
                     .execute()
                     .catch(err => {
-                        log(`Error in deleted message edits insertion: ${err}`, message.client, false, 'error');
+                        log(`Error in deleted message edits insertion: ${err} || ${editID}`, message.client, false, 'error');
                     });
             }
         }
