@@ -1,4 +1,4 @@
-const { Client } = require('discord.js');
+const { Client, Intents } = require('discord.js');
 const auth = require('../auth.json');
 const { sweep } = require('../modules/timed/dbGarbageCollection.js');
 const db = require('./db.js');
@@ -9,8 +9,12 @@ const config = require('./config.js');
 
 
 function bot_init() {
+    // Generate Intents
+    const clientIntents = new Intents();
+    clientIntents.add(Intents.FLAGS.GUILD_MEMBERS, Intents.FLAGS.GUILD_BANS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.GUILD_MESSAGE_REACTIONS, Intents.FLAGS.DIRECT_MESSAGES, Intents.FLAGS.GUILDS);
+
     // bot login
-    const client = new Client();
+    const client = new Client({ intents: clientIntents });
     client.login(auth.token);
 
     client.once('ready', async () => {
