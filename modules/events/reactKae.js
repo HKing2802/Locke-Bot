@@ -8,7 +8,7 @@ function react(message) {
 }
 
 function main(client) {
-    client.on('message', (message) => {
+    client.on('messageCreate', (message) => {
         react(message);
     })
 }
