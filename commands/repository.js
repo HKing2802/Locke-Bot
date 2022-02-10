@@ -18,8 +18,9 @@ async function main(message, args) {
         .setTitle("Repository")
         .setThumbnail(message.client.user.avatarURL())
         .setDescription(package.repository.url)
-        .setFooter("v" + package.version + " -- Developed by HKing#9193");
-    message.channel.send(embed);
+        .setFooter({ text: "v" + package.version + " -- Developed by HKing#9193" });
+    message.channel.send({ embeds: [embed] })
+        .catch(err => { log(`Could not send repository message: ${err}`, undefined, false, 'error'); });
 }
 
 exports.main = main;
