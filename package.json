@@ -4,8 +4,8 @@
     "description": "Dedicated bot for the Locke Server",
     "main": "bot.js",
     "engines": {
-        "node": "12.22.2",
-        "npm": "7.19.1"
+        "node": "16.13.0",
+        "npm": "8.4.1"
     },
     "scripts": {
         "test": "mocha",
@@ -20,7 +20,7 @@
     },
     "dependencies": {
         "@mysql/xdevapi": "8.0.25",
-        "discord.js": "^12.5.3",
+        "discord.js": "^13.6.0",
         "hjson": "^3.2.2",
         "moment": "^2.29.1",
         "winston": "^3.3.3",
