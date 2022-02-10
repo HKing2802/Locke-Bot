@@ -38,7 +38,7 @@ async function messageProcess(message) {
  */
 function main(client) {
     // sets up event listener
-    client.on('message', (message) => {
+    client.on('messageCreate', (message) => {
         messageProcess(message);
     });
 }
