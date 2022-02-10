@@ -30,14 +30,14 @@ function getCommandData(name) {
         }
 
         const embed = new Discord.MessageEmbed()
-            .setAuthor("LockeBot")
+            .setAuthor({ name: "LockeBot" })
             .setTitle(command.name)
             .setDescription(commandData.description);
 
         if (!(commandData.type) || commandData.type === "") {
-            embed.setFooter(`Misc\nv${package.version} -- Developed by HKing#9193`);
+            embed.setFooter({ text: `Misc\nv${package.version} -- Developed by HKing#9193` });
         } else {
-            embed.setFooter(`${commandData.type}\nv${package.version} -- Developed by HKing#9193`);
+            embed.setFooter({ text: `${commandData.type}\nv${package.version} -- Developed by HKing#9193` });
         }
 
         if (commandData.usage && commandData.usage !== "") {
@@ -114,10 +114,10 @@ function help(message, args, nameListOverride) {
 
     if (args.length === 0) {
         const embed = new Discord.MessageEmbed()
-            .setAuthor("LockeBot")
+            .setAuthor({ name: "LockeBot" })
             .setTitle("Help Menu")
             .setDescription("----------------------------------------")
-            .setFooter('Use ' + config.getConfig('prefix') + 'help <command> for more information\nv' + package.version + " -- Developed by HKing#9193");
+            .setFooter({ text: 'Use ' + config.getConfig('prefix') + 'help <command> for more information\nv' + package.version + " -- Developed by HKing#9193" });
 
         const commands = getCommandList(nameList);
 
@@ -129,7 +129,7 @@ function help(message, args, nameListOverride) {
             embed.addField(type, value);
         }
 
-        return message.channel.send(embed)
+        return message.channel.send({ embeds: [embed] })
             .catch(err => { log(`Could not send help message: ${err}`, undefined, false, 'error'); });
     } else {
         let cmdTarget;
@@ -140,7 +140,7 @@ function help(message, args, nameListOverride) {
             }
         }
 
-        return message.channel.send(getCommandData(cmdTarget))
+        return message.channel.send({ embeds: [getCommandData(cmdTarget)] })
             .catch(err => { log(`Could not send help message: ${err}`, undefined, false, 'error'); });
     }
 }
