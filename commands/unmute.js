@@ -21,7 +21,7 @@ async function unmute(message, args, target) {
     }
 
     // checks if member is muted
-    if (!target.roles.cache.has(config.getConfig('mutedRoleID'))) {
+    if (!target.communicationDisabledUntilTimestamp) {
         return message.channel.send("Member is not muted")
             .then(() => { return false });
     }
@@ -31,55 +31,55 @@ async function unmute(message, args, target) {
     if (reason == "") reason = "No reason given";
 
     // checks db if member
-    let boolMember = false;
-    if (!db.connected()) log(`Not Connected to database. Skipping database check...`, message.client, false, 'warn');
-    else {
-        // checks if member
-        await db
-            .getSessionSchema()
-            .getTable('muted_users')
-            .select(['member'])
-            .where('user_id = :id')
-            .bind('id', target.id)
-            .execute(function (res) {
-                boolMember = !!res;
-            })
-            .catch(err => {
-                log(`Error in querying database in unmute: ${err}`, message.client, false, 'error');
-            });
+    // ---- DEPRECATED ----
+    //let boolMember = false;
+    //if (!db.connected()) log(`Not Connected to database. Skipping database check...`, message.client, false, 'warn');
+    //else {
+    //    // checks if member
+    //    await db
+    //        .getSessionSchema()
+    //        .getTable('muted_users')
+    //        .select(['member'])
+    //        .where('user_id = :id')
+    //        .bind('id', target.id)
+    //        .execute(function (res) {
+    //            boolMember = !!res;
+    //        })
+    //        .catch(err => {
+    //            log(`Error in querying database in unmute: ${err}`, message.client, false, 'error');
+    //        });
 
-        // removes entry
-        db.getSessionSchema()
-            .getTable('muted_users')
-            .delete()
-            .where('user_id = :id')
-            .bind('id', target.id)
-            .execute()
-            .catch(err => {
-                log(`Error in querying database in unmute delete: ${err}`, message.client, false, 'error');
-            });
-    }
+    //    // removes entry
+    //    db.getSessionSchema()
+    //        .getTable('muted_users')
+    //        .delete()
+    //        .where('user_id = :id')
+    //        .bind('id', target.id)
+    //        .execute()
+    //        .catch(err => {
+    //            log(`Error in querying database in unmute delete: ${err}`, message.client, false, 'error');
+    //        });
+    //}
 
     // performs unmute
-    target.roles.remove(message.guild.roles.cache.get(config.getConfig('mutedRoleID')));
-    target.roles.add(message.guild.roles.cache.get(config.getConfig('humanRoleID')));
-    if (boolMember) target.roles.add(message.guild.roles.cache.get(config.getConfig('memberRoleID')));
+    target.timeout(null, reason);
 
     // tells auto-unmute to update
-    auto_unmute.events.emit('update');
+    // ---- DEPRECATED ----
+    //auto_unmute.events.emit('update');
 
     // logs data
     log(`${message.author.tag} unmuted ${target.user.tag} for ${reason}`);
 
     // constructs log embed
     const logEmbed = new Discord.MessageEmbed()
-        .setAuthor(message.author.tag)
+        .setAuthor({ name: message.author.tag })
         .setDescription(target.user.tag)
         .setTitle('Unmute')
         .addField('Reason', reason)
-        .setFooter(moment().format("dddd, MMMM Do YYYY, HH:mm:ss"));
+        .setFooter({ text: moment().format("dddd, MMMM Do YYYY, HH:mm:ss") });
 
-    log(logEmbed, message.client);
+    log({ embeds: [logEmbed] }, message.client);
 
     // constructs and sends response message
     let msg = `Unmuted ${target.user.tag}`;

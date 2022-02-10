@@ -13,6 +13,9 @@ const usage = `${config.getConfig('prefix')}mute <member mention> [duration] [re
     + '\n' + `${config.getConfig('prefix')}mute <member ID> [duration] [reason]`;
 const type = "Moderation";
 
+// max timeout time in ms
+const MAX_TIMEOUT_TIME = 1814400000;
+
 /**
  * Parses the time argument to get a timestamp when the member is meant to be unmuted
  * @param {Array<string>} args The arguments provided to the command and split by processor
@@ -117,22 +120,31 @@ async function mute(message, args, target) {
     }
 
     const muteTime = parseTime(args, target);
-    let member = false;
+    //let member = false;
 
     let reason;
     if (muteTime) reason = getReason(args, target, 2);
     else reason = getReason(args, target);
 
     if (reason == "" || reason == undefined) reason = "No reason given";
-    if (target.roles.cache.has(config.getConfig('memberRoleID'))) member = true;
 
     // adds role
-    const role = message.guild.roles.cache.get(config.getConfig('mutedRoleID'));
-    await target.roles.add(role);
+    //const role = message.guild.roles.cache.get(config.getConfig('mutedRoleID'));
+    //await target.roles.add(role);
 
     // removes role(s)
-    await target.roles.remove(message.guild.roles.cache.get(config.getConfig('humanRoleID')));
-    if (member) await target.roles.remove(message.guild.roles.cache.get(config.getConfig('memberRoleID')));
+    //await target.roles.remove(message.guild.roles.cache.get(config.getConfig('humanRoleID')));
+    //if (member) await target.roles.remove(message.guild.roles.cache.get(config.getConfig('memberRoleID')));
+
+
+    // times out member
+    if (muteTime) {
+        timems = muteTime.timeUnmute.valueOf() - moment().valueOf();
+        target.timeout(timems, reason);
+    } else {
+        // indefinite timeout
+        target.timeout(MAX_TIMEOUT_TIME, reason);
+    }
 
     // constructs DM message
     let DMmsg = `You have been muted in Locke`
@@ -145,13 +157,15 @@ async function mute(message, args, target) {
     else msg += ` for ${reason}`;
 
     // adds to database
-    addToDatabase(message.client, target, member, muteTime)
-        .catch(err => {
-            log(`Error in adding to database in mute: ${err}`, message.client, false, 'error');
-        });
+    // ---- DEPRECATED ----
+    //addToDatabase(message.client, target, member, muteTime)
+    //    .catch(err => {
+    //        log(`Error in adding to database in mute: ${err}`, message.client, false, 'error');
+    //    });
 
     // tells auto-unmute to update
-    auto_unmute.events.emit('update');
+    // ---- DEPRECATED ----
+    // auto_unmute.events.emit('update');
 
     // logs info
     let logmsg = `${message.author.tag} muted ${target.user.tag} for ${reason}`;
@@ -160,14 +174,14 @@ async function mute(message, args, target) {
 
     // constructs and sends log embed
     const logEmbed = new Discord.MessageEmbed()
-        .setAuthor(message.author.tag)
+        .setAuthor({ name: message.author.tag })
         .setDescription(target.user.tag)
         .setTitle("Mute")
         .addField("Reason", reason)
-        .setFooter(moment().format("dddd, MMMM Do YYYY, HH:mm:ss"))
+        .setFooter({ text: moment().format("dddd, MMMM Do YYYY, HH:mm:ss") });
 
     if (muteTime) logEmbed.addField("Duration", muteTime.timeUnmute.toNow(true));
-    log(logEmbed, message.client);
+    log({ embeds: [logEmbed] }, message.client);
 
     // sends DM message
     await target.user.createDM()
