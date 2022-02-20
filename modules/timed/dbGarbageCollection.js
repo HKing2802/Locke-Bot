@@ -84,6 +84,7 @@ async function checkEdits(client) {
  * Returns the number of entries deleted
  * @param {Client} client The client for logging and getting muted status
  * @returns {number}
+ * @deprecated
  */
 async function checkMuted(client) {
     // gets guild to check if muted
@@ -141,7 +142,7 @@ async function checkMuted(client) {
  */
 async function checkBanned(client, guild) {
     // gets guild to check if banned
-    if (!guild) guild = client.guilds.cache.get(config.getConfig('guildID'));
+    if (!guild) guild = await client.guilds.fetch(config.getConfig('guildID'));
     if (!guild) {
         log(`Error in getting guild: No such ID ${config.getConfig('guildID')}`, client, false, 'error');
         return;
@@ -193,7 +194,6 @@ async function sweep(client) {
     } else {
         await checkMessages(client);
         await checkEdits(client);
-        await checkMuted(client);
         await checkBanned(client);
         log(`Garbage collection complete.`, client, false);
         return true
