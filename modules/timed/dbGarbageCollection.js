@@ -204,8 +204,8 @@ async function sweep(client) {
  * Controller to start and store the sweep interval and set up the listener to stop the module
  * @param {number} startTime Time in ms between sweeps
  */
-async function controller(startTime) {
-    const interval = setInterval(sweep, startTime);
+async function controller(startTime, client) {
+    const interval = setInterval(sweep, startTime, client);
     interval.unref();
 
     moduleEvents.once('stopModule', () => {
@@ -216,10 +216,10 @@ async function controller(startTime) {
 /**
  * Starts the timed portion of the module
  */
-function startModule() {
+function startModule(client) {
     // starts timed interval for sweep
     const msTime = config.getConfig('gcSweepInterval') * 60 * 60 * 1000;
-    controller(msTime);
+    controller(msTime, client);
 }
 
 /**
