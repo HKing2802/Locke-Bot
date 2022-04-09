@@ -22,7 +22,7 @@
         "@mysql/xdevapi": "8.0.25",
         "discord.js": "^13.6.0",
         "hjson": "^3.2.2",
-        "moment": "^2.29.1",
+        "moment": "^2.29.2",
         "winston": "^3.3.3",
         "winston-daily-rotate-file": "^4.5.5"
     },
